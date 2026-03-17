@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "Accessify",
+  "version": "1.0.0",
+  "description": "Transforma páginas web em acessíveis seguindo as diretrizes WCAG para usuários cegos ou de baixa visão",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "webRequest",
+    "tabs",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_title": "Accessify"
+  },
+  "commands": {
+    "trigger-accessibility-analysis": {
+      "suggested_key": {
+        "default": "Alt+Shift+A",
+        "mac": "Option+Shift+A"
+      },
+      "description": "Abre o painel e inicia a análise da página atual"
+    },
+    "toggle-auto-optimize": {
+      "suggested_key": {
+        "default": "Alt+Shift+O",
+        "mac": "Option+Shift+O"
+      },
+      "description": "Liga ou desliga a aplicação automática de melhorias"
+    }
+  },
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página de Teste - WCAG Accessibility Plugin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Problema 1: Contraste baixo */
+        .low-contrast {
+            color: #999;
+            background: #f0f0f0;
+            font-size: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        /* Problema 2: Sem alt text */
+        .image-section {
+            margin-bottom: 20px;
+        }
+
+        /* Problema 3: Estrutura de títulos ruim */
+        h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        h5 {
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        /* Problema 4: Link genérico */
+        a.generic-link {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        a.generic-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Problema 5: Formulário sem labels */
+        .form-section {
+            background: white;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+        }
+
+        button {
+            background: #0066cc;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #0052a3;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Problema 6: Foco sem indicador visual */
+        input:focus,
+        button:focus {
+            outline: none;
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .justified-sample {
+            text-align: justify;
+        }
+
+        .tiny-text {
+            font-size: 11px;
+        }
+
+        .hidden-alert {
+            opacity: 0.2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Problema 1: Sem título H1 e estrutura ruim -->
+        <h3>Página de Teste para WCAG Accessibility Plugin</h3>
+        <p>Esta página contém vários problemas de acessibilidade que o plugin deve identificar e corrigir.</p>
+
+        <!-- Problema 2: Contraste baixo -->
+        <div class="low-contrast">
+            <strong>⚠️ Texto com contraste baixo:</strong> Este texto tem contraste insuficiente e é difícil de ler para pessoas com baixa visão.
+        </div>
+
+        <!-- Seção 1: Imagens sem alt text -->
+        <div class="section">
+            <h3>Seção 1: Imagens</h3>
+            
+            <div class="image-section">
+                <p>Imagem sem alt text:</p>
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%23ddd' width='200' height='150'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23999' font-size='14'%3EImagem de Exemplo%3C/text%3E%3C/svg%3E">
+            </div>
+
+            <div class="image-section">
+                <p>Imagem com alt text muito curto:</p>
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='150'%3E%3Crect fill='%23ddd' width='200' height='150'/%3E%3Ctext x='50%' y='50%' text-anchor='middle' dy='.3em' fill='%23999' font-size='14'%3EOutra Imagem%3C/text%3E%3C/svg%3E" alt="Foto">
+            </div>
+
+            <div class="image-section">
+                <p>Logotipo do evento <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Crect fill='%23cce' width='120' height='60'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23333' font-size='14'%3ELogotipo do evento%3C/text%3E%3C/svg%3E" alt="Logotipo do evento"></p>
+            </div>
+        </div>
+
+        <!-- Seção 2: Links genéricos -->
+        <div class="section">
+            <h3>Seção 2: Links</h3>
+            <p>Links com texto genérico:</p>
+            <ul>
+                <li><a href="#" class="generic-link">clique aqui</a> para saber mais</li>
+                <li><a href="#" class="generic-link">leia mais</a> sobre este tópico</li>
+                <li><a href="#" class="generic-link">saiba mais</a> informações</li>
+            </ul>
+        </div>
+
+        <!-- Seção 3: Formulário sem labels -->
+        <div class="section">
+            <h3>Seção 3: Formulário</h3>
+            <form class="form-section">
+                <p>Formulário com campos sem labels associados:</p>
+                <input type="text" placeholder="Nome completo">
+                <input type="email" placeholder="E-mail">
+                <textarea placeholder="Mensagem" rows="4"></textarea>
+                <button type="submit">Enviar</button>
+            </form>
+        </div>
+
+        <!-- Seção 4: Tabela sem estrutura semântica -->
+        <div class="section">
+            <h3>Seção 4: Tabela</h3>
+            <table>
+                <tr>
+                    <td>Nome</td>
+                    <td>Idade</td>
+                    <td>Cidade</td>
+                </tr>
+                <tr>
+                    <td>João</td>
+                    <td>25</td>
+                    <td>São Paulo</td>
+                </tr>
+                <tr>
+                    <td>Maria</td>
+                    <td>30</td>
+                    <td>Rio de Janeiro</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h3>Seção 5: Alertas de Legibilidade</h3>
+            <p class="justified-sample">Este é um bloco propositalmente muito longo para disparar o alerta de texto justificado no plugin. O objetivo aqui é reproduzir um cenário em que um parágrafo extenso foi configurado com alinhamento totalmente justificado, criando espaçamentos irregulares entre palavras, rios de branco e piorando a leitura para pessoas com baixa visão, dislexia ou dificuldades cognitivas. Como o algoritmo desejado considera elementos do tipo parágrafo, divisão ou célula de tabela com mais de quinhentos caracteres e text-align: justify, este texto continua se estendendo com conteúdo repetido para ultrapassar com folga esse limiar, permitindo validar que a correção automática remove o alinhamento justificado e retorna o texto para uma apresentação mais estável e previsível na tela.</p>
+            <p title="Saiba mais sobre acessibilidade">Saiba mais sobre acessibilidade</p>
+            <p class="tiny-text">Este texto está propositalmente pequeno demais para validar o aumento automático para 14px.</p>
+            <div class="hidden-alert" aria-hidden="true">Este conteúdo está com aria-hidden e deve voltar a ficar perceptível após aplicar as correções.</div>
+        </div>
+
+        <!-- Seção 6: Estrutura de títulos ruim -->
+        <div class="section">
+            <h5>Subtítulo (H5)</h5>
+            <p>Observe que pulamos de H3 para H5, violando a hierarquia de títulos.</p>
+            
+            <h3>Voltando para H3</h3>
+            <p>Isto viola as regras de estrutura semântica.</p>
+        </div>
+
+        <!-- Seção 7: Elemento interativo sem role -->
+        <div class="section">
+            <h3>Seção 5: Elementos Interativos</h3>
+            <div onclick="alert('Clicado!')" style="
+                background: #0066cc;
+                color: white;
+                padding: 15px;
+                border-radius: 4px;
+                cursor: pointer;
+                display: inline-block;
+            ">
+                Clique aqui (Div com onclick)
+            </div>
+            <p style="margin-top: 15px;">Este é um div com onclick, não um botão semântico.</p>
+        </div>
+
+        <!-- Seção 8: Informações úteis -->
+        <div class="section">
+            <h3>Problemas Identificados Nesta Página</h3>
+            <div class="info-box">
+                <strong>Este página contém propositalmente os seguintes problemas de acessibilidade:</strong>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>❌ Sem H1 (título principal)</li>
+                    <li>❌ Estrutura de títulos ruim (H3 → H5)</li>
+                    <li>❌ Imagens sem alt text</li>
+                    <li>❌ Imagem com alt text muito curto</li>
+                    <li>❌ Links com texto genérico</li>
+                    <li>❌ Formulário sem labels</li>
+                    <li>❌ Tabela sem headers semânticos</li>
+                    <li>❌ Contraste de cores baixo</li>
+                    <li>❌ Texto longo justificado</li>
+                    <li>❌ Texto muito pequeno</li>
+                    <li>❌ Conteúdo com aria-hidden</li>
+                    <li>❌ Title redundante</li>
+                    <li>❌ Alt redundante com texto adjacente</li>
+                    <li>❌ Div com onclick (não semântico)</li>
+                    <li>❌ Sem indicador de foco visual</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Seção 9: Instruções de teste -->
+        <div class="section">
+            <h3>Como Testar o Plugin</h3>
+            <ol style="margin-left: 20px; margin-top: 10px;">
+                <li>Clique no ícone ♿ na barra de ferramentas</li>
+                <li>Clique em "🔍 Analisar Acessibilidade"</li>
+                <li>Aguarde a análise ser concluída</li>
+                <li>Revise os problemas encontrados</li>
+                <li>Clique em "✨ Aplicar Otimizações"</li>
+                <li>Observe as mudanças na página</li>
+            </ol>
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
+            <p>Página de teste para WCAG Accessibility Transformer Plugin</p>
+            <p>Todos os problemas aqui são intencionais para fins de demonstração.</p>
+        </div>
+    </div>
+</body>
+</html>

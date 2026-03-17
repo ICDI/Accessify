@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessify</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        body.panel-collapsed .container {
+            padding: 12px;
+        }
+
+        body.panel-collapsed .section,
+        body.panel-collapsed .settings-link,
+        body.panel-collapsed .info-box,
+        body.panel-collapsed .summary,
+        body.panel-collapsed .step-description,
+        body.panel-collapsed .toggle-label {
+            display: none !important;
+        }
+
+        body.panel-collapsed .header {
+            margin-bottom: 12px;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        body.panel-collapsed .header h1 {
+            font-size: 14px;
+        }
+
+        body.panel-collapsed .button {
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        body.panel-collapsed .section {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .collapse-button {
+            border: 1px solid #d0d7de;
+            background: white;
+            color: #333;
+            border-radius: 999px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: #1976d2;
+            margin: 0;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4CAF50;
+        }
+
+        .status-indicator.unconfigured {
+            background: #ff9800;
+        }
+
+        .status-indicator.error {
+            background: #f44336;
+        }
+
+        .status-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .section {
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .section h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .section-toggle {
+            border: 1px solid #d0d7de;
+            background: white;
+            color: #333;
+            border-radius: 6px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .section-icon {
+            font-size: 16px;
+        }
+
+        .button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .button-primary {
+            background: #1976d2;
+            color: white;
+        }
+
+        .button-primary:hover {
+            background: #1565c0;
+        }
+
+        .button-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .button-secondary:hover {
+            background: #efefef;
+        }
+
+        .button-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .button-danger:hover {
+            background: #d32f2f;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-label {
+            font-size: 13px;
+            color: #666;
+            flex: 1;
+            line-height: 1.4;
+        }
+
+        .toggle-switch {
+            position: relative;
+            flex: 0 0 auto;
+            width: 50px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+            align-self: center;
+        }
+
+        .toggle-switch.active {
+            background: #4CAF50;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 28px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #1976d2;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #1565c0;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .info-box.warning {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+            color: #e65100;
+        }
+
+        .info-box.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+            color: #c62828;
+        }
+
+        .progress-container {
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1976d2;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .processing-time {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #555;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .settings-link {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .settings-link a {
+            color: #1976d2;
+            text-decoration: none;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .settings-link a:hover {
+            text-decoration: underline;
+        }
+
+        .summary {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .summary-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .summary-label {
+            color: #666;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #1976d2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .step-item {
+            padding: 10px;
+            background: #f9f9f9;
+            border-left: 3px solid #ccc;
+            margin-bottom: 8px;
+            border-radius: 2px;
+            font-size: 12px;
+        }
+
+        .step-item.active {
+            border-left-color: #1976d2;
+            background: #e3f2fd;
+        }
+
+        .step-item.completed {
+            border-left-color: #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .step-description {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .report-status {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .report-status.processing {
+            color: #1565c0;
+        }
+
+        .report-status.success {
+            color: #2e7d32;
+        }
+
+        .report-status.error {
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-main">
+                <div>
+                    <h1>Accessify</h1>
+                    <div class="status-text" id="status-text">Verificando configuração...</div>
+                </div>
+            </div>
+            <button class="collapse-button" id="collapse-toggle" type="button" aria-label="Colapsar painel" title="Colapsar painel">◂</button>
+        </div>
+
+        <!-- Status Section -->
+        <div class="section">
+            <div class="toggle-container">
+                <span class="toggle-label">Aplicar melhorias automaticamente ao carregar páginas</span>
+                <div class="toggle-switch" id="auto-optimize-toggle"></div>
+            </div>
+            <div class="info-box" id="status-info">
+                Carregando status...
+            </div>
+        </div>
+
+        <!-- Main Action Section -->
+        <div class="section" id="main-section">
+            <button class="button button-primary" id="analyze-btn">
+                <span class="section-icon">🔍</span>
+                Analisar Acessibilidade
+            </button>
+            <div class="info-box" style="margin-top: 10px;">
+                Clique para analisar a página atual e identificar problemas de acessibilidade WCAG. Se a otimização automática estiver ativada, novas páginas serão analisadas e ajustadas ao carregar. Atalhos: Alt + Shift + A para analisar e Alt + Shift + O para ligar ou desligar a aplicação automática.
+            </div>
+        </div>
+
+        <!-- Progress Section (Hidden by default) -->
+        <div class="section" id="progress-section" style="display: none;">
+            <h2><span class="section-icon">⟳</span> Processando...</h2>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-text" id="progress-text">Iniciando análise...</div>
+                <div class="processing-time" id="processing-time" style="display: none;">Tempo de processamento: --</div>
+            </div>
+            <div id="steps-container" style="margin-top: 15px;"></div>
+            <button class="button button-secondary" id="restart-analysis-btn" style="margin-top: 12px;">
+                <span class="section-icon">↻</span>
+                Reiniciar Análise
+            </button>
+        </div>
+
+        <!-- Results Section (Hidden by default) -->
+        <div class="section" id="results-section" style="display: none;">
+            <h2><span class="section-icon">✓</span> Análise Completa</h2>
+            <div class="summary" id="results-summary"></div>
+            <button class="button button-primary" id="apply-optimizations-btn" style="margin-top: 15px;">
+                <span class="section-icon">✨</span>
+                Aplicar Otimizações
+            </button>
+            <button class="button button-secondary" id="new-analysis-btn" style="margin-top: 10px;">
+                <span class="section-icon">🔄</span>
+                Nova Análise
+            </button>
+        </div>
+
+        <div class="section" id="report-section" style="display: none;">
+            <div class="section-header">
+                <h2><span class="section-icon">🧾</span> Relatório da Execução</h2>
+                <button class="section-toggle" id="report-toggle" type="button">Ocultar</button>
+            </div>
+            <div id="report-body">
+                <div class="report-status" id="report-status"></div>
+                <div class="summary" id="report-summary"></div>
+                <div id="report-steps" style="margin-top: 12px;"></div>
+            </div>
+        </div>
+
+        <!-- Settings Link -->
+        <div class="settings-link">
+            <a id="settings-link">⚙️ Configurações</a>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+================================================================================
+WCAG ACCESSIBILITY TRANSFORMER - PLUGIN CHROME
+================================================================================
+
+VERSÃO: 1.0.0
+DATA: Março 2026
+STATUS: Pronto para instalação
+
+================================================================================
+DESCRIÇÃO DO PROJETO
+================================================================================
+
+Um plugin poderoso do Google Chrome que transforma páginas web em acessíveis
+seguindo as diretrizes WCAG 2.1, com foco especial em usuários cegos ou de
+baixa visão.
+
+O plugin utiliza inteligência artificial (OpenRouter) para analisar páginas,
+gerar textos alternativos para imagens e recomendar otimizações de acessibilidade.
+
+================================================================================
+ARQUIVOS DO PROJETO
+================================================================================
+
+Estrutura do Diretório:
+├── manifest.json              Configuração do plugin Chrome
+├── background.js              Service worker (integração com API)
+├── content.js                 Content script (análise na página)
+├── wcag-evaluator.js          Avaliador WCAG (integrado em content.js)
+├── popup.html                 Interface do popup
+├── popup.js                   Lógica do popup
+├── options.html               Página de configurações
+├── options.js                 Lógica das configurações
+├── test-page.html             Página de teste com 10 problemas
+├── icons/                     Ícones do plugin
+│   ├── icon-16.png
+│   ├── icon-48.png
+│   └── icon-128.png
+├── README.md                  Documentação principal
+├── INSTALLATION.md            Guia de instalação
+├── TECHNICAL.md               Documentação técnica
+├── VALIDATION.md              Checklist de validação
+└── PROJECT_SUMMARY.txt        Este arquivo
+
+================================================================================
+FUNCIONALIDADES PRINCIPAIS
+================================================================================
+
+1. ANÁLISE WCAG AUTOMÁTICA
+   - Avalia conformidade com WCAG 2.1 (Nível A e AA)
+   - Identifica 10+ critérios de acessibilidade
+   - Classifica problemas como críticos ou avisos
+
+2. GERAÇÃO DE ALT TEXT COM IA
+   - Usa OpenRouter para análise de imagens
+   - Gera descrições automáticas e descritivas
+   - Suporta múltiplas imagens
+
+3. OTIMIZAÇÕES INTELIGENTES
+   - Melhora estrutura HTML semântica
+   - Otimiza contraste de cores
+   - Adiciona ARIA labels apropriados
+   - Garante navegação por teclado
+
+4. INTERFACE AMIGÁVEL
+   - Mostra etapas de otimização em tempo real
+   - Permite revisar mudanças antes de aplicar
+   - Suporta otimização automática
+   - Painel de configurações intuitivo
+
+================================================================================
+CRITÉRIOS WCAG AVALIADOS
+================================================================================
+
+NÍVEL A (Essencial):
+- 1.1.1 Alternativas de Texto
+- 1.3.1 Informações e Relações
+- 2.1.1 Teclado
+- 2.4.2 Título da Página
+- 2.4.4 Propósito do Link
+- 3.1.1 Idioma da Página
+
+NÍVEL AA (Melhorado):
+- 1.4.3 Contraste (Mínimo)
+- 2.4.7 Foco Visível
+
+================================================================================
+REQUISITOS
+================================================================================
+
+TÉCNICOS:
+- Google Chrome 88+
+- Conexão com internet
+- JavaScript ativado
+
+EXTERNOS:
+- Chave de API do OpenRouter (gratuita em https://openrouter.io)
+
+================================================================================
+INSTALAÇÃO RÁPIDA
+================================================================================
+
+1. Abra chrome://extensions/
+2. Ative "Modo de desenvolvedor"
+3. Clique em "Carregar extensão não empacotada"
+4. Selecione a pasta do plugin
+5. Acesse as configurações e insira sua chave de API OpenRouter
+6. Pronto! Clique no ícone ♿ para começar
+
+Para instruções detalhadas, veja INSTALLATION.md
+
+================================================================================
+COMO USAR
+================================================================================
+
+ANÁLISE MANUAL:
+1. Navegue até uma página web
+2. Clique no ícone ♿ na barra de ferramentas
+3. Clique em "Analisar Acessibilidade"
+4. Revise os problemas encontrados
+5. Clique em "Aplicar Otimizações"
+
+OTIMIZAÇÃO AUTOMÁTICA:
+1. Acesse as configurações do plugin
+2. Ative "Otimizar automaticamente todas as páginas"
+3. O plugin analisará cada página visitada
+
+================================================================================
+ARQUITETURA
+================================================================================
+
+O plugin é estruturado em 3 camadas:
+
+1. CONTENT SCRIPT (content.js)
+   - Executa no contexto da página
+   - Avalia conformidade WCAG localmente
+   - Aplica otimizações à página
+
+2. BACKGROUND SERVICE WORKER (background.js)
+   - Gerencia integração com OpenRouter
+   - Armazena configurações
+   - Comunica com popup e content script
+
+3. INTERFACE DO USUÁRIO
+   - Popup: Interface principal
+   - Options: Página de configurações
+
+Fluxo de Dados:
+Página → Content Script → Background → OpenRouter API → Recomendações
+
+================================================================================
+INTEGRAÇÃO COM OPENROUTER
+================================================================================
+
+API ENDPOINT: https://openrouter.io/api/v1/chat/completions
+
+MODELOS DISPONÍVEIS:
+- Auto (Recomendado) - OpenRouter escolhe o melhor
+- GPT-4 Turbo - Mais avançado
+- GPT-3.5 Turbo - Rápido e econômico
+- Claude 3 Opus - Poderoso
+- Mistral Large - Código aberto
+
+SEGURANÇA:
+- Chave de API armazenada localmente
+- Nunca enviada para servidores não autorizados
+- Conteúdo da página processado apenas para otimização
+
+================================================================================
+TESTES
+================================================================================
+
+PÁGINA DE TESTE:
+- test-page.html contém 10 problemas intencionais
+- Útil para validar funcionalidade
+
+FERRAMENTAS RECOMENDADAS:
+- WAVE (WebAIM) - Análise de acessibilidade
+- Axe DevTools - Auditoria de acessibilidade
+- Lighthouse - Auditoria do Chrome
+- NVDA - Leitor de tela (Windows/Linux)
+- JAWS - Leitor de tela (Windows)
+- VoiceOver - Leitor de tela (macOS/iOS)
+
+================================================================================
+DOCUMENTAÇÃO
+================================================================================
+
+README.md
+  - Visão geral do projeto
+  - Funcionalidades principais
+  - Exemplos de uso
+
+INSTALLATION.md
+  - Guia passo a passo de instalação
+  - Obtenção de chave de API
+  - Solução de problemas
+
+TECHNICAL.md
+  - Arquitetura do plugin
+  - Descrição de componentes
+  - Fluxo de dados
+  - Integração com OpenRouter
+
+VALIDATION.md
+  - Checklist de validação
+  - Testes de funcionalidade
+  - Testes de compatibilidade
+  - Testes de segurança
+
+================================================================================
+SUPORTE E CONTRIBUIÇÕES
+================================================================================
+
+REPORTAR BUGS:
+- Abra uma issue no repositório GitHub
+- Descreva o problema detalhadamente
+- Inclua screenshots se possível
+
+SUGERIR MELHORIAS:
+- Abra uma issue com tag "enhancement"
+- Descreva a melhoria desejada
+- Explique o benefício
+
+CONTRIBUIR:
+1. Fork o repositório
+2. Crie uma branch para sua feature
+3. Commit suas mudanças
+4. Push para a branch
+5. Abra um Pull Request
+
+================================================================================
+LICENÇA
+================================================================================
+
+MIT License - Veja LICENSE para detalhes
+
+================================================================================
+CONTATO E RECURSOS
+================================================================================
+
+WCAG 2.1 Guidelines: https://www.w3.org/WAI/standards-guidelines/wcag/
+Web Accessibility Initiative: https://www.w3.org/WAI/
+OpenRouter: https://openrouter.ai
+Chrome Extensions: https://developer.chrome.com/docs/extensions/
+
+================================================================================
+NOTAS IMPORTANTES
+================================================================================
+
+1. Este plugin é fornecido "como está"
+2. Sempre revise as mudanças antes de aplicar em produção
+3. Recomenda-se testar com usuários reais e ferramentas profissionais
+4. Não substitui uma auditoria profissional de acessibilidade
+5. Custos de API podem variar conforme uso
+
+================================================================================
+PRÓXIMAS ETAPAS
+================================================================================
+
+APÓS INSTALAR:
+1. Configure sua chave de API OpenRouter
+2. Teste em 2-3 páginas diferentes
+3. Revise as recomendações geradas
+4. Aplique as otimizações
+5. Teste com um leitor de tela
+
+PARA PRODUÇÃO:
+1. Exporte as recomendações
+2. Implemente manualmente no código-fonte
+3. Teste com usuários reais
+4. Valide com ferramentas profissionais (WAVE, Axe)
+5. Documente as mudanças
+
+================================================================================
+VERSÃO E HISTÓRICO
+================================================================================
+
+v1.0.0 (Março 2026)
+- Lançamento inicial
+- Suporte para WCAG 2.1 Nível A e AA
+- Integração com OpenRouter
+- Interface completa
+- Documentação abrangente
+
+================================================================================
+DESENVOLVIDO COM ❤️ PARA TORNAR A WEB MAIS ACESSÍVEL PARA TODOS
+================================================================================
