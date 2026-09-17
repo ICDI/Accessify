@@ -12,6 +12,7 @@ class PopupController {
     this.jobState = null;
     this.pollingId = null;
     this.reportCollapsed = false;
+    this.dismissedErrorKey = null;
     this.init();
   }
 
@@ -57,7 +58,7 @@ class PopupController {
         return;
       }
 
-      if (changes.selectedModel || changes.apiKey) {
+      if (changes.selectedModel || changes.apiKey || changes.provider || changes.localModel) {
         this.checkConfiguration();
       }
 
@@ -146,6 +147,7 @@ class PopupController {
     }
 
     if (job.status === 'running') {
+      this.dismissedErrorKey = null;
       this.analysisResult = job.analysisResult;
       this.imageAltResults = job.imageAltResults || [];
       this.showProgressSection();
@@ -157,6 +159,7 @@ class PopupController {
     }
 
     if (job.status === 'completed' && job.analysisResult) {
+      this.dismissedErrorKey = null;
       this.analysisResult = job.analysisResult;
       this.imageAltResults = job.imageAltResults || [];
       this.optimizations = this.combineOptimizations(job.optimizations, this.imageAltResults);
@@ -167,6 +170,12 @@ class PopupController {
     }
 
     if (job.status === 'error') {
+      const errorKey = `${job.runId || ''}:${job.error || ''}`;
+      if (this.dismissedErrorKey && errorKey === this.dismissedErrorKey) {
+        return;
+      }
+
+      this.dismissedErrorKey = null;
       this.updateProcessingTime(job);
       this.showError(`Erro: ${job.error || 'Falha desconhecida'}`);
     }
@@ -192,16 +201,8 @@ class PopupController {
     });
   }
 
-  getModelDisplayName(modelId) {
-    const modelNames = {
-      'openai/gpt-5-nano': 'OpenAI GPT-5 Nano',
-      'moonshotai/kimi-k2.5': 'MoonshotAI Kimi K2.5',
-      'qwen/qwen3.5-flash-02-23': 'Qwen 3.5 Flash',
-      'google/gemini-3.1-flash-lite-preview': 'Google Gemini 3.1 Flash Lite',
-      'x-ai/grok-4.1-fast': 'X.AI Grok 4.1 Fast'
-    };
-
-    return modelNames[modelId] || modelId || 'Modelo não definido';
+  getModelDisplayName(modelId, provider, localModel) {
+    return globalThis.getModelDisplayName(modelId, provider, localModel);
   }
 
   /**
@@ -212,10 +213,19 @@ class PopupController {
       const statusInfo = document.getElementById('status-info');
       const analyzeBtn = document.getElementById('analyze-btn');
 
+      if (!response) {
+        return;
+      }
+
       if (response.isConfigured) {
-        statusInfo.innerHTML = `✓ Modelo configurado: <strong>${this.getModelDisplayName(response.selectedModel)}</strong>`;
+        const label = response.displayName || this.getModelDisplayName(response.selectedModel, response.provider, response.localModel);
+        statusInfo.innerHTML = `✓ Modelo configurado: <strong>${label}</strong>`;
         statusInfo.className = 'info-box';
         analyzeBtn.disabled = false;
+      } else if (response.provider === 'local') {
+        statusInfo.innerHTML = `⚠️ Ollama local não configurado. Clique em "Configurações" para definir a URL e o modelo.`;
+        statusInfo.className = 'info-box warning';
+        analyzeBtn.disabled = true;
       } else {
         statusInfo.innerHTML = `⚠️ API não configurada. Clique em "Configurações" para adicionar sua chave de API do OpenRouter.`;
         statusInfo.className = 'info-box warning';
@@ -257,6 +267,8 @@ class PopupController {
       return;
     }
 
+    this.dismissCurrentError();
+    this.restoreStatusInfo();
     this.showProgressSection();
     this.updateProgress('Analisando página...', 10);
     this.steps = [];
@@ -503,6 +515,7 @@ class PopupController {
    * Mostra seção de progresso
    */
   showProgressSection() {
+    this.restoreStatusInfo();
     document.getElementById('main-section').style.display = 'none';
     document.getElementById('progress-section').style.display = 'block';
     document.getElementById('results-section').style.display = 'none';
@@ -752,9 +765,33 @@ class PopupController {
   }
 
   /**
+   * Evita que o polling reexiba o erro antigo após um novo clique em analisar.
+   */
+  dismissCurrentError() {
+    const job = this.jobState;
+    if (job?.status === 'error') {
+      this.dismissedErrorKey = `${job.runId || ''}:${job.error || ''}`;
+    }
+  }
+
+  /**
+   * Remove a caixa vermelha e volta o status de configuração.
+   */
+  restoreStatusInfo() {
+    const statusInfo = document.getElementById('status-info');
+    if (statusInfo?.classList.contains('error')) {
+      statusInfo.className = 'info-box';
+      statusInfo.textContent = 'Carregando status...';
+      this.checkConfiguration();
+    }
+  }
+
+  /**
    * Reseta UI
    */
   resetUI() {
+    this.dismissedErrorKey = null;
+    this.restoreStatusInfo();
     document.getElementById('main-section').style.display = 'block';
     document.getElementById('progress-section').style.display = 'none';
     document.getElementById('results-section').style.display = 'none';

@@ -1,1055 +1,6 @@
 /**
- * WCAG Accessibility Evaluator
- * Avalia a página contra as diretrizes WCAG 2.1
- */
-
-class WCAGEvaluator {
-  constructor() {
-    this.issues = [];
-    this.wcagCriteria = {
-      'text-alternatives': {
-        name: 'Alternativas de Texto',
-        level: 'A',
-        criterion: '1.1.1',
-        description: 'Imagens devem ter alternativas de texto'
-      },
-      'color-contrast': {
-        name: 'Contraste de Cores',
-        level: 'AA',
-        criterion: '1.4.3',
-        description: 'Texto deve ter contraste mínimo de 4.5:1'
-      },
-      'readability-alerts': {
-        name: 'Alertas de Legibilidade',
-        level: 'Advisory',
-        criterion: 'Advisory',
-        description: 'Evita padrões que reduzem legibilidade ou repetem informação'
-      },
-      'page-regions': {
-        name: 'Regiões da Página',
-        level: 'A',
-        criterion: '1.3.1',
-        description: 'A página deve expor regiões e landmarks semânticos'
-      },
-      'aria-hidden': {
-        name: 'ARIA Hidden',
-        level: 'A',
-        criterion: '4.1.2',
-        description: 'Conteúdo oculto com aria-hidden deve ser intencional e seguro'
-      },
-      'aria-references': {
-        name: 'Referências ARIA',
-        level: 'A',
-        criterion: '4.1.2',
-        description: 'Referências aria-labelledby e aria-describedby devem apontar para elementos existentes'
-      },
-      'heading-structure': {
-        name: 'Estrutura de Títulos',
-        level: 'A',
-        criterion: '1.3.1',
-        description: 'Títulos devem estar em ordem hierárquica'
-      },
-      'form-labels': {
-        name: 'Rótulos de Formulário',
-        level: 'A',
-        criterion: '1.3.1',
-        description: 'Campos de formulário devem ter rótulos associados'
-      },
-      'link-text': {
-        name: 'Texto do Link',
-        level: 'A',
-        criterion: '2.4.4',
-        description: 'Links devem ter texto descritivo'
-      },
-      'keyboard-navigation': {
-        name: 'Navegação por Teclado',
-        level: 'A',
-        criterion: '2.1.1',
-        description: 'Todos os elementos devem ser acessíveis por teclado'
-      },
-      'focus-indicator': {
-        name: 'Indicador de Foco',
-        level: 'AA',
-        criterion: '2.4.7',
-        description: 'Elementos focáveis devem ter indicador visual'
-      },
-      'semantic-html': {
-        name: 'HTML Semântico',
-        level: 'A',
-        criterion: '1.3.1',
-        description: 'Deve usar elementos semânticos apropriados'
-      },
-      'language-declaration': {
-        name: 'Declaração de Idioma',
-        level: 'A',
-        criterion: '3.1.1',
-        description: 'Página deve declarar o idioma principal'
-      },
-      'page-title': {
-        name: 'Título da Página',
-        level: 'A',
-        criterion: '2.4.2',
-        description: 'Página deve ter um título descritivo'
-      }
-    };
-  }
-
-  evaluate() {
-    this.issues = [];
-    this.evaluateImages();
-    this.evaluateHeadings();
-    this.evaluateForms();
-    this.evaluateLinks();
-    this.evaluateButtons();
-    this.evaluateTitleAttributes();
-    this.evaluateColorContrast();
-    this.evaluateTextPresentation();
-    this.evaluatePageRegions();
-    this.evaluateSemanticHTML();
-    this.evaluateAriaHidden();
-    this.evaluateAriaReferences();
-    this.evaluateLanguage();
-    this.evaluatePageTitle();
-    this.evaluateKeyboardNavigation();
-    this.evaluateFocusIndicators();
-    return this.issues;
-  }
-
-  evaluateImages() {
-    const images = document.querySelectorAll('img');
-    images.forEach((img, index) => {
-      const hasAltAttribute = img.hasAttribute('alt');
-      const alt = img.getAttribute('alt');
-      const normalizedAlt = typeof alt === 'string' ? alt.trim() : '';
-
-      if (!hasAltAttribute) {
-        if (this.isSpacerImage(img)) {
-          this.issues.push({
-            type: 'spacer-image-missing-alt',
-            element: img,
-            index,
-            severity: 'warning',
-            criterion: this.wcagCriteria['text-alternatives'],
-            message: `Imagem espaçadora ${index + 1} sem alt vazio`,
-            element_html: img.outerHTML.substring(0, 100),
-            requires_llm: false,
-            image_src: img.src
-          });
-          return;
-        }
-
-        this.issues.push({
-          type: 'image-missing-alt',
-          element: img,
-          severity: 'critical',
-          criterion: this.wcagCriteria['text-alternatives'],
-          message: `Imagem ${index + 1} não possui texto alternativo`,
-          element_html: img.outerHTML.substring(0, 100),
-          requires_llm: true,
-          image_src: img.src
-        });
-      } else if (normalizedAlt.length > 100) {
-        this.issues.push({
-          type: 'image-alt-too-long',
-          element: img,
-          severity: 'warning',
-          criterion: this.wcagCriteria['text-alternatives'],
-          message: `Alt text da imagem é muito longo (${normalizedAlt.length} caracteres)`,
-          element_html: img.outerHTML.substring(0, 100),
-          requires_llm: true,
-          image_src: img.src
-        });
-      } else if (normalizedAlt.length > 0 && normalizedAlt.length < 5) {
-        this.issues.push({
-          type: 'image-alt-too-short',
-          element: img,
-          severity: 'warning',
-          criterion: this.wcagCriteria['text-alternatives'],
-          message: `Alt text da imagem é muito curto: "${normalizedAlt}"`,
-          element_html: img.outerHTML.substring(0, 100),
-          requires_llm: true,
-          image_src: img.src
-        });
-      }
-
-      if (normalizedAlt.length > 0) {
-        const adjacentText = this.getRedundantAdjacentText(img, normalizedAlt);
-
-        if (adjacentText) {
-          this.issues.push({
-            type: 'redundant-image-alt',
-            element: img,
-            index,
-            severity: 'warning',
-            criterion: this.wcagCriteria['text-alternatives'],
-            message: `Alt text da imagem repete o texto adjacente: "${normalizedAlt}"`,
-            element_html: img.outerHTML.substring(0, 100),
-            requires_llm: false,
-            image_src: img.src,
-            alt_text: normalizedAlt,
-            adjacent_text: adjacentText
-          });
-        }
-      }
-    });
-  }
-
-  evaluateHeadings() {
-    const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-    let lastLevel = 0;
-    let h1Count = 0;
-    if (headings.length === 0) {
-      this.issues.push({
-        type: 'no-headings',
-        severity: 'warning',
-        criterion: this.wcagCriteria['heading-structure'],
-        message: 'Página não possui títulos estruturados',
-        requires_llm: false
-      });
-      return;
-    }
-    headings.forEach((heading, index) => {
-      const level = parseInt(heading.tagName[1]);
-
-      if (this.isHeadingEmpty(heading)) {
-        this.issues.push({
-          type: 'empty-heading',
-          element: heading,
-          severity: 'critical',
-          criterion: this.wcagCriteria['heading-structure'],
-          message: `Título ${heading.tagName} sem conteúdo informativo`,
-          element_html: heading.outerHTML.substring(0, 100),
-          requires_llm: false
-        });
-      }
-
-      if (level === 1) h1Count++;
-      if (index === 0 && level !== 1) {
-        this.issues.push({
-          type: 'heading-structure-invalid',
-          element: heading,
-          severity: 'warning',
-          criterion: this.wcagCriteria['heading-structure'],
-          message: 'Primeira estrutura de título deve ser H1',
-          element_html: heading.outerHTML.substring(0, 100),
-          requires_llm: false
-        });
-      }
-      if (level - lastLevel > 1 && index > 0) {
-        this.issues.push({
-          type: 'heading-level-skip',
-          element: heading,
-          severity: 'warning',
-          criterion: this.wcagCriteria['heading-structure'],
-          message: `Salto de nível de título: de H${lastLevel} para H${level}`,
-          element_html: heading.outerHTML.substring(0, 100),
-          requires_llm: false
-        });
-      }
-      lastLevel = level;
-    });
-    if (h1Count === 0) {
-      this.issues.push({
-        type: 'no-h1',
-        severity: 'critical',
-        criterion: this.wcagCriteria['heading-structure'],
-        message: 'Página deve ter pelo menos um H1',
-        requires_llm: false
-      });
-    }
-  }
-
-  evaluateForms() {
-    const inputs = document.querySelectorAll('input, textarea, select');
-    inputs.forEach((input) => {
-      if (this.shouldIgnoreFormControl(input)) {
-        return;
-      }
-
-      if (!this.hasAccessibleFormLabel(input)) {
-        this.issues.push({
-          type: 'form-field-no-label',
-          element: input,
-          severity: 'critical',
-          criterion: this.wcagCriteria['form-labels'],
-          message: `Campo de formulário sem rótulo associado`,
-          element_html: input.outerHTML.substring(0, 100),
-          requires_llm: false
-        });
-      }
-    });
-  }
-
-  evaluateLinks() {
-    const links = document.querySelectorAll('a[href]');
-    links.forEach((link) => {
-      const text = this.getAccessibleLinkText(link);
-      const hasImageWithoutAlt = this.hasLinkedImageMissingAlt(link);
-
-      if (!text && hasImageWithoutAlt) {
-        this.issues.push({
-          type: 'linked-image-missing-alt',
-          element: link,
-          severity: 'critical',
-          criterion: this.wcagCriteria['link-text'],
-          message: 'Imagem linkada sem texto alternativo descritivo',
-          element_html: link.outerHTML.substring(0, 100),
-          requires_llm: false
-        });
-      }
-
-      if (!text) {
-        this.issues.push({
-          type: 'link-no-text',
-          element: link,
-          severity: 'critical',
-          criterion: this.wcagCriteria['link-text'],
-          message: 'Link sem texto descritivo',
-          element_html: link.outerHTML.substring(0, 100),
-          requires_llm: false
-        });
-        return;
-      }
-
-      if (text && (text === 'clique aqui' || text === 'leia mais' || text === 'saiba mais')) {
-        this.issues.push({
-          type: 'link-generic-text',
-          element: link,
-          severity: 'warning',
-          criterion: this.wcagCriteria['link-text'],
-          message: `Link com texto genérico: "${text}"`,
-          element_html: link.outerHTML.substring(0, 100),
-          requires_llm: true
-        });
-      }
-    });
-  }
-
-  evaluateButtons() {
-    const buttons = document.querySelectorAll('button, input[type="submit"], input[type="button"], input[type="reset"]');
-
-    buttons.forEach((button, index) => {
-      if (this.isEmptyButton(button)) {
-        this.issues.push({
-          type: 'empty-button',
-          element: button,
-          severity: 'critical',
-          criterion: this.wcagCriteria['link-text'],
-          message: `Botão ${index + 1} sem texto descritivo`,
-          element_html: button.outerHTML.substring(0, 100),
-          requires_llm: false
-        });
-      }
-    });
-  }
-
-  evaluateTitleAttributes() {
-    const elements = document.querySelectorAll('[title]');
-
-    elements.forEach((element) => {
-      const title = element.getAttribute('title');
-      const normalizedTitle = this.normalizeComparableText(title);
-
-      if (!normalizedTitle) {
-        return;
-      }
-
-      const comparisonText = this.getTitleComparisonText(element);
-      const normalizedComparison = this.normalizeComparableText(comparisonText);
-
-      if (normalizedComparison && normalizedComparison === normalizedTitle) {
-        this.issues.push({
-          type: 'redundant-title-text',
-          element,
-          severity: 'warning',
-          criterion: this.wcagCriteria['readability-alerts'],
-          message: `Title redundante repete o texto disponível: "${title.trim()}"`,
-          element_html: element.outerHTML.substring(0, 100),
-          requires_llm: false,
-          title_attribute: title.trim(),
-          element_text: comparisonText.trim()
-        });
-      }
-    });
-  }
-
-  evaluateTextPresentation() {
-    const elements = document.querySelectorAll('p, div, td, span, li, a, button, label, small');
-
-    elements.forEach((element) => {
-      if (!this.isVisible(element)) {
-        return;
-      }
-
-      const textContent = this.getRelevantElementText(element);
-      if (textContent.length === 0) {
-        return;
-      }
-
-      const style = window.getComputedStyle(element);
-      const fontSize = this.parsePixelValue(style.fontSize);
-
-      if (Number.isFinite(fontSize) && fontSize < 14) {
-        this.issues.push({
-          type: 'small-text',
-          element,
-          severity: 'warning',
-          criterion: this.wcagCriteria['readability-alerts'],
-          message: `Texto muito pequeno (${style.fontSize})`,
-          element_html: element.outerHTML.substring(0, 100),
-          requires_llm: false,
-          font_size: style.fontSize,
-          text_content: textContent.slice(0, 160)
-        });
-      }
-
-      if (textContent.length <= 500) {
-        return;
-      }
-
-      if (style.textAlign === 'justify') {
-        this.issues.push({
-          type: 'justified-text',
-          element,
-          severity: 'warning',
-          criterion: this.wcagCriteria['readability-alerts'],
-          message: `Bloco longo com texto justificado (${textContent.length} caracteres)`,
-          element_html: element.outerHTML.substring(0, 100),
-          requires_llm: false,
-          character_count: textContent.length,
-          text_align: style.textAlign
-        });
-      }
-    });
-  }
-
-  evaluateColorContrast() {
-    const elements = document.querySelectorAll('*');
-    let checkedCount = 0;
-    elements.forEach((element) => {
-      if (checkedCount > 100) return;
-
-      if (!this.isVisible(element) || !this.hasDirectTextContent(element)) {
-        return;
-      }
-
-      const style = window.getComputedStyle(element);
-      const color = style.color;
-      const bgColor = this.getEffectiveBackgroundColor(element);
-      const contrast = this.calculateContrast(color, bgColor);
-      const isLargeText = this.isLargeText(style);
-      const minimumContrast = isLargeText ? 3 : 4.5;
-
-      if (contrast > 0 && contrast < minimumContrast) {
-        this.issues.push({
-          type: 'low-color-contrast',
-          element: element,
-          severity: 'warning',
-          criterion: this.wcagCriteria['color-contrast'],
-          message: `Contraste baixo: ${contrast.toFixed(2)}:1 (mínimo ${minimumContrast}:1)`,
-          element_html: element.outerHTML.substring(0, 100),
-          requires_llm: true,
-          contrast_ratio: contrast,
-          minimum_contrast: minimumContrast,
-          foreground_color: color,
-          background_color: bgColor,
-          font_size: style.fontSize,
-          font_weight: style.fontWeight,
-          is_large_text: isLargeText,
-          background_image: style.backgroundImage
-        });
-      }
-
-      checkedCount++;
-    });
-  }
-
-  evaluatePageRegions() {
-    const landmarks = document.querySelectorAll(
-      'header, nav, main, footer, aside, [role="banner"], [role="navigation"], [role="main"], [role="contentinfo"], [role="complementary"], [role="search"]'
-    );
-
-    if (landmarks.length === 0) {
-      this.issues.push({
-        type: 'no-page-regions',
-        severity: 'warning',
-        criterion: this.wcagCriteria['page-regions'],
-        message: 'Página sem regiões semânticas ou landmarks ARIA',
-        requires_llm: false
-      });
-    }
-  }
-
-  evaluateAriaHidden() {
-    const hiddenElements = document.querySelectorAll('[aria-hidden="true"]');
-
-    hiddenElements.forEach((element) => {
-      const hasFocusableDescendant = !!element.querySelector(
-        'a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])'
-      );
-      const style = window.getComputedStyle(element);
-      const backgroundColor = this.getEffectiveBackgroundColor(element);
-      const minimumContrast = this.isLargeText(style) ? 3 : 4.5;
-
-      this.issues.push({
-        type: 'aria-hidden-content',
-        element,
-        severity: hasFocusableDescendant ? 'critical' : 'warning',
-        criterion: this.wcagCriteria['aria-hidden'],
-        message: hasFocusableDescendant
-          ? 'Elemento com aria-hidden contém conteúdo navegável'
-          : 'Elemento com aria-hidden="true" presente na página',
-        element_html: element.outerHTML.substring(0, 100),
-        requires_llm: false,
-        foreground_color: style.color,
-        background_color: backgroundColor,
-        font_size: style.fontSize,
-        minimum_contrast: minimumContrast
-      });
-    });
-  }
-
-  evaluateAriaReferences() {
-    const elements = document.querySelectorAll('[aria-labelledby], [aria-describedby]');
-
-    elements.forEach((element) => {
-      ['aria-labelledby', 'aria-describedby'].forEach((attributeName) => {
-        const value = element.getAttribute(attributeName);
-        if (!value) {
-          return;
-        }
-
-        const missingIds = value
-          .split(/\s+/)
-          .filter(Boolean)
-          .filter((id) => !document.getElementById(id));
-
-        if (missingIds.length > 0) {
-          this.issues.push({
-            type: 'broken-aria-reference',
-            element,
-            severity: 'critical',
-            criterion: this.wcagCriteria['aria-references'],
-            message: `${attributeName} referencia ID inexistente: ${missingIds.join(', ')}`,
-            element_html: element.outerHTML.substring(0, 100),
-            requires_llm: false
-          });
-        }
-      });
-    });
-  }
-
-  calculateContrast(color1, color2) {
-    const rgb1 = this.parseColor(color1);
-    const rgb2 = this.parseColor(color2);
-    if (!rgb1 || !rgb2) return 0;
-    const lum1 = this.getLuminance(rgb1);
-    const lum2 = this.getLuminance(rgb2);
-    const lighter = Math.max(lum1, lum2);
-    const darker = Math.min(lum1, lum2);
-    return (lighter + 0.05) / (darker + 0.05);
-  }
-
-  parseColor(color) {
-    if (typeof color !== 'string') {
-      return null;
-    }
-
-    const rgb = color.match(/\d+/g);
-    return rgb ? { r: parseInt(rgb[0]), g: parseInt(rgb[1]), b: parseInt(rgb[2]) } : null;
-  }
-
-  isVisible(element) {
-    const style = window.getComputedStyle(element);
-    return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
-  }
-
-  hasDirectTextContent(element) {
-    return Array.from(element.childNodes).some(
-      (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
-    );
-  }
-
-  isHeadingEmpty(heading) {
-    if (heading.textContent.trim().length > 0) {
-      return false;
-    }
-
-    const informativeImage = Array.from(heading.querySelectorAll('img')).some(
-      (img) => this.getImageAlternativeText(img).length > 0
-    );
-
-    return !informativeImage;
-  }
-
-  isSpacerImage(img) {
-    const width = this.getImageDimension(img, 'width');
-    const height = this.getImageDimension(img, 'height');
-    const fileName = this.getImageFileName(img.currentSrc || img.src);
-
-    return width <= 3 || height <= 3 || /^(spacer|space|blank)\b/i.test(fileName);
-  }
-
-  getImageDimension(img, dimension) {
-    const attributeValue = parseInt(img.getAttribute(dimension), 10);
-    if (Number.isFinite(attributeValue)) {
-      return attributeValue;
-    }
-
-    const renderedValue = dimension === 'width' ? img.width : img.height;
-    return Number.isFinite(renderedValue) ? renderedValue : Number.POSITIVE_INFINITY;
-  }
-
-  getImageFileName(src) {
-    if (typeof src !== 'string' || src.length === 0) {
-      return '';
-    }
-
-    if (src.startsWith('data:')) {
-      return '';
-    }
-
-    try {
-      const url = new URL(src, window.location.href);
-      const segments = url.pathname.split('/').filter(Boolean);
-      return decodeURIComponent(segments[segments.length - 1] || '');
-    } catch {
-      const segments = src.split('/').filter(Boolean);
-      return segments[segments.length - 1] || '';
-    }
-  }
-
-  getEffectiveBackgroundColor(element) {
-    let current = element;
-
-    while (current) {
-      const bgColor = window.getComputedStyle(current).backgroundColor;
-      if (this.isOpaqueColor(bgColor)) {
-        return bgColor;
-      }
-      current = current.parentElement;
-    }
-
-    return 'rgb(255, 255, 255)';
-  }
-
-  isOpaqueColor(color) {
-    if (typeof color !== 'string') {
-      return false;
-    }
-
-    if (color === 'transparent') {
-      return false;
-    }
-
-    const alphaMatch = color.match(/rgba?\([^)]*\)/);
-    if (!alphaMatch) {
-      return false;
-    }
-
-    const values = color.match(/[\d.]+/g);
-    if (!values) {
-      return false;
-    }
-
-    if (values.length < 4) {
-      return true;
-    }
-
-    return parseFloat(values[3]) > 0;
-  }
-
-  isLargeText(style) {
-    const fontSize = parseFloat(style.fontSize);
-    const fontWeight = parseInt(style.fontWeight, 10);
-    const isBold = Number.isFinite(fontWeight) ? fontWeight >= 700 : style.fontWeight === 'bold';
-
-    return fontSize >= 24 || (isBold && fontSize >= 18.66);
-  }
-
-  shouldIgnoreFormControl(input) {
-    if (input.tagName !== 'INPUT') {
-      return false;
-    }
-
-    return ['image', 'submit', 'reset', 'button', 'hidden'].includes((input.type || '').toLowerCase());
-  }
-
-  hasAccessibleFormLabel(input) {
-    const title = input.getAttribute('title');
-
-    if (typeof title === 'string' && title.trim().length > 0) {
-      return true;
-    }
-
-    if (this.hasAssociatedLabelElement(input)) {
-      return true;
-    }
-
-    return this.hasAriaLabelledByText(input);
-  }
-
-  hasAssociatedLabelElement(input) {
-    if (!input.labels || input.labels.length === 0) {
-      return false;
-    }
-
-    return Array.from(input.labels).some((label) => {
-      if (label.hidden || label.getAttribute('aria-hidden') === 'true' || !this.isVisible(label)) {
-        return false;
-      }
-
-      if (label.textContent.trim().length === 0) {
-        return false;
-      }
-
-      if (label.htmlFor) {
-        return label.htmlFor === input.id;
-      }
-
-      const nestedControls = label.querySelectorAll('input, select, textarea');
-      return nestedControls.length === 1 && nestedControls[0] === input;
-    });
-  }
-
-  hasAriaLabelledByText(input) {
-    const ariaLabelledBy = input.getAttribute('aria-labelledby');
-    if (!ariaLabelledBy) {
-      return false;
-    }
-
-    return ariaLabelledBy
-      .split(/\s+/)
-      .map((id) => document.getElementById(id))
-      .some((element) => element && this.isVisible(element) && element.textContent.trim().length > 0);
-  }
-
-  getAccessibleLinkText(link) {
-    const ariaLabel = link.getAttribute('aria-label');
-    const title = link.getAttribute('title');
-    const visibleText = link.textContent.trim();
-
-    if (typeof ariaLabel === 'string' && ariaLabel.trim().length > 0) {
-      return ariaLabel.trim();
-    }
-
-    if (visibleText.length > 0) {
-      return visibleText;
-    }
-
-    if (typeof title === 'string' && title.trim().length > 0) {
-      return title.trim();
-    }
-
-    const imageAltText = Array.from(link.querySelectorAll('img'))
-      .map((img) => this.getImageAlternativeText(img))
-      .find((text) => text.length > 0);
-
-    return imageAltText || '';
-  }
-
-  isEmptyButton(button) {
-    if (button.tagName === 'BUTTON') {
-      if (button.textContent.trim().length > 0) {
-        return false;
-      }
-
-      const informativeImage = Array.from(button.querySelectorAll('img')).some(
-        (img) => this.getImageAlternativeText(img).length > 0
-      );
-
-      return !informativeImage;
-    }
-
-    const value = button.getAttribute('value');
-    return !(typeof value === 'string' && value.trim().length > 0);
-  }
-
-  hasLinkedImageMissingAlt(link) {
-    const images = Array.from(link.querySelectorAll('img'));
-    if (images.length === 0) {
-      return false;
-    }
-
-    return images.every((img) => this.getImageAlternativeText(img).length === 0 || this.isAriaHidden(img));
-  }
-
-  getImageAlternativeText(img) {
-    if (!img.hasAttribute('alt')) {
-      return '';
-    }
-
-    const alt = img.getAttribute('alt');
-    return typeof alt === 'string' ? alt.trim() : '';
-  }
-
-  normalizeComparableText(value) {
-    if (typeof value !== 'string') {
-      return '';
-    }
-
-    return value.replace(/\s+/g, ' ').trim().toLowerCase();
-  }
-
-  parsePixelValue(value) {
-    if (typeof value !== 'string') {
-      return Number.NaN;
-    }
-
-    const match = value.match(/[\d.]+/);
-    return match ? parseFloat(match[0]) : Number.NaN;
-  }
-
-  getRedundantAdjacentText(img, altText) {
-    const normalizedAlt = this.normalizeComparableText(altText);
-    if (!normalizedAlt) {
-      return null;
-    }
-
-    const candidates = this.getAdjacentTextCandidates(img);
-    for (const candidate of candidates) {
-      const normalizedCandidate = this.normalizeComparableText(candidate);
-
-      if (!normalizedCandidate) {
-        continue;
-      }
-
-      if (normalizedCandidate === normalizedAlt) {
-        return candidate.trim();
-      }
-
-      if (normalizedCandidate.includes(normalizedAlt) && Math.abs(normalizedCandidate.length - normalizedAlt.length) <= 15) {
-        return candidate.trim();
-      }
-    }
-
-    return null;
-  }
-
-  getAdjacentTextCandidates(img) {
-    const candidates = [];
-    const siblingNodes = [img.previousSibling, img.nextSibling];
-    const siblingElements = [img.previousElementSibling, img.nextElementSibling];
-
-    siblingNodes.forEach((node) => {
-      const text = this.getTextFromNode(node);
-      if (text) {
-        candidates.push(text);
-      }
-    });
-
-    siblingElements.forEach((element) => {
-      const text = this.getRelevantElementText(element);
-      if (text) {
-        candidates.push(text);
-      }
-    });
-
-    if (img.parentElement) {
-      const parentInlineText = Array.from(img.parentElement.childNodes)
-        .filter((node) => node !== img && !(node.nodeType === Node.ELEMENT_NODE && node.tagName === 'IMG'))
-        .map((node) => this.getTextFromNode(node))
-        .filter(Boolean)
-        .join(' ')
-        .trim();
-
-      if (parentInlineText) {
-        candidates.push(parentInlineText);
-      }
-    }
-
-    return [...new Set(candidates)];
-  }
-
-  getTextFromNode(node) {
-    if (!node) {
-      return '';
-    }
-
-    if (node.nodeType === Node.TEXT_NODE) {
-      return node.textContent.replace(/\s+/g, ' ').trim();
-    }
-
-    if (node.nodeType === Node.ELEMENT_NODE) {
-      return this.getRelevantElementText(node);
-    }
-
-    return '';
-  }
-
-  getRelevantElementText(element) {
-    if (!(element instanceof Element)) {
-      return '';
-    }
-
-    return element.textContent.replace(/\s+/g, ' ').trim();
-  }
-
-  getTitleComparisonText(element) {
-    if (element.tagName === 'IMG') {
-      return this.getImageAlternativeText(element);
-    }
-
-    const text = this.getRelevantElementText(element);
-    if (text.length > 0) {
-      return text;
-    }
-
-    const imageAltText = Array.from(element.querySelectorAll('img'))
-      .map((img) => this.getImageAlternativeText(img))
-      .find((value) => value.length > 0);
-
-    if (imageAltText) {
-      return imageAltText;
-    }
-
-    const ariaLabel = element.getAttribute('aria-label');
-    return typeof ariaLabel === 'string' ? ariaLabel.trim() : '';
-  }
-
-  isAriaHidden(element) {
-    return element.getAttribute('aria-hidden') === 'true';
-  }
-
-  getLuminance(rgb) {
-    const [r, g, b] = [rgb.r, rgb.g, rgb.b].map(val => {
-      val = val / 255;
-      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
-    });
-    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  }
-
-  evaluateSemanticHTML() {
-    const divs = document.querySelectorAll('div[role]');
-    let divRoleCount = 0;
-    divs.forEach(div => {
-      if (div.getAttribute('role') === 'button' || div.getAttribute('role') === 'link') {
-        divRoleCount++;
-      }
-    });
-    if (divs.length > 0 && divRoleCount > divs.length * 0.3) {
-      this.issues.push({
-        type: 'excessive-div-roles',
-        severity: 'warning',
-        criterion: this.wcagCriteria['semantic-html'],
-        message: 'Muitos divs com roles - considere usar elementos semânticos',
-        requires_llm: false
-      });
-    }
-  }
-
-  evaluateLanguage() {
-    const htmlElement = document.documentElement;
-    const lang = htmlElement.getAttribute('lang');
-    if (!lang) {
-      this.issues.push({
-        type: 'no-language-declared',
-        severity: 'warning',
-        criterion: this.wcagCriteria['language-declaration'],
-        message: 'Página não declara o idioma principal',
-        requires_llm: false
-      });
-    }
-  }
-
-  evaluatePageTitle() {
-    const title = document.title;
-    if (!title || title.length === 0) {
-      this.issues.push({
-        type: 'no-page-title',
-        severity: 'critical',
-        criterion: this.wcagCriteria['page-title'],
-        message: 'Página não possui título',
-        requires_llm: false
-      });
-    } else if (title.length < 5) {
-      this.issues.push({
-        type: 'page-title-too-short',
-        severity: 'warning',
-        criterion: this.wcagCriteria['page-title'],
-        message: `Título da página muito curto: "${title}"`,
-        requires_llm: false
-      });
-    }
-  }
-
-  evaluateKeyboardNavigation() {
-    const interactiveElements = document.querySelectorAll('button, a, input, select, textarea');
-    let focusableCount = 0;
-    interactiveElements.forEach(element => {
-      const tabindex = element.getAttribute('tabindex');
-      if (tabindex && parseInt(tabindex) > 0) {
-        focusableCount++;
-      }
-    });
-    if (focusableCount > interactiveElements.length * 0.5) {
-      this.issues.push({
-        type: 'excessive-positive-tabindex',
-        severity: 'warning',
-        criterion: this.wcagCriteria['keyboard-navigation'],
-        message: 'Muitos elementos com tabindex positivo - pode prejudicar navegação',
-        requires_llm: false
-      });
-    }
-  }
-
-  evaluateFocusIndicators() {
-    const hasOutlineRemoval = this.checkForOutlineRemoval();
-    if (hasOutlineRemoval) {
-      this.issues.push({
-        type: 'focus-outline-removed',
-        severity: 'critical',
-        criterion: this.wcagCriteria['focus-indicator'],
-        message: 'Outline de foco foi removido sem substituição',
-        requires_llm: false
-      });
-    }
-  }
-
-  checkForOutlineRemoval() {
-    const sheets = document.styleSheets;
-    try {
-      for (let sheet of sheets) {
-        const rules = sheet.cssRules || sheet.rules;
-        for (let rule of rules) {
-          if (rule.selectorText && rule.selectorText.includes(':focus')) {
-            if (rule.style.outline === 'none' || rule.style.outline === '0') {
-              return true;
-            }
-          }
-        }
-      }
-    } catch (e) {}
-    return false;
-  }
-
-  groupIssuesByType() {
-    const grouped = {};
-    this.issues.forEach(issue => {
-      if (!grouped[issue.type]) {
-        grouped[issue.type] = [];
-      }
-      grouped[issue.type].push(issue);
-    });
-    return grouped;
-  }
-
-  getSummary() {
-    const critical = this.issues.filter(i => i.severity === 'critical').length;
-    const warnings = this.issues.filter(i => i.severity === 'warning').length;
-    const requiresLLM = this.issues.filter(i => i.requires_llm).length;
-    return {
-      total: this.issues.length,
-      critical,
-      warnings,
-      requiresLLM,
-      issues: this.issues
-    };
-  }
-}
-
-/**
- * Content Script - Executado no contexto da página
+ * Content Script - Executado no contexto da página.
+ * WCAGEvaluator é carregado por wcag-evaluator.js (declarado antes no manifest).
  */
 
 class AccessibilityAnalyzer {
@@ -1060,16 +11,11 @@ class AccessibilityAnalyzer {
     this.currentStep = 0;
   }
 
-  /**
-   * Inicia a análise da página
-   */
   async analyzePageForAccessibility() {
     try {
-      // Criar instância do avaliador
       const evaluator = new WCAGEvaluator();
       this.evaluator = evaluator;
-      
-      // Executar avaliação
+
       const rawIssues = evaluator.evaluate();
       const issues = rawIssues.map((issue) => this.serializeIssue(issue));
       const summary = this.buildSummary(issues);
@@ -1093,26 +39,15 @@ class AccessibilityAnalyzer {
     }
   }
 
-  /**
-   * Extrai conteúdo relevante da página
-   */
   extractPageContent() {
     return {
       title: document.title,
       url: window.location.href,
-      html: document.documentElement.outerHTML.substring(0, 50000), // Limitar tamanho
-      language: document.documentElement.getAttribute('lang') || 'pt-BR',
-      images: Array.from(document.querySelectorAll('img')).map(img => ({
-        src: img.src,
-        alt: img.getAttribute('alt'),
-        title: img.getAttribute('title')
-      }))
+      html: document.documentElement.outerHTML.substring(0, 1500),
+      language: document.documentElement.getAttribute('lang') || 'pt-BR'
     };
   }
 
-  /**
-   * Converte issues em objetos serializáveis e ricos em contexto.
-   */
   serializeIssue(issue) {
     const serializedIssue = { ...issue };
     const element = issue.element;
@@ -1131,14 +66,12 @@ class AccessibilityAnalyzer {
       serializedIssue.ariaLabelledBy = element.getAttribute('aria-labelledby');
       serializedIssue.ariaDescribedBy = element.getAttribute('aria-describedby');
       serializedIssue.role = element.getAttribute('role');
+      serializedIssue.href = element.tagName.toLowerCase() === 'a' ? element.getAttribute('href') : null;
     }
 
     return serializedIssue;
   }
 
-  /**
-   * Gera um resumo serializável das issues detectadas.
-   */
   buildSummary(issues) {
     const critical = issues.filter((issue) => issue.severity === 'critical').length;
     const warnings = issues.filter((issue) => issue.severity === 'warning').length;
@@ -1153,9 +86,6 @@ class AccessibilityAnalyzer {
     };
   }
 
-  /**
-   * Gera seletor CSS estável para o elemento analisado.
-   */
   getElementSelector(element) {
     if (!(element instanceof Element)) {
       return null;
@@ -1198,6 +128,10 @@ class AccessibilityAnalyzer {
     }
 
     return value.replace(/([ !"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, '\\$1');
+  }
+
+  escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   normalizeMalformedIdToken(token) {
@@ -1272,49 +206,92 @@ class AccessibilityAnalyzer {
     }
   }
 
-  /**
-   * Extrai imagens para processamento
-   */
-  extractImages() {
+  extractImages(options = {}) {
     const images = [];
     const evaluator = this.evaluator || new WCAGEvaluator();
+    const maxImages = Number.isInteger(options.maxImages) ? options.maxImages : Number.POSITIVE_INFINITY;
+    const includeDataUrl = options.includeDataUrl === true;
+
     document.querySelectorAll('img').forEach((img, index) => {
-      if (evaluator.isSpacerImage(img)) {
+      if (images.length >= maxImages) {
         return;
       }
 
-      if (!img.hasAttribute('alt')) {
-        images.push({
-          index,
-          src: img.src,
-          currentAlt: img.getAttribute('alt') || '',
-          element: img
-        });
+      if (evaluator.isSpacerImage(img) || evaluator.isEmojiImage(img) || img.hasAttribute('alt')) {
+        return;
       }
+
+      images.push({
+        index,
+        src: img.src,
+        currentAlt: img.getAttribute('alt') || '',
+        fileName: evaluator.getImageFileName(img.currentSrc || img.src),
+        title: (img.getAttribute('title') || '').trim(),
+        figcaption: this.getFigcaptionText(img),
+        adjacentText: this.getImageAdjacentText(img, evaluator),
+        parentAriaLabel: this.getParentAccessibleName(img),
+        width: img.naturalWidth || img.width || null,
+        height: img.naturalHeight || img.height || null,
+        dataUrl: includeDataUrl ? this.tryGetImageDataUrl(img) : null
+      });
     });
+
     return images;
   }
 
-  /**
-   * Aplica otimizações à página
-   */
+  getFigcaptionText(img) {
+    const figure = img.closest('figure');
+    const caption = figure?.querySelector('figcaption');
+    return caption ? caption.textContent.replace(/\s+/g, ' ').trim().slice(0, 200) : '';
+  }
+
+  getImageAdjacentText(img, evaluator) {
+    const candidates = evaluator.getAdjacentTextCandidates(img) || [];
+    return candidates.find((text) => typeof text === 'string' && text.trim().length > 0)?.trim().slice(0, 200) || '';
+  }
+
+  getParentAccessibleName(img) {
+    const parent = img.closest('a, button, [aria-label], [role="img"]');
+    if (!parent) {
+      return '';
+    }
+
+    const ariaLabel = parent.getAttribute('aria-label');
+    if (typeof ariaLabel === 'string' && ariaLabel.trim()) {
+      return ariaLabel.trim();
+    }
+
+    return parent.textContent.replace(/\s+/g, ' ').trim().slice(0, 160);
+  }
+
+  tryGetImageDataUrl(img) {
+    try {
+      if (!img.complete || img.naturalWidth === 0) {
+        return null;
+      }
+
+      const maxSize = 768;
+      const scale = Math.min(1, maxSize / Math.max(img.naturalWidth, img.naturalHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      const context = canvas.getContext('2d');
+      context.drawImage(img, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/jpeg', 0.7);
+    } catch (error) {
+      return null;
+    }
+  }
+
   async applyOptimizations(optimizations) {
     try {
       let appliedCount = 0;
-      const evaluator = this.evaluator || new WCAGEvaluator();
+      appliedCount += this.applyDeterministicFixes();
 
-      document.querySelectorAll('img').forEach((img) => {
-        if (evaluator.isSpacerImage(img) && !img.hasAttribute('alt')) {
-          img.setAttribute('alt', '');
-          appliedCount++;
-        }
-      });
-
-      // Aplicar alt text em imagens
       if (optimizations.imageAlts) {
         optimizations.imageAlts.forEach(({ index, alt }) => {
           const images = document.querySelectorAll('img');
-          if (images[index]) {
+          if (images[index] && typeof alt === 'string') {
             images[index].setAttribute('alt', alt);
             images[index].setAttribute('role', 'img');
             appliedCount++;
@@ -1322,35 +299,30 @@ class AccessibilityAnalyzer {
         });
       }
 
-      // Aplicar melhorias de estrutura
       if (optimizations.structureChanges) {
-        optimizations.structureChanges.forEach(change => {
+        optimizations.structureChanges.forEach((change) => {
           const element = this.resolveSelector(change.selector);
-          if (element) {
-            if (change.newTag) {
-              const newElement = document.createElement(change.newTag);
-              newElement.innerHTML = element.innerHTML;
-              Object.keys(change.attributes || {}).forEach(key => {
-                newElement.setAttribute(key, change.attributes[key]);
-              });
-              element.replaceWith(newElement);
-              appliedCount++;
-            } else if (change.attributes) {
-              Object.keys(change.attributes).forEach(key => {
-                const value = change.attributes[key];
-                if (value === null || value === undefined) {
-                  element.removeAttribute(key);
-                } else {
-                  element.setAttribute(key, value);
-                }
-              });
-              appliedCount++;
-            }
+          if (!element) {
+            return;
+          }
+
+          if (change.newTag) {
+            this.replaceElementTag(element, change.newTag, change.attributes || {});
+            appliedCount++;
+          } else if (change.attributes) {
+            Object.keys(change.attributes).forEach((key) => {
+              const value = change.attributes[key];
+              if (value === null || value === undefined) {
+                element.removeAttribute(key);
+              } else {
+                element.setAttribute(key, value);
+              }
+            });
+            appliedCount++;
           }
         });
       }
 
-      // Aplicar mudanças de texto visível
       if (optimizations.textChanges) {
         optimizations.textChanges.forEach(({ selector, text }) => {
           const element = this.resolveSelector(selector);
@@ -1361,9 +333,8 @@ class AccessibilityAnalyzer {
         });
       }
 
-      // Aplicar estilos de acessibilidade
       if (optimizations.styles) {
-        const existingStyles = document.querySelectorAll('style[data-accessibility="true"]');
+        const existingStyles = document.querySelectorAll('style[data-accessibility="true"]:not(#accessify-deterministic-styles)');
         existingStyles.forEach((style) => style.remove());
 
         const style = document.createElement('style');
@@ -1373,7 +344,6 @@ class AccessibilityAnalyzer {
         appliedCount++;
       }
 
-      // Aplicar ARIA labels
       if (optimizations.ariaLabels) {
         optimizations.ariaLabels.forEach(({ selector, label, role }) => {
           const element = this.resolveSelector(selector);
@@ -1401,11 +371,833 @@ class AccessibilityAnalyzer {
     }
   }
 
-  /**
-   * Cria overlay de acessibilidade
-   */
+  replaceElementTag(element, newTag, attributes) {
+    const newElement = document.createElement(newTag);
+    Array.from(element.attributes).forEach((attr) => {
+      newElement.setAttribute(attr.name, attr.value);
+    });
+    Object.keys(attributes).forEach((key) => {
+      const value = attributes[key];
+      if (value === null || value === undefined) {
+        newElement.removeAttribute(key);
+      } else {
+        newElement.setAttribute(key, value);
+      }
+    });
+    while (element.firstChild) {
+      newElement.appendChild(element.firstChild);
+    }
+    element.replaceWith(newElement);
+  }
+
+  applyDeterministicFixes() {
+    let appliedCount = 0;
+    const evaluator = this.evaluator || new WCAGEvaluator();
+
+    document.querySelectorAll('img').forEach((img) => {
+      if (evaluator.isSpacerImage(img) && !img.hasAttribute('alt')) {
+        img.setAttribute('alt', '');
+        appliedCount++;
+      }
+    });
+
+    if (!document.documentElement.getAttribute('lang')) {
+      document.documentElement.setAttribute('lang', navigator.language || 'pt-BR');
+      appliedCount++;
+    }
+
+    document.querySelectorAll('table').forEach((table) => {
+      if (table.querySelector('th') || table.getAttribute('role') === 'presentation') {
+        return;
+      }
+
+      const firstRow = table.querySelector('tr');
+      if (!firstRow) {
+        return;
+      }
+
+      Array.from(firstRow.children).forEach((cell) => {
+        if (cell.tagName !== 'TD') {
+          return;
+        }
+
+        this.replaceElementTag(cell, 'th', { scope: 'col' });
+        appliedCount++;
+      });
+    });
+
+    document.querySelectorAll('iframe').forEach((iframe) => {
+      const title = iframe.getAttribute('title');
+      const ariaLabel = iframe.getAttribute('aria-label');
+      if ((title && title.trim()) || (ariaLabel && ariaLabel.trim())) {
+        return;
+      }
+
+      let inferred = 'Conteúdo incorporado';
+      try {
+        const src = iframe.src || iframe.getAttribute('src') || '';
+        if (src) {
+          inferred = `Conteúdo de ${new URL(src, window.location.href).hostname}`;
+        }
+      } catch (error) {
+        inferred = 'Conteúdo incorporado';
+      }
+
+      iframe.setAttribute('title', inferred);
+      appliedCount++;
+    });
+
+    const hasSkipLink = Array.from(document.querySelectorAll('a[href^="#"]')).some((link) => (
+      /pular|skip|ir para o conte[uú]do|jump to|main-content/i.test(`${link.textContent} ${link.getAttribute('href')}`)
+    ));
+    const hasMain = document.querySelector('main, [role="main"]');
+    if (!hasSkipLink && !hasMain) {
+      const target = document.querySelector('h1, h2, h3, [role="main"], .container, body > *:not(script):not(style)');
+      if (target) {
+        if (!target.id) {
+          target.id = 'accessify-main-content';
+        }
+        const skipLink = document.createElement('a');
+        skipLink.href = `#${target.id}`;
+        skipLink.textContent = 'Pular para o conteúdo principal';
+        skipLink.setAttribute('data-accessify-skip', 'true');
+        skipLink.style.cssText = 'position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;';
+        skipLink.addEventListener('focus', () => {
+          skipLink.style.position = 'static';
+          skipLink.style.width = 'auto';
+          skipLink.style.height = 'auto';
+        });
+        skipLink.addEventListener('blur', () => {
+          skipLink.style.position = 'absolute';
+          skipLink.style.width = '1px';
+          skipLink.style.height = '1px';
+        });
+        document.body.insertBefore(skipLink, document.body.firstChild);
+        appliedCount++;
+      }
+    }
+
+    document.querySelectorAll('[onclick]').forEach((element) => {
+      const tag = element.tagName;
+      if (['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'SUMMARY', 'LABEL'].includes(tag)) {
+        return;
+      }
+
+      if (!element.hasAttribute('tabindex')) {
+        element.setAttribute('tabindex', '0');
+        appliedCount++;
+      }
+      if (!element.getAttribute('role')) {
+        element.setAttribute('role', 'button');
+        appliedCount++;
+      }
+      if (!element.dataset.accessifyKeyboard) {
+        element.dataset.accessifyKeyboard = 'true';
+        element.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            element.click();
+          }
+        });
+        appliedCount++;
+      }
+    });
+
+    document.querySelectorAll('svg').forEach((svg) => {
+      if (svg.getAttribute('aria-hidden') === 'true' || svg.getAttribute('role') === 'presentation') {
+        return;
+      }
+
+      const parentControl = svg.closest('a, button');
+      if (parentControl && parentControl.textContent.replace(svg.textContent, '').trim()) {
+        return;
+      }
+
+      if (svg.getAttribute('aria-label') || svg.querySelector('title')) {
+        return;
+      }
+
+      const titleText = this.getParentAccessibleName(svg) || 'Gráfico';
+      svg.setAttribute('role', 'img');
+      svg.setAttribute('aria-label', titleText);
+      appliedCount++;
+    });
+
+    const seenIds = new Map();
+    document.querySelectorAll('[id]').forEach((element) => {
+      const id = element.id;
+      if (!id) {
+        return;
+      }
+
+      if (seenIds.has(id)) {
+        let suffix = 2;
+        while (document.getElementById(`${id}-accessify-${suffix}`)) {
+          suffix += 1;
+        }
+        element.id = `${id}-accessify-${suffix}`;
+        appliedCount++;
+      } else {
+        seenIds.set(id, element);
+      }
+    });
+
+    document.querySelectorAll('input, textarea, select').forEach((input) => {
+      if (evaluator.shouldIgnoreFormControl(input) || evaluator.hasVisibleFormLabel(input)) {
+        return;
+      }
+
+      const nameText = (input.getAttribute('aria-label') || input.getAttribute('title') || input.getAttribute('placeholder') || '').trim();
+      if (!nameText) {
+        return;
+      }
+
+      if (!input.id) {
+        input.id = `accessify-field-${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      if (!document.querySelector(`label[for="${CSS.escape(input.id)}"]`)) {
+        const label = document.createElement('label');
+        label.setAttribute('for', input.id);
+        label.textContent = nameText;
+        input.parentNode?.insertBefore(label, input);
+        appliedCount++;
+      }
+    });
+
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (viewport) {
+      const content = viewport.getAttribute('content') || '';
+      if (/user-scalable\s*=\s*(no|0)/i.test(content) || /maximum-scale\s*=\s*1(\.0+)?(\s|,|$)/i.test(content)) {
+        viewport.setAttribute(
+          'content',
+          content
+            .replace(/user-scalable\s*=\s*(no|0)/ig, 'user-scalable=yes')
+            .replace(/maximum-scale\s*=\s*1(\.0+)?/ig, 'maximum-scale=5')
+        );
+        appliedCount++;
+      }
+    }
+
+    document.querySelectorAll('input').forEach((input) => {
+      if (input.getAttribute('autocomplete')) {
+        return;
+      }
+
+      const type = (input.type || '').toLowerCase();
+      const identity = `${input.name || ''} ${input.id || ''}`.toLowerCase();
+      if (type === 'email' || /e-?mail/.test(identity)) {
+        input.setAttribute('autocomplete', 'email');
+        appliedCount++;
+      } else if (type === 'tel' || /(tel|phone|fone|celular)/.test(identity)) {
+        input.setAttribute('autocomplete', 'tel');
+        appliedCount++;
+      } else if (/(^|[_-])(name|nome)($|[_-])/.test(identity)) {
+        input.setAttribute('autocomplete', 'name');
+        appliedCount++;
+      }
+    });
+
+    document.querySelectorAll('[title]').forEach((element) => {
+      if (this.isAccessifyUi(element)) {
+        return;
+      }
+
+      const title = element.getAttribute('title');
+      const normalizedTitle = evaluator.normalizeComparableText(title);
+      const comparisonText = evaluator.getTitleComparisonText(element);
+      const normalizedComparison = evaluator.normalizeComparableText(comparisonText);
+
+      if (normalizedTitle && normalizedComparison && normalizedTitle === normalizedComparison) {
+        element.removeAttribute('title');
+        appliedCount++;
+      }
+    });
+
+    appliedCount += this.fixPageTitle();
+    appliedCount += this.fixMissingH1();
+    appliedCount += this.fixGenericLinks(evaluator);
+    appliedCount += this.fixEmptyLinksAndButtons(evaluator);
+    appliedCount += this.fixMissingImageAlts(evaluator);
+    appliedCount += this.fixGraphicFallbacks(evaluator);
+    appliedCount += this.fixBrokenAriaReferences();
+    appliedCount += this.fixPositiveTabindex();
+    appliedCount += this.fixLabelInName(evaluator);
+    appliedCount += this.fixAriaHiddenContent();
+    appliedCount += this.fixLowContrast(evaluator);
+
+    let leftAlignNeeded = false;
+    let minFontNeeded = false;
+    let contrastNeeded = false;
+    let nonTextContrastNeeded = false;
+
+    document.querySelectorAll('p, div, td, span, li, a, button, label, small').forEach((element) => {
+      if (this.isAccessifyUi(element) || !evaluator.isVisible(element)) {
+        return;
+      }
+
+      const textContent = evaluator.getRelevantElementText(element);
+      if (textContent.length === 0) {
+        return;
+      }
+
+      const style = window.getComputedStyle(element);
+      const fontSize = evaluator.parsePixelValue(style.fontSize);
+
+      if (Number.isFinite(fontSize) && fontSize < 14) {
+        element.setAttribute('data-accessify-min-font', 'true');
+        minFontNeeded = true;
+        appliedCount++;
+      }
+
+      if (textContent.length > 500 && style.textAlign === 'justify') {
+        element.setAttribute('data-accessify-left-align', 'true');
+        leftAlignNeeded = true;
+        appliedCount++;
+      }
+    });
+
+    const colorOnlyLinks = document.querySelectorAll('a[href]');
+    let underlineNeeded = false;
+    colorOnlyLinks.forEach((link) => {
+      if (!link.closest('p, li, td, th, article, blockquote, dd')) {
+        return;
+      }
+
+      const style = window.getComputedStyle(link);
+      const decoration = `${style.textDecorationLine || ''} ${style.textDecoration || ''}`.toLowerCase();
+      if (!decoration.includes('underline')) {
+        link.setAttribute('data-accessify-underline', 'true');
+        underlineNeeded = true;
+      }
+    });
+
+    contrastNeeded = !!document.querySelector('[data-accessify-contrast]');
+    nonTextContrastNeeded = this.markLowNonTextContrast(evaluator);
+
+    const focusNeeded = evaluator.checkForOutlineRemoval();
+    if (underlineNeeded || focusNeeded || leftAlignNeeded || minFontNeeded || contrastNeeded || nonTextContrastNeeded) {
+      this.ensureAccessifyStyles({
+        focusNeeded,
+        underlineNeeded,
+        leftAlignNeeded,
+        minFontNeeded,
+        contrastNeeded,
+        nonTextContrastNeeded
+      });
+      appliedCount++;
+    }
+
+    return appliedCount;
+  }
+
+  isAccessifyUi(element) {
+    return !!(
+      element.closest('[data-accessibility="true"]')
+      || element.closest('[data-accessify-skip]')
+      || element.id?.startsWith('accessify-')
+    );
+  }
+
+  fixPageTitle() {
+    if (document.title && document.title.trim().length >= 5) {
+      return 0;
+    }
+
+    const heading = document.querySelector('h1, h2, h3');
+    const inferred = (heading?.textContent || '').replace(/\s+/g, ' ').trim()
+      || window.location.hostname
+      || 'Página da web';
+    document.title = inferred.slice(0, 120);
+    return 1;
+  }
+
+  fixMissingH1() {
+    if (document.querySelector('h1')) {
+      return 0;
+    }
+
+    const firstHeading = document.querySelector('h2, h3, h4, h5, h6');
+    if (firstHeading) {
+      this.replaceElementTag(firstHeading, 'h1', {});
+      return 1;
+    }
+
+    const title = (document.title || '').trim();
+    if (!title) {
+      return 0;
+    }
+
+    const heading = document.createElement('h1');
+    heading.textContent = title;
+    heading.setAttribute('data-accessify-sr-h1', 'true');
+    heading.style.cssText = 'position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;';
+    document.body.insertBefore(heading, document.body.firstChild);
+    return 1;
+  }
+
+  fixGenericLinks(evaluator) {
+    let appliedCount = 0;
+
+    document.querySelectorAll('a[href]').forEach((link) => {
+      if (this.isAccessifyUi(link)) {
+        return;
+      }
+
+      const visible = (link.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!evaluator.isGenericLinkText(visible)) {
+        return;
+      }
+
+      const context = this.getLinkPurposeContext(link, evaluator);
+      if (!context || evaluator.isGenericLinkText(context)) {
+        return;
+      }
+
+      const label = `${visible}: ${context}`.slice(0, 160);
+      if (link.getAttribute('aria-label') === label) {
+        return;
+      }
+
+      link.setAttribute('aria-label', label);
+      appliedCount++;
+    });
+
+    return appliedCount;
+  }
+
+  getLinkPurposeContext(link, evaluator) {
+    const titled = (link.getAttribute('title') || '').trim();
+    if (titled && !evaluator.isGenericLinkText(titled)) {
+      return titled;
+    }
+
+    const container = link.closest('article, li, figure, section, [class*="card"]');
+    const heading = container?.querySelector('h1, h2, h3, h4, h5, h6');
+    const headingText = (heading?.textContent || '').replace(/\s+/g, ' ').trim();
+    if (headingText && headingText !== (link.textContent || '').trim()) {
+      return headingText.slice(0, 120);
+    }
+
+    const precedingHeading = this.getPrecedingHeadingText(link);
+    if (precedingHeading) {
+      return precedingHeading.slice(0, 120);
+    }
+
+    const parentText = (link.parentElement?.textContent || '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(new RegExp(this.escapeRegExp(link.textContent.trim()), 'i'), '')
+      .trim();
+    if (parentText.length >= 8) {
+      return parentText.slice(0, 120);
+    }
+
+    const href = link.getAttribute('href') || '';
+    if (href.startsWith('#') && href.length > 1) {
+      const target = document.getElementById(decodeURIComponent(href.slice(1)));
+      const targetText = (target?.textContent || '').replace(/\s+/g, ' ').trim();
+      if (targetText) {
+        return targetText.slice(0, 120);
+      }
+    }
+
+    try {
+      const url = new URL(link.href, window.location.href);
+      if (url.hostname && url.hostname !== window.location.hostname) {
+        return url.hostname.replace(/^www\./, '');
+      }
+
+      const slug = decodeURIComponent(url.pathname.split('/').filter(Boolean).pop() || '');
+      const humanized = this.humanizeFileName(slug);
+      if (humanized) {
+        return humanized;
+      }
+    } catch (error) {
+      return '';
+    }
+
+    return '';
+  }
+
+  getPrecedingHeadingText(element) {
+    const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    let previous = '';
+
+    headings.forEach((heading) => {
+      if (heading.contains(element)) {
+        previous = (heading.textContent || '').replace(/\s+/g, ' ').trim();
+        return;
+      }
+
+      if (heading.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING) {
+        previous = (heading.textContent || '').replace(/\s+/g, ' ').trim();
+      }
+    });
+
+    return previous;
+  }
+
+  fixEmptyLinksAndButtons(evaluator) {
+    let appliedCount = 0;
+
+    document.querySelectorAll('a[href]').forEach((link, index) => {
+      if (this.isAccessifyUi(link) || evaluator.getAccessibleLinkText(link)) {
+        return;
+      }
+
+      const context = this.getLinkPurposeContext(link, evaluator)
+        || this.humanizeFileName((link.getAttribute('href') || '').split('/').pop())
+        || `Abrir link ${index + 1}`;
+      link.setAttribute('aria-label', context.slice(0, 160));
+      appliedCount++;
+    });
+
+    document.querySelectorAll('button, input[type="submit"], input[type="button"], input[type="reset"]').forEach((button, index) => {
+      if (this.isAccessifyUi(button) || !evaluator.isEmptyButton(button)) {
+        return;
+      }
+
+      const label = (button.getAttribute('title') || button.getAttribute('name') || `Acionar botão ${index + 1}`).trim();
+      if (button.tagName === 'INPUT') {
+        button.setAttribute('value', label);
+      } else {
+        button.setAttribute('aria-label', label);
+      }
+      appliedCount++;
+    });
+
+    return appliedCount;
+  }
+
+  fixMissingImageAlts(evaluator) {
+    let appliedCount = 0;
+
+    document.querySelectorAll('img').forEach((img) => {
+      if (this.isAccessifyUi(img) || img.hasAttribute('alt')) {
+        return;
+      }
+
+      if (evaluator.isSpacerImage(img) || evaluator.isEmojiImage(img)) {
+        img.setAttribute('alt', '');
+        appliedCount++;
+        return;
+      }
+
+      const alt = this.buildHeuristicImageAlt(img, evaluator);
+      img.setAttribute('alt', alt);
+      appliedCount++;
+    });
+
+    return appliedCount;
+  }
+
+  buildHeuristicImageAlt(img, evaluator) {
+    const figcaption = this.getFigcaptionText(img);
+    if (figcaption.length >= 8) {
+      return figcaption.slice(0, 100);
+    }
+
+    const title = (img.getAttribute('title') || '').trim();
+    if (title.length >= 8) {
+      return title.slice(0, 100);
+    }
+
+    const parentName = this.getParentAccessibleName(img);
+    if (parentName.length >= 8 && parentName.toLowerCase() !== (img.src || '').toLowerCase()) {
+      return parentName.slice(0, 100);
+    }
+
+    const adjacent = this.getImageAdjacentText(img, evaluator);
+    if (adjacent.length >= 8) {
+      return adjacent.slice(0, 100);
+    }
+
+    const fileName = this.humanizeFileName(evaluator.getImageFileName(img.currentSrc || img.src));
+    if (fileName) {
+      return fileName;
+    }
+
+    const width = evaluator.getImageDimension(img, 'width');
+    const height = evaluator.getImageDimension(img, 'height');
+    if (width <= 32 || height <= 32) {
+      return '';
+    }
+
+    return 'Imagem';
+  }
+
+  humanizeFileName(fileName) {
+    if (typeof fileName !== 'string' || fileName.trim().length === 0) {
+      return '';
+    }
+
+    const base = fileName
+      .replace(/\.[a-z0-9]+$/i, '')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (base.length < 6 || /^\d+$/.test(base.replace(/\s/g, ''))) {
+      return '';
+    }
+
+    if (/^[a-f0-9\s]{8,}$/i.test(base)) {
+      return '';
+    }
+
+    return base.slice(0, 100);
+  }
+
+  fixGraphicFallbacks(evaluator) {
+    let appliedCount = 0;
+
+    document.querySelectorAll('input[type="image"]').forEach((input) => {
+      const alt = input.getAttribute('alt');
+      if (typeof alt === 'string' && alt.trim()) {
+        return;
+      }
+
+      const inferred = (input.getAttribute('title') || input.getAttribute('value') || this.humanizeFileName(evaluator.getImageFileName(input.src)) || 'Enviar').trim();
+      input.setAttribute('alt', inferred.slice(0, 100));
+      appliedCount++;
+    });
+
+    document.querySelectorAll('area').forEach((area) => {
+      if (area.hasAttribute('alt')) {
+        return;
+      }
+
+      const inferred = (area.getAttribute('title') || area.getAttribute('href') || 'Área do mapa').toString().trim();
+      area.setAttribute('alt', inferred.slice(0, 100));
+      appliedCount++;
+    });
+
+    return appliedCount;
+  }
+
+  fixBrokenAriaReferences() {
+    let appliedCount = 0;
+
+    document.querySelectorAll('[aria-labelledby], [aria-describedby]').forEach((element) => {
+      ['aria-labelledby', 'aria-describedby'].forEach((attributeName) => {
+        const value = element.getAttribute(attributeName);
+        if (!value) {
+          return;
+        }
+
+        const remaining = value
+          .split(/\s+/)
+          .filter(Boolean)
+          .filter((id) => document.getElementById(id));
+
+        if (remaining.length === value.split(/\s+/).filter(Boolean).length) {
+          return;
+        }
+
+        if (remaining.length === 0) {
+          element.removeAttribute(attributeName);
+        } else {
+          element.setAttribute(attributeName, remaining.join(' '));
+        }
+        appliedCount++;
+      });
+    });
+
+    return appliedCount;
+  }
+
+  fixPositiveTabindex() {
+    let appliedCount = 0;
+
+    document.querySelectorAll('[tabindex]').forEach((element) => {
+      const tabindex = parseInt(element.getAttribute('tabindex'), 10);
+      if (Number.isFinite(tabindex) && tabindex > 0) {
+        element.setAttribute('tabindex', '0');
+        appliedCount++;
+      }
+    });
+
+    return appliedCount;
+  }
+
+  fixLabelInName(evaluator) {
+    let appliedCount = 0;
+
+    document.querySelectorAll('[aria-label]').forEach((element) => {
+      if (this.isAccessifyUi(element)) {
+        return;
+      }
+
+      const visibleText = evaluator.getRelevantElementText(element);
+      const ariaLabel = evaluator.normalizeComparableText(element.getAttribute('aria-label'));
+      const visible = evaluator.normalizeComparableText(visibleText);
+
+      if (!visible || visible.length < 2 || !ariaLabel) {
+        return;
+      }
+
+      if (ariaLabel.includes(visible) || visible.includes(ariaLabel)) {
+        return;
+      }
+
+      element.setAttribute('aria-label', `${visibleText.trim()} ${element.getAttribute('aria-label')}`.replace(/\s+/g, ' ').trim().slice(0, 160));
+      appliedCount++;
+    });
+
+    return appliedCount;
+  }
+
+  fixAriaHiddenContent() {
+    let appliedCount = 0;
+
+    document.querySelectorAll('[aria-hidden="true"]').forEach((element) => {
+      if (this.isAccessifyUi(element) || element.closest('svg, i, [class*="icon"]')) {
+        return;
+      }
+
+      const hasFocusableDescendant = !!element.querySelector(
+        'a[href], button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])'
+      );
+      const text = (element.textContent || '').replace(/\s+/g, ' ').trim();
+      const shouldReveal = hasFocusableDescendant || (text.length >= 20 && ['DIV', 'P', 'SECTION', 'ARTICLE', 'SPAN'].includes(element.tagName));
+
+      if (!shouldReveal) {
+        return;
+      }
+
+      element.removeAttribute('aria-hidden');
+      element.removeAttribute('hidden');
+      element.removeAttribute('inert');
+      appliedCount++;
+    });
+
+    return appliedCount;
+  }
+
+  fixLowContrast(evaluator) {
+    let appliedCount = 0;
+    let checkedCount = 0;
+
+    document.querySelectorAll('*').forEach((element) => {
+      if (checkedCount > 400 || appliedCount > 80) {
+        return;
+      }
+
+      if (this.isAccessifyUi(element) || !evaluator.isVisible(element) || !evaluator.hasDirectTextContent(element)) {
+        return;
+      }
+
+      const style = window.getComputedStyle(element);
+      const color = style.color;
+      const bgColor = evaluator.getEffectiveBackgroundColor(element);
+      const contrast = evaluator.calculateContrast(color, bgColor);
+      const minimumContrast = evaluator.isLargeText(style) ? 3 : 4.5;
+
+      checkedCount++;
+
+      if (!(contrast > 0 && contrast < minimumContrast)) {
+        return;
+      }
+
+      const fg = evaluator.parseColor(color);
+      const bg = evaluator.parseColor(bgColor);
+      if (!fg || !bg) {
+        return;
+      }
+
+      const blackContrast = evaluator.calculateContrast('rgb(17, 17, 17)', bgColor);
+      const whiteContrast = evaluator.calculateContrast('rgb(255, 255, 255)', bgColor);
+      const fgLuminance = evaluator.getLuminance(fg);
+
+      if (blackContrast >= minimumContrast && blackContrast >= whiteContrast) {
+        element.setAttribute('data-accessify-contrast', 'dark');
+      } else if (whiteContrast >= minimumContrast) {
+        element.setAttribute('data-accessify-contrast', 'light');
+      } else if (fgLuminance >= 0.5) {
+        element.setAttribute('data-accessify-contrast', 'solid-dark');
+      } else {
+        element.setAttribute('data-accessify-contrast', 'solid-light');
+      }
+
+      appliedCount++;
+    });
+
+    return appliedCount;
+  }
+
+  markLowNonTextContrast(evaluator) {
+    let marked = false;
+    let checkedCount = 0;
+
+    document.querySelectorAll('button, input, select, textarea, a[href], [role="button"]').forEach((element) => {
+      if (checkedCount > 80 || this.isAccessifyUi(element) || !evaluator.isVisible(element)) {
+        return;
+      }
+
+      const style = window.getComputedStyle(element);
+      const borderWidth = parseFloat(style.borderTopWidth) || 0;
+      const ownBackground = style.backgroundColor;
+      const hasOwnOpaqueBackground = evaluator.isOpaqueColor(ownBackground);
+      if (!hasOwnOpaqueBackground && borderWidth === 0) {
+        return;
+      }
+
+      const background = hasOwnOpaqueBackground ? ownBackground : evaluator.getEffectiveBackgroundColor(element);
+      const parentBackground = element.parentElement
+        ? evaluator.getEffectiveBackgroundColor(element.parentElement)
+        : 'rgb(255, 255, 255)';
+      const backgroundContrast = evaluator.calculateContrast(background, parentBackground);
+      const borderContrast = borderWidth > 0 ? evaluator.calculateContrast(style.borderTopColor, parentBackground) : 0;
+
+      checkedCount++;
+
+      if (backgroundContrast >= 3 || borderContrast >= 3 || backgroundContrast === 0) {
+        return;
+      }
+
+      element.setAttribute('data-accessify-control-outline', 'true');
+      marked = true;
+    });
+
+    return marked;
+  }
+
+  ensureAccessifyStyles({ focusNeeded, underlineNeeded, leftAlignNeeded, minFontNeeded, contrastNeeded, nonTextContrastNeeded }) {
+    let style = document.getElementById('accessify-deterministic-styles');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'accessify-deterministic-styles';
+      style.setAttribute('data-accessibility', 'true');
+      document.head.appendChild(style);
+    }
+
+    const rules = [];
+    if (focusNeeded) {
+      rules.push('a:focus, button:focus, input:focus, select:focus, textarea:focus, [tabindex]:focus { outline: 2px solid #1976d2; outline-offset: 2px; }');
+    }
+    if (underlineNeeded) {
+      rules.push('a[data-accessify-underline="true"] { text-decoration: underline; }');
+    }
+    if (leftAlignNeeded) {
+      rules.push('[data-accessify-left-align="true"] { text-align: left !important; }');
+    }
+    if (minFontNeeded) {
+      rules.push('[data-accessify-min-font="true"] { font-size: 14px !important; }');
+    }
+    if (contrastNeeded) {
+      rules.push('[data-accessify-contrast="dark"] { color: #111111 !important; }');
+      rules.push('[data-accessify-contrast="light"] { color: #ffffff !important; }');
+      rules.push('[data-accessify-contrast="solid-dark"] { color: #ffffff !important; background-color: #111111 !important; padding: 0.12em 0.25em; }');
+      rules.push('[data-accessify-contrast="solid-light"] { color: #111111 !important; background-color: #ffffff !important; padding: 0.12em 0.25em; }');
+    }
+    if (nonTextContrastNeeded) {
+      rules.push('[data-accessify-control-outline="true"] { outline: 2px solid #111111; outline-offset: 2px; }');
+    }
+    style.textContent = rules.join('\n');
+  }
+
   createAccessibilityOverlay() {
-    // Criar container para overlay
     const overlay = document.createElement('div');
     overlay.id = 'wcag-accessibility-overlay';
     overlay.setAttribute('data-accessibility', 'true');
@@ -1423,7 +1215,6 @@ class AccessibilityAnalyzer {
       overflow-y: auto;
     `;
 
-    // Adicionar conteúdo
     overlay.innerHTML = `
       <div style="padding: 20px; max-width: 1200px; margin: 0 auto; width: 100%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
@@ -1439,7 +1230,7 @@ class AccessibilityAnalyzer {
         </div>
 
         <div id="wcag-steps-container" style="margin-bottom: 30px;"></div>
-        
+
         <div style="background: #f5f5f5; padding: 20px; border-radius: 4px; margin-bottom: 20px;">
           <h2 style="margin-top: 0;">Resumo das Alterações</h2>
           <div id="wcag-summary" style="font-size: 14px; line-height: 1.6;"></div>
@@ -1471,7 +1262,6 @@ class AccessibilityAnalyzer {
 
     document.body.appendChild(overlay);
 
-    // Adicionar event listeners
     document.getElementById('wcag-close-overlay').addEventListener('click', () => {
       overlay.remove();
     });
@@ -1483,15 +1273,12 @@ class AccessibilityAnalyzer {
     return overlay;
   }
 
-  /**
-   * Atualiza display de etapas
-   */
   updateStepsDisplay(steps) {
     const container = document.getElementById('wcag-steps-container');
     if (!container) return;
 
     container.innerHTML = '';
-    steps.forEach((step, index) => {
+    steps.forEach((step) => {
       const stepDiv = document.createElement('div');
       stepDiv.style.cssText = `
         margin-bottom: 15px;
@@ -1519,9 +1306,6 @@ class AccessibilityAnalyzer {
     });
   }
 
-  /**
-   * Atualiza resumo
-   */
   updateSummary(summary) {
     const summaryDiv = document.getElementById('wcag-summary');
     if (!summaryDiv) return;
@@ -1535,27 +1319,28 @@ class AccessibilityAnalyzer {
   }
 }
 
-// Criar instância global
 window.accessibilityAnalyzer = new AccessibilityAnalyzer();
 
-// Escutar mensagens do background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'analyzeAccessibility') {
     window.accessibilityAnalyzer.analyzePageForAccessibility()
-      .then(result => sendResponse(result))
-      .catch(error => sendResponse({ success: false, error: error.message }));
-    return true; // Indica que a resposta será enviada de forma assíncrona
+      .then((result) => sendResponse(result))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
   }
 
   if (request.action === 'extractImages') {
-    sendResponse(window.accessibilityAnalyzer.extractImages());
+    sendResponse(window.accessibilityAnalyzer.extractImages({
+      includeDataUrl: request.includeDataUrl === true,
+      maxImages: request.maxImages
+    }));
     return false;
   }
 
   if (request.action === 'applyOptimizations') {
     window.accessibilityAnalyzer.applyOptimizations(request.optimizations)
-      .then(result => sendResponse(result))
-      .catch(error => sendResponse({ success: false, error: error.message }));
+      .then((result) => sendResponse(result))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
     return true;
   }
 

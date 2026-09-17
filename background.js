@@ -1,13 +1,18 @@
 /**
  * Background Service Worker
- * Gerencia a integração com OpenRouter e processamento de IA
+ * Gerencia a integração com Ollama local e OpenRouter
  */
+
+importScripts('ai-config.js');
 
 class AccessibilityOptimizer {
   constructor() {
     this.apiKey = null;
-    this.selectedModel = 'openai/gpt-5-nano';
-    this.baseURL = 'https://openrouter.ai/api/v1';
+    this.provider = ACCESSIFY_AI_CONFIG.defaults.provider;
+    this.selectedModel = ACCESSIFY_AI_CONFIG.defaults.selectedModel;
+    this.localBaseUrl = ACCESSIFY_AI_CONFIG.defaults.localBaseUrl;
+    this.localModel = ACCESSIFY_AI_CONFIG.defaults.localModel;
+    this.openRouterBaseURL = ACCESSIFY_AI_CONFIG.defaults.openRouterBaseUrl;
     this.analysisJobStorageKey = 'analysisJob';
     this.analysisCommandName = 'trigger-accessibility-analysis';
     this.toggleAutoOptimizeCommandName = 'toggle-auto-optimize';
@@ -45,12 +50,16 @@ class AccessibilityOptimizer {
    */
   async loadSettings() {
     return new Promise((resolve) => {
-      chrome.storage.sync.get(['apiKey', 'selectedModel'], (result) => {
+      chrome.storage.sync.get(['apiKey', 'selectedModel', 'provider', 'localBaseUrl', 'localModel'], (result) => {
         this.apiKey = result.apiKey || null;
-        this.selectedModel = result.selectedModel || 'openai/gpt-5-nano';
-        console.log('Settings loaded:', { 
-          apiKeyConfigured: !!this.apiKey, 
-          model: this.selectedModel 
+        this.provider = result.provider || (result.apiKey ? ACCESSIFY_AI_CONFIG.providers.openrouter : ACCESSIFY_AI_CONFIG.defaults.provider);
+        this.selectedModel = result.selectedModel || ACCESSIFY_AI_CONFIG.defaults.selectedModel;
+        this.localBaseUrl = result.localBaseUrl || ACCESSIFY_AI_CONFIG.defaults.localBaseUrl;
+        this.localModel = result.localModel || ACCESSIFY_AI_CONFIG.defaults.localModel;
+        console.log('Settings loaded:', {
+          provider: this.provider,
+          apiKeyConfigured: !!this.apiKey,
+          model: this.getActiveModel()
         });
         resolve();
       });
@@ -152,7 +161,7 @@ class AccessibilityOptimizer {
   async ensureContentScript(tabId) {
     await chrome.scripting.executeScript({
       target: { tabId },
-      files: ['content.js']
+      files: ['wcag-evaluator.js', 'content.js']
     });
   }
 
@@ -214,6 +223,8 @@ class AccessibilityOptimizer {
     });
 
     try {
+      await this.refreshSettings();
+
       const analysisResult = await this.sendMessageToTab(tabId, { action: 'analyzeAccessibility' });
       if (!(await this.isRunCurrent(runId))) {
         return await this.getAnalysisJob();
@@ -224,10 +235,30 @@ class AccessibilityOptimizer {
       }
 
       steps = this.markStepStatus(steps, 0, 'completed');
-      const requiresImageProcessing = analysisResult.summary.requiresLLM > 0;
+
+      const extractedImages = await this.sendMessageToTab(tabId, {
+        action: 'extractImages',
+        includeDataUrl: !this.isLocalProvider() && openRouterModelSupportsVision(this.selectedModel),
+        maxImages: this.isLocalProvider()
+          ? ACCESSIFY_AI_CONFIG.localLimits.maxImages
+          : 8
+      });
+      if (!(await this.isRunCurrent(runId))) {
+        return await this.getAnalysisJob();
+      }
+
+      const images = Array.isArray(extractedImages) ? extractedImages : [];
+      const requiresImageProcessing = images.length > 0;
       if (requiresImageProcessing) {
         steps = this.markStepStatus(steps, 1, 'active');
       }
+
+      console.log('Accessify AI scope:', {
+        provider: this.provider,
+        issueCount: analysisResult.summary?.total,
+        imagesQueued: images.length,
+        localLimits: this.isLocalProvider() ? ACCESSIFY_AI_CONFIG.localLimits : null
+      });
 
       await this.updateAnalysisJobForRun(runId, {
         analysisResult,
@@ -238,24 +269,15 @@ class AccessibilityOptimizer {
 
       let imageAltResults = [];
       if (requiresImageProcessing) {
-        const images = await this.sendMessageToTab(tabId, { action: 'extractImages' });
+        const imageResults = await this.processImages(images);
         if (!(await this.isRunCurrent(runId))) {
           return await this.getAnalysisJob();
         }
 
-        if (Array.isArray(images) && images.length > 0) {
-          const imageResults = await this.processImages(images);
-          if (!(await this.isRunCurrent(runId))) {
-            return await this.getAnalysisJob();
-          }
-
-          imageAltResults = imageResults.filter((result) => result.success && result.alt);
-        }
-
-        steps = this.markStepStatus(steps, 1, 'completed');
-      } else {
-        steps = this.markStepStatus(steps, 1, 'completed');
+        imageAltResults = imageResults.filter((result) => result.success && result.alt);
       }
+
+      steps = this.markStepStatus(steps, 1, 'completed');
 
       steps = this.markStepStatus(steps, 2, 'active');
       await this.updateAnalysisJobForRun(runId, {
@@ -265,10 +287,18 @@ class AccessibilityOptimizer {
         steps
       });
 
-      const optimizations = await this.analyzePageForOptimizations(
-        analysisResult.pageContent,
-        analysisResult.summary.issues
-      );
+      let optimizations = this.getEmptyOptimizations();
+      try {
+        optimizations = await this.analyzePageForOptimizations(
+          analysisResult.pageContent,
+          analysisResult.summary.issues
+        );
+      } catch (optimizationError) {
+        console.warn('IA de recomendações falhou; seguindo com correções determinísticas:', optimizationError);
+        await this.updateAnalysisJobForRun(runId, {
+          progressText: 'IA não retornou JSON válido. Seguindo com correções automáticas...'
+        });
+      }
       if (!(await this.isRunCurrent(runId))) {
         return await this.getAnalysisJob();
       }
@@ -541,22 +571,46 @@ class AccessibilityOptimizer {
   /**
    * Salva configurações
    */
-  async saveSettings(apiKey, selectedModel) {
-    this.apiKey = apiKey;
-    this.selectedModel = selectedModel;
+  async saveSettings(settings = {}) {
+    this.apiKey = settings.apiKey !== undefined ? settings.apiKey : this.apiKey;
+    this.selectedModel = settings.selectedModel || this.selectedModel;
+    this.provider = settings.provider || this.provider;
+    this.localBaseUrl = settings.localBaseUrl || this.localBaseUrl;
+    this.localModel = settings.localModel || this.localModel;
+
     return new Promise((resolve) => {
-      chrome.storage.sync.set({ apiKey, selectedModel }, () => {
-        console.log('Settings saved:', { model: this.selectedModel });
+      chrome.storage.sync.set({
+        apiKey: this.apiKey,
+        selectedModel: this.selectedModel,
+        provider: this.provider,
+        localBaseUrl: this.localBaseUrl,
+        localModel: this.localModel
+      }, () => {
+        console.log('Settings saved:', { provider: this.provider, model: this.getActiveModel() });
         resolve();
       });
     });
   }
 
-  /**
-   * Valida se API key está configurada
-   */
+  isLocalProvider() {
+    return this.provider === ACCESSIFY_AI_CONFIG.providers.local;
+  }
+
+  getActiveModel() {
+    return this.isLocalProvider() ? this.localModel : this.selectedModel;
+  }
+
+  getActiveBaseURL() {
+    const rawUrl = this.isLocalProvider() ? this.localBaseUrl : this.openRouterBaseURL;
+    return (rawUrl || '').replace(/\/+$/, '');
+  }
+
   isConfigured() {
-    return this.apiKey && this.apiKey.length > 0;
+    if (this.isLocalProvider()) {
+      return !!(this.localBaseUrl && this.localModel);
+    }
+
+    return !!(this.apiKey && this.apiKey.length > 0);
   }
 
   /**
@@ -567,12 +621,12 @@ class AccessibilityOptimizer {
       return '';
     }
 
-    if (typeof message.content === 'string') {
-      return message.content;
-    }
+    let content = '';
 
-    if (Array.isArray(message.content)) {
-      return message.content
+    if (typeof message.content === 'string') {
+      content = message.content;
+    } else if (Array.isArray(message.content)) {
+      content = message.content
         .map((part) => {
           if (typeof part === 'string') {
             return part;
@@ -584,11 +638,229 @@ class AccessibilityOptimizer {
 
           return '';
         })
-        .join('')
-        .trim();
+        .join('');
     }
 
-    return '';
+    if (!content && typeof message.reasoning === 'string') {
+      content = message.reasoning;
+    }
+
+    return this.stripThinking(content).trim();
+  }
+
+  stripThinking(text) {
+    if (typeof text !== 'string') {
+      return '';
+    }
+
+    return text
+      .replace(/<think>[\s\S]*?<\/think>/gi, '')
+      .replace(/<\/?think>/gi, '')
+      .trim();
+  }
+
+  getEmptyOptimizations() {
+    return {
+      optimizations: [],
+      structureChanges: [],
+      ariaLabels: [],
+      textChanges: [],
+      styles: '',
+      imageAlts: []
+    };
+  }
+
+  extractJsonObject(text) {
+    const normalized = this.stripThinking(text);
+    const jsonMatch = normalized.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Resposta inválida da IA - não contém JSON válido');
+    }
+
+    try {
+      return this.normalizeOptimizations(JSON.parse(jsonMatch[0]));
+    } catch (parseError) {
+      const repaired = this.repairJsonObject(jsonMatch[0]);
+      if (repaired) {
+        console.warn('JSON da IA foi reparado após resposta malformada:', parseError.message);
+        return this.normalizeOptimizations(repaired);
+      }
+
+      throw parseError;
+    }
+  }
+
+  repairJsonObject(raw) {
+    if (typeof raw !== 'string' || raw.trim().length === 0) {
+      return null;
+    }
+
+    let candidate = raw
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/,\s*([}\]])/g, '$1');
+
+    try {
+      return JSON.parse(candidate);
+    } catch (error) {
+      // continua para fechar JSON truncado
+    }
+
+    const quoteCount = (candidate.match(/(?<!\\)"/g) || []).length;
+    if (quoteCount % 2 === 1) {
+      candidate += '"';
+    }
+
+    const openBrackets = (candidate.match(/\[/g) || []).length;
+    const closeBrackets = (candidate.match(/\]/g) || []).length;
+    const openBraces = (candidate.match(/\{/g) || []).length;
+    const closeBraces = (candidate.match(/\}/g) || []).length;
+    candidate += ']'.repeat(Math.max(0, openBrackets - closeBrackets));
+    candidate += '}'.repeat(Math.max(0, openBraces - closeBraces));
+    candidate = candidate.replace(/,\s*([}\]])/g, '$1');
+
+    try {
+      return JSON.parse(candidate);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  normalizeOptimizations(parsed) {
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('Resposta inválida da IA - JSON inesperado');
+    }
+
+    const normalized = {
+      optimizations: Array.isArray(parsed.optimizations) ? parsed.optimizations : [],
+      structureChanges: Array.isArray(parsed.structureChanges) ? parsed.structureChanges : [],
+      ariaLabels: Array.isArray(parsed.ariaLabels) ? parsed.ariaLabels : [],
+      textChanges: Array.isArray(parsed.textChanges) ? parsed.textChanges : [],
+      styles: typeof parsed.styles === 'string' ? parsed.styles : '',
+      imageAlts: Array.isArray(parsed.imageAlts) ? parsed.imageAlts : []
+    };
+
+    if (normalized.optimizations.length === 0) {
+      normalized.optimizations = this.deriveOptimizationsList(normalized);
+    }
+
+    return normalized;
+  }
+
+  deriveOptimizationsList(parsed) {
+    const items = [];
+
+    (parsed.structureChanges || []).forEach((change) => {
+      items.push({
+        type: 'structure',
+        priority: 'alta',
+        description: change.reason || 'Ajuste estrutural de acessibilidade',
+        implementation: change.selector || '',
+        wcagCriterion: ''
+      });
+    });
+
+    (parsed.textChanges || []).forEach((change) => {
+      items.push({
+        type: 'text',
+        priority: 'média',
+        description: change.reason || 'Ajuste de texto acessível',
+        implementation: change.selector || '',
+        wcagCriterion: ''
+      });
+    });
+
+    (parsed.ariaLabels || []).forEach((change) => {
+      items.push({
+        type: 'aria',
+        priority: 'média',
+        description: `aria-label: ${change.label || ''}`.trim(),
+        implementation: change.selector || '',
+        wcagCriterion: '4.1.2'
+      });
+    });
+
+    if (parsed.styles) {
+      items.push({
+        type: 'styles',
+        priority: 'média',
+        description: 'CSS de contraste, foco ou legibilidade',
+        implementation: 'style[data-accessibility]',
+        wcagCriterion: '1.4.3'
+      });
+    }
+
+    return items;
+  }
+
+  buildChatHeaders() {
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+
+    if (!this.isLocalProvider()) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+      headers['HTTP-Referer'] = 'https://accessify-extension.local';
+      headers['X-Title'] = 'Accessify';
+    }
+
+    return headers;
+  }
+
+  async chatCompletion({ messages, maxTokens, temperature = 0.3, json = false }) {
+    await this.refreshSettings();
+
+    if (!this.isConfigured()) {
+      throw new Error(this.isLocalProvider()
+        ? 'Ollama local não está configurado. Acesse as opções do plugin.'
+        : 'API key não configurada. Acesse as opções do plugin.');
+    }
+
+    const requestBody = {
+      model: this.getActiveModel(),
+      messages,
+      max_tokens: maxTokens,
+      temperature
+    };
+
+    if (this.isLocalProvider()) {
+      requestBody.think = false;
+      requestBody.chat_template_kwargs = { enable_thinking: false };
+      requestBody.options = {
+        temperature,
+        num_predict: maxTokens,
+        num_ctx: ACCESSIFY_AI_CONFIG.localLimits.numCtx
+      };
+    } else if (json) {
+      requestBody.response_format = { type: 'json_object' };
+    }
+
+    const response = await fetch(`${this.getActiveBaseURL()}/chat/completions`, {
+      method: 'POST',
+      headers: this.buildChatHeaders(),
+      body: JSON.stringify(requestBody)
+    });
+
+    const responseText = await response.text();
+
+    if (!response.ok) {
+      try {
+        const errorData = JSON.parse(responseText);
+        throw new Error(`Erro da API (${response.status}): ${errorData.error?.message || errorData.message || responseText}`);
+      } catch (parseError) {
+        if (parseError.message.includes('Erro da API')) {
+          throw parseError;
+        }
+        throw new Error(`Erro da API (${response.status}): ${responseText || 'Erro desconhecido'}`);
+      }
+    }
+
+    const data = JSON.parse(responseText);
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      throw new Error('Resposta inválida: estrutura inesperada');
+    }
+
+    return data;
   }
 
   /**
@@ -610,188 +882,183 @@ class AccessibilityOptimizer {
   }
 
   /**
-   * Testa conexão com OpenRouter
+   * Testa conexão com Ollama ou OpenRouter
    */
   async testConnection() {
     await this.refreshSettings();
 
-    console.log('Testing connection to OpenRouter...');
-    console.log('API Key configured:', this.isConfigured());
-    console.log('Selected model:', this.selectedModel);
-
     if (!this.isConfigured()) {
-      throw new Error('API key não configurada');
+      throw new Error(this.isLocalProvider() ? 'Ollama local não está configurado' : 'API key não configurada');
     }
 
-    try {
-      const requestBody = {
-        model: this.selectedModel,
-        messages: [
-          {
-            role: 'user',
-            content: 'Responda com "OK" se você conseguir ler esta mensagem.'
-          }
-        ],
-        max_tokens: 16000,
-        temperature: 0.7
-      };
-
-      console.log('Request body:', JSON.stringify(requestBody, null, 2));
-
-      const response = await fetch(`${this.baseURL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-          'HTTP-Referer': 'https://accessify-extension.local',
-          'X-Title': 'Accessify'
-        },
-        body: JSON.stringify(requestBody)
+    if (this.isLocalProvider()) {
+      const modelsResponse = await fetch(`${this.getActiveBaseURL()}/models`, {
+        headers: this.buildChatHeaders()
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', {
-        contentType: response.headers.get('content-type'),
-        status: response.status,
-        statusText: response.statusText
-      });
-
-      // Ler o corpo da resposta como texto primeiro
-      const responseText = await response.text();
-      console.log('Response body (raw):', responseText);
-
-      if (!response.ok) {
-        console.error('Error response status:', response.status);
-        
-        try {
-          const errorData = JSON.parse(responseText);
-          console.error('Error data:', errorData);
-          throw new Error(`API Error (${response.status}): ${errorData.error?.message || errorData.message || 'Erro desconhecido'}`);
-        } catch (parseError) {
-          if (parseError.message.includes('API Error')) {
-            throw parseError;
-          }
-          throw new Error(`API Error (${response.status}): ${responseText || 'Erro desconhecido'}`);
+      if (modelsResponse.ok) {
+        const modelsData = await modelsResponse.json();
+        const modelIds = (modelsData.data || []).map((item) => item.id);
+        if (modelIds.length > 0 && !modelIds.includes(this.localModel)) {
+          throw new Error(`Ollama respondeu, mas o modelo "${this.localModel}" não foi encontrado. Execute: ollama pull ${this.localModel}`);
         }
       }
-
-      // Tentar parsear como JSON
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
-        throw new Error(`Resposta inválida: não é JSON válido. Resposta: ${responseText}`);
-      }
-
-      console.log('Success response:', data);
-      
-      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error('Resposta inválida: estrutura inesperada');
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Erro ao testar conexão:', error);
-      throw error;
     }
+
+    return this.chatCompletion({
+      messages: [
+        {
+          role: 'user',
+          content: 'Responda com "OK" se você conseguir ler esta mensagem.'
+        }
+      ],
+      maxTokens: ACCESSIFY_AI_CONFIG.tokens.test,
+      temperature: 0
+    });
+  }
+
+  buildImageContextPrompt(image) {
+    const parts = [
+      'Gere um alt text curto (10 a 100 caracteres) para esta imagem.',
+      'Descreva só o que é visível ou o que o contexto da página indica com segurança.',
+      'Não invente detalhes. Responda APENAS com o texto alternativo.'
+    ];
+
+    if (image.fileName) {
+      parts.push(`Nome do arquivo: ${image.fileName}`);
+    }
+    if (image.title) {
+      parts.push(`Title: ${image.title}`);
+    }
+    if (image.figcaption) {
+      parts.push(`Figcaption: ${image.figcaption}`);
+    }
+    if (image.adjacentText) {
+      parts.push(`Texto adjacente: ${image.adjacentText}`);
+    }
+    if (image.parentAriaLabel) {
+      parts.push(`Nome do elemento pai: ${image.parentAriaLabel}`);
+    }
+    if (image.width && image.height) {
+      parts.push(`Dimensões: ${image.width}x${image.height}`);
+    }
+
+    return parts.join('\n');
   }
 
   /**
    * Gera alt text para imagens usando IA
    */
-  async generateImageAltText(imageUrl) {
-    await this.refreshSettings();
+  async generateImageAltText(image) {
+    const imageData = typeof image === 'string' ? { src: image } : (image || {});
+    const useVision = !this.isLocalProvider()
+      && openRouterModelSupportsVision(this.selectedModel)
+      && !!(imageData.dataUrl || imageData.src);
 
-    if (!this.isConfigured()) {
-      throw new Error('API key não configurada. Acesse as opções do plugin.');
-    }
+    const userContent = useVision
+      ? [
+          { type: 'text', text: this.buildImageContextPrompt(imageData) },
+          { type: 'image_url', image_url: { url: imageData.dataUrl || imageData.src } }
+        ]
+      : this.buildImageContextPrompt(imageData);
 
-    try {
-      const requestBody = {
-        model: this.selectedModel,
-        messages: [
-          {
-            role: 'system',
-            content: 'Você é um especialista em acessibilidade web. Gere um texto alternativo conciso e descritivo para a imagem fornecida. O texto deve ter entre 10 e 100 caracteres, descrever apenas o que é visível e evitar detalhes supérfluos. Responda APENAS com o texto alternativo, sem explicações adicionais.'
-          },
-          {
-            role: 'user',
-            content: `Gere um alt text para esta imagem: ${imageUrl}`
-          }
-        ],
-        max_tokens: 16000,
-        temperature: 0.7
-      };
-
-      const response = await fetch(`${this.baseURL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-          'HTTP-Referer': 'https://accessify-extension.local',
-          'X-Title': 'Accessify'
+    const data = await this.chatCompletion({
+      messages: [
+        {
+          role: 'system',
+          content: 'Você é um especialista em acessibilidade web. Gere um texto alternativo conciso e descritivo. O texto deve ter entre 10 e 100 caracteres. Responda APENAS com o texto alternativo, sem explicações adicionais.'
         },
-        body: JSON.stringify(requestBody)
-      });
-
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        try {
-          const errorData = JSON.parse(responseText);
-          throw new Error(`Erro da API: ${errorData.error?.message || 'Erro desconhecido'}`);
-        } catch (parseError) {
-          throw new Error(`Erro da API (${response.status}): ${responseText}`);
+        {
+          role: 'user',
+          content: userContent
         }
-      }
+      ],
+      maxTokens: this.isLocalProvider()
+        ? ACCESSIFY_AI_CONFIG.tokens.localAltText
+        : ACCESSIFY_AI_CONFIG.tokens.altText,
+      temperature: 0.3
+    });
 
-      const data = JSON.parse(responseText);
-      const altText = this.normalizeAltText(this.extractMessageText(data.choices?.[0]?.message));
-
-      if (!altText) {
-        throw new Error('Resposta inválida da IA: alt text vazio');
-      }
-
-      return altText;
-    } catch (error) {
-      console.error('Erro ao gerar alt text:', error);
-      throw error;
+    const altText = this.normalizeAltText(this.extractMessageText(data.choices?.[0]?.message));
+    if (!altText) {
+      throw new Error('Resposta inválida da IA: alt text vazio');
     }
+
+    return altText;
   }
 
   /**
    * Analisa página e gera recomendações de otimização
    */
   async analyzePageForOptimizations(pageContent, issues) {
-    await this.refreshSettings();
-
-    if (!this.isConfigured()) {
-      throw new Error('API key não configurada. Acesse as opções do plugin.');
+    const selectedIssues = this.selectIssuesForLlm(issues);
+    if (selectedIssues.length === 0) {
+      console.log('Nenhum problema essencial para a IA; pulando recomendações.');
+      return this.getEmptyOptimizations();
     }
 
-    try {
-      // Preparar resumo dos problemas
-      const issuesSummary = this.prepareIssuesSummary(issues);
+    console.log('Accessify issues enviadas à IA:', selectedIssues.map((issue) => issue.type));
 
-      const requestBody = {
-        model: this.selectedModel,
-        messages: [
-          {
-            role: 'system',
-            content: `Você é um especialista em WCAG 2.1 e acessibilidade web. Sua tarefa é analisar uma página web e fornecer recomendações específicas para melhorar a acessibilidade para usuários cegos ou de baixa visão.
+    const issuesSummary = this.prepareIssuesSummary(selectedIssues);
+    const htmlExcerptLength = this.isLocalProvider()
+      ? ACCESSIFY_AI_CONFIG.localLimits.htmlExcerpt
+      : 1500;
+    const htmlExcerpt = typeof pageContent?.html === 'string' && htmlExcerptLength > 0
+      ? pageContent.html.slice(0, htmlExcerptLength)
+      : '';
+
+    const data = await this.chatCompletion({
+      messages: this.buildOptimizationMessages(pageContent, issuesSummary, htmlExcerpt),
+      maxTokens: this.isLocalProvider()
+        ? ACCESSIFY_AI_CONFIG.tokens.localOptimizations
+        : ACCESSIFY_AI_CONFIG.tokens.optimizations,
+      temperature: this.isLocalProvider() ? 0.1 : 0.3,
+      json: true
+    });
+
+    const content = this.extractMessageText(data.choices?.[0]?.message);
+    if (!content) {
+      throw new Error('Resposta inválida da IA - conteúdo vazio');
+    }
+
+    return this.extractJsonObject(content);
+  }
+
+  buildOptimizationMessages(pageContent, issuesSummary, htmlExcerpt) {
+    if (this.isLocalProvider()) {
+      return [
+        {
+          role: 'system',
+          content: `Você corrige acessibilidade WCAG 2.1 A/AA para cegos e baixa visão.
+Responda SOMENTE um JSON válido, sem markdown e sem comentários:
+{"structureChanges":[{"selector":"css","newTag":"h1","attributes":{},"reason":"..."}],"ariaLabels":[],"textChanges":[{"selector":"css","text":"...","reason":"..."}],"styles":""}
+Regras:
+- No máximo 5 itens no total.
+- Use só os seletores enviados.
+- Se faltar H1, transforme o título principal visível em h1.
+- Links genéricos: troque o texto visível por um texto que descreva o destino.
+- Não invente seletores. Não descreva imagens.`
+        },
+        {
+          role: 'user',
+          content: `Título: ${pageContent.title}
+URL: ${pageContent.url}
+
+Problemas essenciais:
+${issuesSummary}
+
+JSON:`
+        }
+      ];
+    }
+
+    return [
+      {
+        role: 'system',
+        content: `Você é um especialista em WCAG 2.1 e acessibilidade web. Sua tarefa é analisar uma página web e fornecer recomendações específicas para melhorar a acessibilidade para usuários cegos ou de baixa visão.
 
 Responda em formato JSON com a seguinte estrutura:
 {
-  "optimizations": [
-    {
-      "type": "tipo_da_otimizacao",
-      "priority": "alta|média|baixa",
-      "description": "descrição da otimização",
-      "implementation": "como implementar",
-      "wcagCriterion": "número do critério WCAG"
-    }
-  ],
   "structureChanges": [
     {
       "selector": "seletor CSS",
@@ -817,37 +1084,16 @@ Responda em formato JSON com a seguinte estrutura:
   "styles": "CSS adicional para melhorar acessibilidade"
 }
 
-Foque em:
-1. Melhorar contraste de cores
-2. Adicionar ARIA labels apropriados
-3. Melhorar estrutura semântica
-4. Garantir navegação por teclado
-5. Adicionar indicadores de foco visíveis
-6. Corrigir links vazios com texto visível ou aria-label apropriado
-7. Corrigir referências ARIA quebradas removendo ou substituindo aria-labelledby e aria-describedby inválidos
-8. Corrigir campos de formulário sem label usando preferencialmente title não vazio, ou aria-labelledby válido quando houver referência apropriada
-9. Remover title redundante quando ele repetir exatamente o texto visível ou o alt da imagem
-10. Remover text-align: justify de blocos longos de texto, preferindo alinhamento à esquerda
-11. Quando o alt da imagem repetir texto adjacente, preferir alt vazio preservando o texto visível próximo
-12. Aumentar textos muito pequenos para pelo menos 14px quando font_size estiver abaixo disso
-13. Para elementos com aria-hidden, torná-los perceptíveis removendo aria-hidden e outros atributos de ocultação equivalentes quando presentes
-14. Ao revelar texto que estava oculto, definir explicitamente color e background-color com contraste suficiente entre si
-15. Usar apenas seletores que apareçam nos problemas encontrados
-
-Para problemas de contraste baixo, escolha uma ou mais destas possibilidades e explique a decisão em "reason" ou "implementation":
-- alterar a cor do texto para uma cor com contraste suficiente
-- alterar a cor de fundo para uma cor com contraste suficiente
-- adicionar fundo sólido ao texto quando houver imagem de fundo, gradiente ou transparência
-- quando o texto for claro e o contraste estiver insuficiente, prefira adicionar fundo sólido escuro antes de substituir a cor do texto
-- aumentar peso e/ou tamanho tipográfico apenas quando isso resolver o critério corretamente
-- quando font_size for menor que 18px e o contraste for insuficiente, elevar a fonte para pelo menos 18px
-- ajustar borda, outline ou estado de foco quando o contraste ruim estiver em elementos interativos
-
-Para cada problema de contraste, proponha correções CSS concretas e mínimas, preservando o visual da página quando possível. Se houver dados de foreground_color, background_color, contrast_ratio e minimum_contrast, use-os para decidir a correção mais adequada.`
-          },
-          {
-            role: 'user',
-            content: `Analise esta página e forneça recomendações de otimização:
+Foque só no essencial:
+1. Estrutura de headings (H1 ausente ou salto de nível)
+2. Links genéricos ("clique aqui") com texto descritivo
+3. Contraste baixo com CSS mínimo
+4. Usar apenas seletores que apareçam nos problemas encontrados
+5. Não repetir correções já cobertas por regras fixas (tabela, iframe, skip link, SVG, label, zoom)`
+      },
+      {
+        role: 'user',
+        content: `Analise esta página e forneça recomendações de otimização:
 
 Título: ${pageContent.title}
 URL: ${pageContent.url}
@@ -855,55 +1101,29 @@ Idioma: ${pageContent.language}
 
 Problemas encontrados:
 ${issuesSummary}
-
+${htmlExcerpt ? `\nTrecho HTML:\n${htmlExcerpt}\n` : ''}
 Forneça as recomendações em JSON válido.`
-          }
-        ],
-        response_format: { type: 'json_object' },
-        max_tokens: 32000,
-        temperature: 0.7
-      };
+      }
+    ];
+  }
 
-      const response = await fetch(`${this.baseURL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${this.apiKey}`,
-          'HTTP-Referer': 'https://accessify-extension.local',
-          'X-Title': 'Accessify'
-        },
-        body: JSON.stringify(requestBody)
-      });
+  selectIssuesForLlm(issues) {
+    const skipTypes = new Set(ACCESSIFY_AI_CONFIG.llmSkipIssueTypes || []);
+    const essentialTypes = this.isLocalProvider()
+      ? new Set(ACCESSIFY_AI_CONFIG.localLimits.essentialIssueTypes)
+      : null;
 
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        try {
-          const errorData = JSON.parse(responseText);
-          throw new Error(`Erro da API: ${errorData.error?.message || 'Erro desconhecido'}`);
-        } catch (parseError) {
-          throw new Error(`Erro da API (${response.status}): ${responseText}`);
-        }
+    return (issues || []).filter((issue) => {
+      if (!issue || skipTypes.has(issue.type)) {
+        return false;
       }
 
-      const data = JSON.parse(responseText);
-      const content = this.extractMessageText(data.choices?.[0]?.message);
-
-      if (!content) {
-        throw new Error('Resposta inválida da IA - conteúdo vazio');
+      if (essentialTypes && !essentialTypes.has(issue.type)) {
+        return false;
       }
 
-      // Extrair JSON da resposta
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('Resposta inválida da IA - não contém JSON válido');
-      }
-
-      return JSON.parse(jsonMatch[0]);
-    } catch (error) {
-      console.error('Erro ao analisar página:', error);
-      throw error;
-    }
+      return true;
+    });
   }
 
   /**
@@ -911,7 +1131,11 @@ Forneça as recomendações em JSON válido.`
    */
   prepareIssuesSummary(issues) {
     const grouped = {};
-    issues.forEach(issue => {
+    const maxPerType = this.isLocalProvider()
+      ? ACCESSIFY_AI_CONFIG.localLimits.maxIssuesPerType
+      : 2;
+
+    issues.forEach((issue) => {
       if (!grouped[issue.type]) {
         grouped[issue.type] = [];
       }
@@ -919,82 +1143,25 @@ Forneça as recomendações em JSON válido.`
     });
 
     let summary = '';
-    Object.keys(grouped).forEach(type => {
+    Object.keys(grouped).forEach((type) => {
       summary += `\n${type}:\n`;
-      grouped[type].slice(0, 3).forEach(issue => {
+      grouped[type].slice(0, maxPerType).forEach((issue) => {
         summary += `  - ${issue.message}\n`;
         if (issue.selector) {
           summary += `    seletor: ${issue.selector}\n`;
         }
-        if (issue.ariaLabelledBy) {
-          summary += `    aria-labelledby: ${issue.ariaLabelledBy}\n`;
-        }
-        if (issue.ariaDescribedBy) {
-          summary += `    aria-describedby: ${issue.ariaDescribedBy}\n`;
-        }
-        if (issue.element_html) {
-          summary += `    html: ${issue.element_html}\n`;
-        }
-        if (issue.placeholder) {
-          summary += `    placeholder: ${issue.placeholder}\n`;
-        }
-        if (issue.title_attribute) {
-          summary += `    title_attribute: ${issue.title_attribute}\n`;
-        }
-        if (issue.element_text) {
-          summary += `    element_text: ${issue.element_text}\n`;
-        }
-        if (issue.alt_text) {
-          summary += `    alt_text: ${issue.alt_text}\n`;
-        }
-        if (issue.adjacent_text) {
-          summary += `    adjacent_text: ${issue.adjacent_text}\n`;
-        }
-        if (issue.name) {
-          summary += `    name: ${issue.name}\n`;
-        }
-        if (issue.id) {
-          summary += `    id: ${issue.id}\n`;
-        }
-        if (issue.input_type) {
-          summary += `    input_type: ${issue.input_type}\n`;
-        }
-        if (issue.character_count) {
-          summary += `    character_count: ${issue.character_count}\n`;
-        }
-        if (issue.text_align) {
-          summary += `    text_align: ${issue.text_align}\n`;
+        if (issue.href) {
+          summary += `    href: ${issue.href}\n`;
         }
         if (issue.text_content) {
-          summary += `    text_content: ${issue.text_content}\n`;
+          summary += `    texto: ${issue.text_content.slice(0, 80)}\n`;
         }
-        if (issue.foreground_color) {
-          summary += `    foreground_color: ${issue.foreground_color}\n`;
-        }
-        if (issue.background_color) {
-          summary += `    background_color: ${issue.background_color}\n`;
-        }
-        if (issue.contrast_ratio) {
-          summary += `    contrast_ratio: ${issue.contrast_ratio}\n`;
-        }
-        if (issue.minimum_contrast) {
-          summary += `    minimum_contrast: ${issue.minimum_contrast}\n`;
-        }
-        if (issue.font_size) {
-          summary += `    font_size: ${issue.font_size}\n`;
-        }
-        if (issue.font_weight) {
-          summary += `    font_weight: ${issue.font_weight}\n`;
-        }
-        if (typeof issue.is_large_text === 'boolean') {
-          summary += `    is_large_text: ${issue.is_large_text}\n`;
-        }
-        if (issue.background_image && issue.background_image !== 'none') {
-          summary += `    background_image: ${issue.background_image}\n`;
+        if (issue.foreground_color && issue.background_color) {
+          summary += `    cores: ${issue.foreground_color} / ${issue.background_color} (${issue.contrast_ratio?.toFixed?.(2) || issue.contrast_ratio})\n`;
         }
       });
-      if (grouped[type].length > 3) {
-        summary += `  ... e mais ${grouped[type].length - 3}\n`;
+      if (grouped[type].length > maxPerType) {
+        summary += `  ... e mais ${grouped[type].length - maxPerType}\n`;
       }
     });
 
@@ -1006,10 +1173,36 @@ Forneça as recomendações em JSON válido.`
    */
   async processImages(images) {
     const results = [];
+    let llmCalls = 0;
+    const maxLlmCalls = this.isLocalProvider()
+      ? ACCESSIFY_AI_CONFIG.localLimits.maxImageLlmCalls
+      : images.length;
 
     for (const image of images) {
+      const heuristicAlt = this.buildHeuristicImageAlt(image);
+      if (heuristicAlt && this.isLocalProvider()) {
+        results.push({
+          index: image.index,
+          src: image.src,
+          alt: heuristicAlt,
+          success: true
+        });
+        continue;
+      }
+
+      if (llmCalls >= maxLlmCalls) {
+        results.push({
+          index: image.index,
+          src: image.src,
+          alt: heuristicAlt || this.humanizeFileName(image.fileName) || 'Imagem',
+          success: true
+        });
+        continue;
+      }
+
       try {
-        const altText = await this.generateImageAltText(image.src);
+        llmCalls += 1;
+        const altText = await this.generateImageAltText(image);
         results.push({
           index: image.index,
           src: image.src,
@@ -1017,13 +1210,12 @@ Forneça as recomendações em JSON válido.`
           success: true
         });
 
-        // Pequeno delay para não sobrecarregar a API
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, this.isLocalProvider() ? 150 : 500));
       } catch (error) {
         results.push({
           index: image.index,
           src: image.src,
-          alt: image.currentAlt || 'Imagem',
+          alt: heuristicAlt || image.currentAlt || this.humanizeFileName(image.fileName) || 'Imagem',
           success: false,
           error: error.message
         });
@@ -1031,6 +1223,46 @@ Forneça as recomendações em JSON válido.`
     }
 
     return results;
+  }
+
+  buildHeuristicImageAlt(image) {
+    const candidates = [
+      image?.figcaption,
+      image?.title,
+      image?.parentAriaLabel,
+      image?.adjacentText
+    ];
+
+    for (const candidate of candidates) {
+      const normalized = this.normalizeAltText(candidate);
+      if (normalized.length >= 8) {
+        return normalized;
+      }
+    }
+
+    return '';
+  }
+
+  humanizeFileName(fileName) {
+    if (typeof fileName !== 'string' || fileName.trim().length === 0) {
+      return '';
+    }
+
+    const base = fileName
+      .replace(/\.[a-z0-9]+$/i, '')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (base.length < 6 || /^\d+$/.test(base.replace(/\s/g, ''))) {
+      return '';
+    }
+
+    if (/^[a-f0-9\s]{8,}$/i.test(base)) {
+      return '';
+    }
+
+    return this.normalizeAltText(base);
   }
 }
 
@@ -1082,7 +1314,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({
           apiKey: optimizer.apiKey ? '***' : '',
           selectedModel: optimizer.selectedModel,
-          isConfigured: optimizer.isConfigured()
+          provider: optimizer.provider,
+          localBaseUrl: optimizer.localBaseUrl,
+          localModel: optimizer.localModel,
+          isConfigured: optimizer.isConfigured(),
+          displayName: getModelDisplayName(optimizer.selectedModel, optimizer.provider, optimizer.localModel)
         });
       })
       .catch((error) => sendResponse({ success: false, error: error.message }));
@@ -1090,7 +1326,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === 'saveSettings') {
-    optimizer.saveSettings(request.apiKey, request.selectedModel)
+    optimizer.saveSettings({
+      apiKey: request.apiKey,
+      selectedModel: request.selectedModel,
+      provider: request.provider,
+      localBaseUrl: request.localBaseUrl,
+      localModel: request.localModel
+    })
       .then(() => {
         sendResponse({ success: true });
       })

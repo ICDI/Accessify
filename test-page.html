@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
     <title>Página de Teste - WCAG Accessibility Plugin</title>
     <style>
         * {
@@ -190,8 +190,8 @@
             <h3>Seção 3: Formulário</h3>
             <form class="form-section">
                 <p>Formulário com campos sem labels associados:</p>
-                <input type="text" placeholder="Nome completo">
-                <input type="email" placeholder="E-mail">
+                <input type="text" name="nome" placeholder="Nome completo">
+                <input type="email" name="email" placeholder="E-mail">
                 <textarea placeholder="Mensagem" rows="4"></textarea>
                 <button type="submit">Enviar</button>
             </form>
@@ -233,7 +233,13 @@
             <p>Observe que pulamos de H3 para H5, violando a hierarquia de títulos.</p>
             
             <h3>Voltando para H3</h3>
-            <p>Isto viola as regras de estrutura semântica.</p>
+            <p>Este parágrafo contém um <a href="#conteudo" style="color:#0066cc; text-decoration:none;">link distinguido só por cor</a> no meio do texto.</p>
+            <p id="dup">Primeiro elemento com ID duplicado</p>
+            <p id="dup">Segundo elemento com ID duplicado</p>
+            <svg width="80" height="40" aria-hidden="false">
+                <rect width="80" height="40" fill="#1976d2"></rect>
+            </svg>
+            <iframe src="about:blank" width="300" height="80"></iframe>
         </div>
 
         <!-- Seção 7: Elemento interativo sem role -->
@@ -265,13 +271,19 @@
                     <li>❌ Links com texto genérico</li>
                     <li>❌ Formulário sem labels</li>
                     <li>❌ Tabela sem headers semânticos</li>
+                    <li>❌ Div com onclick (não semântico / teclado)</li>
+                    <li>❌ iframe sem title</li>
+                    <li>❌ SVG sem nome acessível</li>
+                    <li>❌ IDs duplicados</li>
+                    <li>❌ Link distinguido só por cor</li>
+                    <li>❌ Viewport impedindo zoom</li>
+                    <li>❌ Campos sem autocomplete</li>
                     <li>❌ Contraste de cores baixo</li>
                     <li>❌ Texto longo justificado</li>
                     <li>❌ Texto muito pequeno</li>
                     <li>❌ Conteúdo com aria-hidden</li>
                     <li>❌ Title redundante</li>
                     <li>❌ Alt redundante com texto adjacente</li>
-                    <li>❌ Div com onclick (não semântico)</li>
                     <li>❌ Sem indicador de foco visual</li>
                 </ul>
             </div>

@@ -3,10 +3,26 @@
 ## Pré-requisitos
 
 - ✅ Google Chrome versão 88 ou superior
-- ✅ Chave de API do OpenRouter (gratuita)
-- ✅ Conexão com a internet
+- ✅ Ollama local com `qwen3:8b` **ou** chave de API do OpenRouter
+- ✅ Conexão com a internet (apenas se usar OpenRouter)
 
-## Passo 1: Obter Chave de API OpenRouter
+## Passo 1: Configurar a IA
+
+### Opção A — Ollama local (padrão)
+
+1. Instale o [Ollama](https://ollama.com) no Windows
+2. No terminal:
+   ```bash
+   ollama pull qwen3:8b
+   ```
+3. Deixe o Ollama em execução (porta 11434)
+4. Se o teste de conexão da extensão retornar 403, defina no sistema:
+   ```
+   OLLAMA_ORIGINS=chrome-extension://*
+   ```
+   Depois feche o Ollama pelo tray e abra de novo.
+
+### Opção B — OpenRouter
 
 ### 1.1 Criar Conta
 1. Acesse [https://openrouter.ai](https://openrouter.ai)
@@ -65,11 +81,12 @@
 2. Clique em "⚙️ Configurações" (no popup)
 3. Ou clique com botão direito no ícone → "Opções"
 
-### 3.2 Inserir Chave de API
-1. Cole sua chave de API do OpenRouter no campo "Chave de API OpenRouter"
-2. Escolha um modelo de IA (recomendado: "Auto")
-3. Clique em "🧪 Testar Conexão" para validar
-4. Clique em "💾 Salvar Configurações"
+### 3.2 Configurar o provedor
+1. Escolha **Ollama local** (padrão) ou **OpenRouter**
+2. No local, confirme a URL `http://127.0.0.1:11434/v1` e o modelo `qwen3:8b`
+3. No OpenRouter, cole a chave e escolha DeepSeek V4 Flash (padrão) ou outro modelo da lista
+4. Clique em "🧪 Testar Conexão" para validar
+5. Clique em "💾 Salvar Configurações"
 
 ### 3.3 Configurações Opcionais
 - ☑️ **Otimizar automaticamente todas as páginas** - Analisa cada página visitada

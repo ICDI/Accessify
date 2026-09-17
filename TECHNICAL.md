@@ -19,16 +19,14 @@ O plugin é estruturado em três camadas principais:
                          │
 ┌────────────────────────▼────────────────────────────────────┐
 │         Background Service Worker (background.js)           │
-│  - AccessibilityOptimizer (integração com API)             │
+│  - AccessibilityOptimizer (Ollama local ou OpenRouter)     │
 │  - Gerenciamento de configurações                           │
-│  - Comunicação com OpenRouter                               │
 └────────────────────────┬────────────────────────────────────┘
                          │
-┌────────────────────────▼────────────────────────────────────┐
-│              OpenRouter API (Modelos de IA)                 │
-│  - Análise de otimizações                                   │
-│  - Geração de alt text para imagens                         │
-└─────────────────────────────────────────────────────────────┘
+          ┌──────────────┴──────────────┐
+          ▼                             ▼
+   Ollama qwen3:8b              OpenRouter API
+   (localhost:11434)            (modelos baratos)
 ```
 
 ## Componentes Principais
@@ -40,8 +38,8 @@ O plugin é estruturado em três camadas principais:
 - `manifest_version: 3` - Versão do Manifest V3 (obrigatório)
 - `permissions` - Permissões necessárias
 - `host_permissions` - Acesso a todas as URLs
-- `content_scripts` - Scripts executados no contexto da página
-- `background.service_worker` - Worker de fundo
+- `content_scripts` - `wcag-evaluator.js` + `content.js`
+- `background.service_worker` - Worker de fundo (`importScripts('ai-config.js')`)
 - `action` - Ícone e popup
 
 ### 2. content.js
@@ -77,17 +75,18 @@ updateSummary()                  // Atualiza resumo
 **Função:** Service worker que gerencia integração com API
 
 **Classes:**
-- `AccessibilityOptimizer` - Gerencia chamadas à API OpenRouter
+- `AccessibilityOptimizer` - Gerencia chamadas à IA (Ollama ou OpenRouter)
 
 **Métodos Principais:**
 ```javascript
 // Configuração
 loadSettings()                   // Carrega configurações
 saveSettings()                   // Salva configurações
-isConfigured()                   // Verifica se API está configurada
+isConfigured()                   // Local: URL+modelo; OpenRouter: API key
+chatCompletion()                 // Chamada unificada /v1/chat/completions
 
 // Análise com IA
-generateImageAltText()           // Gera alt text para imagem
+generateImageAltText()           // Alt text (contexto local ou visão)
 analyzePageForOptimizations()    // Análise completa com IA
 processImages()                  // Processa múltiplas imagens
 ```
@@ -161,30 +160,27 @@ processImages()                  // Processa múltiplas imagens
 
 ## Critérios WCAG Avaliados
 
-### Nível A (Essencial)
+### Nível A
+1.1.1, 1.3.1 (inclui tabelas), 1.3.2, 1.4.1, 2.1.1, 2.4.1, 2.4.2, 2.4.4, 2.5.3, 3.1.1, 3.3.2, 4.1.2 (iframe, IDs, ARIA)
 
-| Critério | Código | Descrição |
-|----------|--------|-----------|
-| Alternativas de Texto | 1.1.1 | Imagens devem ter alt text |
-| Informações e Relações | 1.3.1 | Estrutura semântica apropriada |
-| Teclado | 2.1.1 | Acessível por teclado |
-| Título da Página | 2.4.2 | Deve ter título descritivo |
-| Propósito do Link | 2.4.4 | Links devem ter texto descritivo |
-| Idioma da Página | 3.1.1 | Deve declarar idioma |
+### Nível AA
+1.3.5, 1.4.3, 1.4.4, 1.4.11, 2.4.7
 
-### Nível AA (Melhorado)
+## Integração com IA
 
-| Critério | Código | Descrição |
-|----------|--------|-----------|
-| Contraste (Mínimo) | 1.4.3 | Contraste mínimo 4.5:1 |
-| Foco Visível | 2.4.7 | Indicador visual de foco |
-
-## Integração com OpenRouter
-
-### Endpoint
+### Local (Ollama)
 ```
-POST https://openrouter.io/api/v1/chat/completions
+POST http://127.0.0.1:11434/v1/chat/completions
+model: qwen3:8b
+think: false
 ```
+
+### OpenRouter
+```
+POST https://openrouter.ai/api/v1/chat/completions
+```
+
+Modelos: `deepseek/deepseek-v4-flash`, `openai/gpt-5-nano`, `qwen/qwen3.5-flash-02-23`, `google/gemini-2.5-flash-lite`.
 
 ### Headers Obrigatórios
 ```javascript
@@ -197,21 +193,22 @@ POST https://openrouter.io/api/v1/chat/completions
 ```
 
 ### Payload para Geração de Alt Text
+No Ollama o user content é texto com contexto da página. No OpenRouter com visão:
+
 ```javascript
 {
-  model: "openrouter/auto",
+  model: "google/gemini-2.5-flash-lite",
   messages: [
-    {
-      role: "system",
-      content: "Você é um especialista em acessibilidade web..."
-    },
+    { role: "system", content: "Gere um alt text..." },
     {
       role: "user",
-      content: "Gere um alt text para esta imagem: [URL]"
+      content: [
+        { type: "text", text: "Contexto da página..." },
+        { type: "image_url", image_url: { url: "data:image/jpeg;base64,..." } }
+      ]
     }
   ],
-  max_tokens: 100,
-  temperature: 0.7
+  max_tokens: 256
 }
 ```
 
@@ -365,8 +362,8 @@ if (!analysisResult.success) {
    - Reduz latência e uso de API
 
 2. **Limitação de Elementos**
-   - Contraste avaliado apenas em 100 primeiros elementos
-   - Evita análise desnecessária
+   - Contraste de texto limitado aos 400 primeiros elementos visíveis
+   - Contraste de não-texto limitado a 80 controles
 
 3. **Cache de Configurações**
    - Configurações armazenadas localmente

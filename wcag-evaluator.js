@@ -1,4 +1,4 @@
-// WCAG Evaluator integrado no content.js
+// WCAG Evaluator carregado pelo content script via manifest
 
 class WCAGEvaluator {
   constructor() {
@@ -88,6 +88,72 @@ class WCAGEvaluator {
         level: 'A',
         criterion: '2.4.2',
         description: 'Página deve ter um título descritivo'
+      },
+      'data-tables': {
+        name: 'Tabelas de Dados',
+        level: 'A',
+        criterion: '1.3.1',
+        description: 'Tabelas de dados devem ter cabeçalhos semânticos'
+      },
+      'bypass-blocks': {
+        name: 'Pular Blocos',
+        level: 'A',
+        criterion: '2.4.1',
+        description: 'Deve ser possível pular blocos repetidos de conteúdo'
+      },
+      'iframe-title': {
+        name: 'Título de iframe',
+        level: 'A',
+        criterion: '4.1.2',
+        description: 'iframes devem ter título acessível'
+      },
+      'use-of-color': {
+        name: 'Uso de Cor',
+        level: 'A',
+        criterion: '1.4.1',
+        description: 'Cor não deve ser o único meio de distinguir links no texto'
+      },
+      'duplicate-ids': {
+        name: 'IDs Duplicados',
+        level: 'A',
+        criterion: '4.1.2',
+        description: 'IDs devem ser únicos para relações e rótulos acessíveis'
+      },
+      'form-instructions': {
+        name: 'Rótulos ou Instruções',
+        level: 'A',
+        criterion: '3.3.2',
+        description: 'Campos devem ter rótulo visível, não apenas placeholder ou title'
+      },
+      'resize-text': {
+        name: 'Redimensionar Texto',
+        level: 'AA',
+        criterion: '1.4.4',
+        description: 'A página não deve impedir zoom do navegador'
+      },
+      'input-purpose': {
+        name: 'Propósito do Campo',
+        level: 'AA',
+        criterion: '1.3.5',
+        description: 'Campos comuns devem declarar autocomplete'
+      },
+      'label-in-name': {
+        name: 'Nome contém Rótulo',
+        level: 'A',
+        criterion: '2.5.3',
+        description: 'O nome acessível deve conter o texto visível'
+      },
+      'non-text-contrast': {
+        name: 'Contraste de Não-texto',
+        level: 'AA',
+        criterion: '1.4.11',
+        description: 'Componentes de interface devem ter contraste mínimo de 3:1'
+      },
+      'meaningful-sequence': {
+        name: 'Sequência Significativa',
+        level: 'A',
+        criterion: '1.3.2',
+        description: 'A ordem visual não deve contradizer a ordem do DOM'
       }
     };
   }
@@ -99,22 +165,34 @@ class WCAGEvaluator {
     this.issues = [];
     
     this.evaluateImages();
+    this.evaluateNonTextAlternatives();
     this.evaluateHeadings();
     this.evaluateForms();
     this.evaluateLinks();
     this.evaluateButtons();
     this.evaluateTitleAttributes();
     this.evaluateColorContrast();
+    this.evaluateNonTextContrast();
     this.evaluateTextPresentation();
     this.evaluatePageRegions();
+    this.evaluateBypassBlocks();
+    this.evaluateTables();
     this.evaluateSemanticHTML();
+    this.evaluateClickableNonSemantic();
     this.evaluateAriaHidden();
     this.evaluateAriaReferences();
+    this.evaluateIframes();
+    this.evaluateDuplicateIds();
     this.evaluateLanguage();
     this.evaluatePageTitle();
     this.evaluateKeyboardNavigation();
     this.evaluateFocusIndicators();
-    
+    this.evaluateColorOnlyLinks();
+    this.evaluateViewportZoom();
+    this.evaluateInputPurpose();
+    this.evaluateLabelInName();
+    this.evaluateReadingOrder();
+
     return this.issues;
   }
 
@@ -154,6 +232,8 @@ class WCAGEvaluator {
           requires_llm: true,
           image_src: img.src
         });
+      } else if (this.isEmojiImage(img)) {
+        return;
       } else if (normalizedAlt.length > 100) {
         this.issues.push({
           type: 'image-alt-too-long',
@@ -162,7 +242,7 @@ class WCAGEvaluator {
           criterion: this.wcagCriteria['text-alternatives'],
           message: `Alt text da imagem é muito longo (${normalizedAlt.length} caracteres)`,
           element_html: img.outerHTML.substring(0, 100),
-          requires_llm: true,
+          requires_llm: false,
           image_src: img.src
         });
       } else if (normalizedAlt.length > 0 && normalizedAlt.length < 5) {
@@ -173,7 +253,7 @@ class WCAGEvaluator {
           criterion: this.wcagCriteria['text-alternatives'],
           message: `Alt text da imagem é muito curto: "${normalizedAlt}"`,
           element_html: img.outerHTML.substring(0, 100),
-          requires_llm: true,
+          requires_llm: false,
           image_src: img.src
         });
       }
@@ -292,7 +372,23 @@ class WCAGEvaluator {
           criterion: this.wcagCriteria['form-labels'],
           message: `Campo de formulário sem rótulo associado`,
           element_html: input.outerHTML.substring(0, 100),
-          requires_llm: false
+          requires_llm: false,
+          placeholder: input.getAttribute('placeholder')
+        });
+        return;
+      }
+
+      if (!this.hasVisibleFormLabel(input)) {
+        this.issues.push({
+          type: 'form-field-no-visible-label',
+          element: input,
+          severity: 'warning',
+          criterion: this.wcagCriteria['form-instructions'],
+          message: 'Campo possui nome acessível, mas não tem rótulo visível (placeholder ou title não bastam)',
+          element_html: input.outerHTML.substring(0, 100),
+          requires_llm: false,
+          placeholder: input.getAttribute('placeholder'),
+          title_attribute: input.getAttribute('title')
         });
       }
     });
@@ -332,7 +428,7 @@ class WCAGEvaluator {
         return;
       }
 
-      if (text && (text === 'clique aqui' || text === 'leia mais' || text === 'saiba mais')) {
+      if (text && this.isGenericLinkText(text)) {
         this.issues.push({
           type: 'link-generic-text',
           element: link,
@@ -340,7 +436,7 @@ class WCAGEvaluator {
           criterion: this.wcagCriteria['link-text'],
           message: `Link com texto genérico: "${text}"`,
           element_html: link.outerHTML.substring(0, 100),
-          requires_llm: true
+          requires_llm: false
         });
       }
     });
@@ -452,7 +548,7 @@ class WCAGEvaluator {
     let checkedCount = 0;
 
     elements.forEach((element) => {
-      if (checkedCount > 100) return; // Limita para performance
+      if (checkedCount > 400) return;
 
       if (!this.isVisible(element) || !this.hasDirectTextContent(element)) {
         return;
@@ -473,7 +569,7 @@ class WCAGEvaluator {
           criterion: this.wcagCriteria['color-contrast'],
           message: `Contraste baixo: ${contrast.toFixed(2)}:1 (mínimo ${minimumContrast}:1)`,
           element_html: element.outerHTML.substring(0, 100),
-          requires_llm: true,
+          requires_llm: false,
           contrast_ratio: contrast,
           minimum_contrast: minimumContrast,
           foreground_color: color,
@@ -625,6 +721,21 @@ class WCAGEvaluator {
     return width <= 3 || height <= 3 || /^(spacer|space|blank)\b/i.test(fileName);
   }
 
+  isEmojiImage(img) {
+    if (!(img instanceof Element)) {
+      return false;
+    }
+
+    const src = img.currentSrc || img.src || img.getAttribute('src') || '';
+    const className = typeof img.className === 'string'
+      ? img.className
+      : (img.className?.baseVal || '');
+
+    return /\bemoji\b/i.test(className)
+      || /\/emoji\//i.test(src)
+      || /s\.w\.org\/images\/core\/emoji/i.test(src);
+  }
+
   getImageDimension(img, dimension) {
     const attributeValue = parseInt(img.getAttribute(dimension), 10);
     if (Number.isFinite(attributeValue)) {
@@ -711,8 +822,12 @@ class WCAGEvaluator {
   }
 
   hasAccessibleFormLabel(input) {
-    const title = input.getAttribute('title');
+    const ariaLabel = input.getAttribute('aria-label');
+    if (typeof ariaLabel === 'string' && ariaLabel.trim().length > 0) {
+      return true;
+    }
 
+    const title = input.getAttribute('title');
     if (typeof title === 'string' && title.trim().length > 0) {
       return true;
     }
@@ -722,6 +837,10 @@ class WCAGEvaluator {
     }
 
     return this.hasAriaLabelledByText(input);
+  }
+
+  hasVisibleFormLabel(input) {
+    return this.hasAssociatedLabelElement(input);
   }
 
   hasAssociatedLabelElement(input) {
@@ -757,6 +876,11 @@ class WCAGEvaluator {
       .split(/\s+/)
       .map((id) => document.getElementById(id))
       .some((element) => element && this.isVisible(element) && element.textContent.trim().length > 0);
+  }
+
+  isGenericLinkText(text) {
+    const normalized = this.normalizeComparableText(text);
+    return /^(clique aqui|leia mais|saiba mais|veja mais|acesse aqui|click here|read more|learn more|here)$/i.test(normalized);
   }
 
   getAccessibleLinkText(link) {
@@ -1087,6 +1211,421 @@ class WCAGEvaluator {
       // Pode falhar com CORS
     }
     return false;
+  }
+
+  evaluateNonTextAlternatives() {
+    document.querySelectorAll('svg').forEach((svg, index) => {
+      if (!this.isVisible(svg) || this.isAriaHidden(svg) || svg.closest('[aria-hidden="true"]')) {
+        return;
+      }
+
+      const parentControl = svg.closest('a, button, [role="button"], [role="link"]');
+      if (parentControl && this.getRelevantElementText(parentControl).replace(svg.textContent, '').trim().length > 0) {
+        return;
+      }
+
+      if (this.hasAccessibleGraphicName(svg)) {
+        return;
+      }
+
+      this.issues.push({
+        type: 'svg-missing-name',
+        element: svg,
+        severity: parentControl ? 'critical' : 'warning',
+        criterion: this.wcagCriteria['text-alternatives'],
+        message: `SVG ${index + 1} sem nome acessível`,
+        element_html: svg.outerHTML.substring(0, 100),
+        requires_llm: false
+      });
+    });
+
+    document.querySelectorAll('input[type="image"]').forEach((input, index) => {
+      const alt = input.getAttribute('alt');
+      if (typeof alt === 'string' && alt.trim().length > 0) {
+        return;
+      }
+
+      this.issues.push({
+        type: 'input-image-missing-alt',
+        element: input,
+        severity: 'critical',
+        criterion: this.wcagCriteria['text-alternatives'],
+        message: `Botão de imagem ${index + 1} sem alt`,
+        element_html: input.outerHTML.substring(0, 100),
+        requires_llm: false
+      });
+    });
+
+    document.querySelectorAll('area').forEach((area, index) => {
+      const alt = area.getAttribute('alt');
+      if (typeof alt === 'string') {
+        return;
+      }
+
+      this.issues.push({
+        type: 'area-missing-alt',
+        element: area,
+        severity: 'critical',
+        criterion: this.wcagCriteria['text-alternatives'],
+        message: `Área de mapa de imagem ${index + 1} sem alt`,
+        element_html: area.outerHTML.substring(0, 100),
+        requires_llm: false
+      });
+    });
+  }
+
+  hasAccessibleGraphicName(element) {
+    const ariaLabel = element.getAttribute('aria-label');
+    if (typeof ariaLabel === 'string' && ariaLabel.trim().length > 0) {
+      return true;
+    }
+
+    if (element.getAttribute('role') === 'presentation' || element.getAttribute('role') === 'none') {
+      return true;
+    }
+
+    const labelledBy = element.getAttribute('aria-labelledby');
+    if (labelledBy && labelledBy.split(/\s+/).some((id) => document.getElementById(id)?.textContent.trim())) {
+      return true;
+    }
+
+    const title = element.querySelector('title');
+    return !!(title && title.textContent.trim().length > 0);
+  }
+
+  evaluateTables() {
+    document.querySelectorAll('table').forEach((table, index) => {
+      if (!this.isVisible(table) || this.isAriaHidden(table) || table.closest('[aria-hidden="true"]')) {
+        return;
+      }
+
+      if (table.getAttribute('role') === 'presentation' || table.getAttribute('role') === 'none') {
+        return;
+      }
+
+      const rows = table.querySelectorAll('tr');
+      if (rows.length < 2) {
+        return;
+      }
+
+      const hasHeaders = table.querySelectorAll('th').length > 0;
+      const hasScope = table.querySelectorAll('[scope]').length > 0;
+      const hasHeadersAttr = table.querySelectorAll('[headers]').length > 0;
+
+      if (!hasHeaders && !hasScope && !hasHeadersAttr) {
+        this.issues.push({
+          type: 'table-missing-headers',
+          element: table,
+          severity: 'critical',
+          criterion: this.wcagCriteria['data-tables'],
+          message: `Tabela ${index + 1} sem cabeçalhos semânticos (th)`,
+          element_html: table.outerHTML.substring(0, 120),
+          requires_llm: false,
+          row_count: rows.length
+        });
+      }
+    });
+  }
+
+  evaluateClickableNonSemantic() {
+    document.querySelectorAll('[onclick]').forEach((element, index) => {
+      const tag = element.tagName;
+      if (['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA', 'SUMMARY', 'LABEL'].includes(tag)) {
+        return;
+      }
+
+      if (!this.isVisible(element)) {
+        return;
+      }
+
+      const tabindex = element.getAttribute('tabindex');
+      const role = (element.getAttribute('role') || '').toLowerCase();
+      const hasKeyboardSupport = tabindex !== null && tabindex !== '-1';
+      const hasInteractiveRole = ['button', 'link', 'menuitem', 'tab', 'checkbox', 'switch'].includes(role);
+
+      if (hasKeyboardSupport && hasInteractiveRole) {
+        return;
+      }
+
+      this.issues.push({
+        type: 'clickable-non-semantic',
+        element,
+        severity: 'critical',
+        criterion: this.wcagCriteria['keyboard-navigation'],
+        message: `Elemento ${tag.toLowerCase()} ${index + 1} é clicável, mas não é acessível por teclado`,
+        element_html: element.outerHTML.substring(0, 100),
+        requires_llm: false
+      });
+    });
+  }
+
+  evaluateBypassBlocks() {
+    const hasSkipLink = Array.from(document.querySelectorAll('a[href^="#"]')).some((link) => {
+      const text = `${this.getAccessibleLinkText(link)} ${link.getAttribute('href') || ''}`.toLowerCase();
+      return /pular|skip|ir para o conte[uú]do|jump to|main-content|conteudo-principal/.test(text);
+    });
+    const hasMain = !!document.querySelector('main, [role="main"]');
+
+    if (!hasSkipLink && !hasMain) {
+      this.issues.push({
+        type: 'no-bypass-blocks',
+        severity: 'warning',
+        criterion: this.wcagCriteria['bypass-blocks'],
+        message: 'Página sem skip link e sem região main para pular blocos repetidos',
+        requires_llm: false
+      });
+    }
+  }
+
+  evaluateIframes() {
+    document.querySelectorAll('iframe').forEach((iframe, index) => {
+      const title = iframe.getAttribute('title');
+      const ariaLabel = iframe.getAttribute('aria-label');
+      const hasName = (typeof title === 'string' && title.trim().length > 0)
+        || (typeof ariaLabel === 'string' && ariaLabel.trim().length > 0);
+
+      if (!hasName) {
+        this.issues.push({
+          type: 'iframe-missing-title',
+          element: iframe,
+          severity: 'critical',
+          criterion: this.wcagCriteria['iframe-title'],
+          message: `iframe ${index + 1} sem título acessível`,
+          element_html: iframe.outerHTML.substring(0, 100),
+          requires_llm: false,
+          iframe_src: iframe.getAttribute('src')
+        });
+      }
+    });
+  }
+
+  evaluateColorOnlyLinks() {
+    document.querySelectorAll('a[href]').forEach((link) => {
+      if (!this.isVisible(link) || !link.closest('p, li, td, th, article, blockquote, dd')) {
+        return;
+      }
+
+      const style = window.getComputedStyle(link);
+      const parent = link.parentElement;
+      if (!parent) {
+        return;
+      }
+
+      const parentStyle = window.getComputedStyle(parent);
+      const decoration = `${style.textDecorationLine || ''} ${style.textDecoration || ''}`.toLowerCase();
+      const hasUnderline = decoration.includes('underline') || parseFloat(style.borderBottomWidth) > 0;
+      const colorDiffers = style.color !== parentStyle.color;
+
+      if (colorDiffers && !hasUnderline) {
+        this.issues.push({
+          type: 'color-only-link',
+          element: link,
+          severity: 'warning',
+          criterion: this.wcagCriteria['use-of-color'],
+          message: 'Link no texto distinguido apenas por cor',
+          element_html: link.outerHTML.substring(0, 100),
+          requires_llm: false
+        });
+      }
+    });
+  }
+
+  evaluateDuplicateIds() {
+    const seen = new Map();
+
+    document.querySelectorAll('[id]').forEach((element) => {
+      const id = element.id;
+      if (!id) {
+        return;
+      }
+
+      if (seen.has(id)) {
+        this.issues.push({
+          type: 'duplicate-id',
+          element,
+          severity: 'critical',
+          criterion: this.wcagCriteria['duplicate-ids'],
+          message: `ID duplicado: "${id}"`,
+          element_html: element.outerHTML.substring(0, 100),
+          requires_llm: false,
+          id
+        });
+      } else {
+        seen.set(id, element);
+      }
+    });
+  }
+
+  evaluateViewportZoom() {
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (!viewport) {
+      return;
+    }
+
+    const content = (viewport.getAttribute('content') || '').toLowerCase();
+    const blocksZoom = /user-scalable\s*=\s*no/.test(content)
+      || /user-scalable\s*=\s*0/.test(content)
+      || /maximum-scale\s*=\s*1(\.0+)?(\s|,|$)/.test(content);
+
+    if (blocksZoom) {
+      this.issues.push({
+        type: 'zoom-restricted',
+        element: viewport,
+        severity: 'critical',
+        criterion: this.wcagCriteria['resize-text'],
+        message: 'Viewport impede redimensionar texto (user-scalable=no ou maximum-scale=1)',
+        element_html: viewport.outerHTML.substring(0, 120),
+        requires_llm: false
+      });
+    }
+  }
+
+  evaluateInputPurpose() {
+    const purposeMap = [
+      { pattern: /(^|[_-])e-?mail($|[_-])/i, autocomplete: 'email', types: ['email', 'text'] },
+      { pattern: /(^|[_-])(tel|phone|fone|celular)($|[_-])/i, autocomplete: 'tel', types: ['tel', 'text'] },
+      { pattern: /(^|[_-])(name|nome)($|[_-])/i, autocomplete: 'name', types: ['text'] },
+      { pattern: /(given-name|first[_-]?name|primeiro[_-]?nome)/i, autocomplete: 'given-name', types: ['text'] },
+      { pattern: /(family-name|last[_-]?name|sobrenome)/i, autocomplete: 'family-name', types: ['text'] }
+    ];
+
+    const flagged = new Set();
+
+    document.querySelectorAll('input').forEach((input) => {
+      if (this.shouldIgnoreFormControl(input) || !this.isVisible(input) || flagged.has(input)) {
+        return;
+      }
+
+      const type = (input.type || 'text').toLowerCase();
+      const identity = `${input.getAttribute('name') || ''} ${input.id || ''}`;
+      const currentAutocomplete = (input.getAttribute('autocomplete') || '').trim();
+
+      if (currentAutocomplete) {
+        return;
+      }
+
+      let suggested = null;
+      if (type === 'email') {
+        suggested = 'email';
+      } else {
+        const match = purposeMap.find(({ pattern, types }) => types.includes(type) && pattern.test(identity));
+        suggested = match?.autocomplete || null;
+      }
+
+      if (!suggested) {
+        return;
+      }
+
+      flagged.add(input);
+      this.issues.push({
+        type: 'missing-autocomplete',
+        element: input,
+        severity: 'warning',
+        criterion: this.wcagCriteria['input-purpose'],
+        message: `Campo provavelmente de ${suggested} sem autocomplete`,
+        element_html: input.outerHTML.substring(0, 100),
+        requires_llm: false,
+        suggested_autocomplete: suggested
+      });
+    });
+  }
+
+  evaluateLabelInName() {
+    document.querySelectorAll('[aria-label]').forEach((element) => {
+      const visibleText = this.getRelevantElementText(element);
+      const ariaLabel = this.normalizeComparableText(element.getAttribute('aria-label'));
+      const visible = this.normalizeComparableText(visibleText);
+
+      if (!visible || visible.length < 2 || !ariaLabel) {
+        return;
+      }
+
+      if (!ariaLabel.includes(visible) && !visible.includes(ariaLabel)) {
+        this.issues.push({
+          type: 'label-in-name-mismatch',
+          element,
+          severity: 'warning',
+          criterion: this.wcagCriteria['label-in-name'],
+          message: `aria-label não contém o texto visível: "${visibleText.slice(0, 80)}"`,
+          element_html: element.outerHTML.substring(0, 100),
+          requires_llm: false,
+          element_text: visibleText.slice(0, 160)
+        });
+      }
+    });
+  }
+
+  evaluateNonTextContrast() {
+    const controls = document.querySelectorAll('button, input, select, textarea, a[href], [role="button"]');
+    let checkedCount = 0;
+
+    controls.forEach((element) => {
+      if (checkedCount > 80 || !this.isVisible(element)) {
+        return;
+      }
+
+      const style = window.getComputedStyle(element);
+      const borderWidth = parseFloat(style.borderTopWidth) || 0;
+      const ownBackground = style.backgroundColor;
+      const hasOwnOpaqueBackground = this.isOpaqueColor(ownBackground);
+      if (!hasOwnOpaqueBackground && borderWidth === 0) {
+        return;
+      }
+
+      const background = hasOwnOpaqueBackground ? ownBackground : this.getEffectiveBackgroundColor(element);
+      const parentBackground = element.parentElement
+        ? this.getEffectiveBackgroundColor(element.parentElement)
+        : 'rgb(255, 255, 255)';
+
+      const backgroundContrast = this.calculateContrast(background, parentBackground);
+      const borderColor = style.borderTopColor;
+      const borderContrast = borderWidth > 0 ? this.calculateContrast(borderColor, parentBackground) : 0;
+      const distinguishable = backgroundContrast >= 3 || borderContrast >= 3;
+
+      if (!distinguishable && backgroundContrast > 0 && backgroundContrast < 3) {
+        this.issues.push({
+          type: 'low-non-text-contrast',
+          element,
+          severity: 'warning',
+          criterion: this.wcagCriteria['non-text-contrast'],
+          message: `Componente com contraste visual baixo (${backgroundContrast.toFixed(2)}:1, mínimo 3:1)`,
+          element_html: element.outerHTML.substring(0, 100),
+          requires_llm: false,
+          contrast_ratio: backgroundContrast,
+          minimum_contrast: 3,
+          background_color: background,
+          foreground_color: borderColor
+        });
+      }
+
+      checkedCount++;
+    });
+  }
+
+  evaluateReadingOrder() {
+    const positioned = document.querySelectorAll('*');
+    let flagged = 0;
+
+    positioned.forEach((element) => {
+      if (flagged > 20 || !this.isVisible(element)) {
+        return;
+      }
+
+      const style = window.getComputedStyle(element);
+      const order = parseInt(style.order, 10);
+      if (Number.isFinite(order) && order !== 0) {
+        this.issues.push({
+          type: 'css-order-mismatch',
+          element,
+          severity: 'warning',
+          criterion: this.wcagCriteria['meaningful-sequence'],
+          message: `CSS order=${order} pode inverter a sequência de leitura em relação ao DOM`,
+          element_html: element.outerHTML.substring(0, 100),
+          requires_llm: false
+        });
+        flagged++;
+      }
+    });
   }
 
   /**
