@@ -73,7 +73,17 @@ const ACCESSIFY_AI_CONFIG = {
     'focus-outline-removed',
     'no-page-regions',
     'excessive-div-roles',
-    'css-order-mismatch'
+    'css-order-mismatch',
+    'multiple-h1',
+    'autoplay-media-no-control',
+    'new-tab-link-no-warning',
+    'duplicate-landmark-no-label',
+    'infinite-animation-no-reduced-motion',
+    'captcha-detected',
+    'form-error-not-announced',
+    'meta-refresh-redirect',
+    'broken-same-page-link',
+    'underlined-non-link-text'
   ],
   openRouterModels: [
     {

@@ -13,6 +13,8 @@ class AccessibilityAnalyzer {
 
   async analyzePageForAccessibility() {
     try {
+      await this.waitForStablePage();
+
       const evaluator = new WCAGEvaluator();
       this.evaluator = evaluator;
 
@@ -37,6 +39,28 @@ class AccessibilityAnalyzer {
         error: error.message
       };
     }
+  }
+
+  /**
+   * Espera fontes web terminarem de carregar e mais um frame de renderização antes de
+   * analisar. Reduz (não elimina) variação entre execuções causada por FOUT/reflow em
+   * andamento no momento exato do clique - sites com fontes customizadas, carrosséis ou
+   * scripts de terceiros ainda podem mudar o DOM entre uma análise e outra; isso é
+   * inerente a conteúdo dinâmico "ao vivo", não algo que o content script controla.
+   */
+  async waitForStablePage() {
+    try {
+      if (document.fonts && document.fonts.ready) {
+        await Promise.race([
+          document.fonts.ready,
+          new Promise((resolve) => setTimeout(resolve, 1500))
+        ]);
+      }
+    } catch (error) {
+      // Ignora falhas da Font Loading API e segue com a análise mesmo assim
+    }
+
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   }
 
   extractPageContent() {
@@ -217,7 +241,13 @@ class AccessibilityAnalyzer {
         return;
       }
 
-      if (evaluator.isSpacerImage(img) || evaluator.isEmojiImage(img) || img.hasAttribute('alt')) {
+      if (
+        evaluator.isSpacerImage(img)
+        || evaluator.isEmojiImage(img)
+        || evaluator.isDecorativeIconImage(img)
+        || evaluator.isMarkedDecorative(img)
+        || img.hasAttribute('alt')
+      ) {
         return;
       }
 
@@ -283,78 +313,115 @@ class AccessibilityAnalyzer {
     }
   }
 
+  applyAiProvidedOptimizations(optimizations) {
+    let appliedCount = 0;
+
+    if (optimizations.imageAlts) {
+      optimizations.imageAlts.forEach(({ index, alt }) => {
+        const images = document.querySelectorAll('img');
+        if (images[index] && typeof alt === 'string') {
+          images[index].setAttribute('alt', alt);
+          images[index].setAttribute('role', 'img');
+          appliedCount++;
+        }
+      });
+    }
+
+    if (optimizations.structureChanges) {
+      optimizations.structureChanges.forEach((change) => {
+        const element = this.resolveSelector(change.selector);
+        if (!element) {
+          return;
+        }
+
+        if (change.newTag) {
+          this.replaceElementTag(element, change.newTag, change.attributes || {});
+          appliedCount++;
+        } else if (change.attributes) {
+          Object.keys(change.attributes).forEach((key) => {
+            const value = change.attributes[key];
+            if (value === null || value === undefined) {
+              element.removeAttribute(key);
+            } else {
+              element.setAttribute(key, value);
+            }
+          });
+          appliedCount++;
+        }
+      });
+    }
+
+    if (optimizations.textChanges) {
+      optimizations.textChanges.forEach(({ selector, text }) => {
+        const element = this.resolveSelector(selector);
+        if (element && typeof text === 'string' && text.trim().length > 0) {
+          element.textContent = text;
+          appliedCount++;
+        }
+      });
+    }
+
+    if (optimizations.styles) {
+      const existingStyles = document.querySelectorAll('style[data-accessibility="true"]:not(#accessify-deterministic-styles)');
+      existingStyles.forEach((style) => style.remove());
+
+      const style = document.createElement('style');
+      style.textContent = optimizations.styles;
+      style.setAttribute('data-accessibility', 'true');
+      document.head.appendChild(style);
+      appliedCount++;
+    }
+
+    if (optimizations.ariaLabels) {
+      optimizations.ariaLabels.forEach(({ selector, label, role }) => {
+        const element = this.resolveSelector(selector);
+        if (element) {
+          element.setAttribute('aria-label', label);
+          if (role) {
+            element.setAttribute('role', role);
+          }
+          appliedCount++;
+        }
+      });
+    }
+
+    return appliedCount;
+  }
+
   async applyOptimizations(optimizations) {
     try {
       let appliedCount = 0;
-      appliedCount += this.applyDeterministicFixes();
+      let roundsRun = 0;
+      let remainingIssues = null;
 
-      if (optimizations.imageAlts) {
-        optimizations.imageAlts.forEach(({ index, alt }) => {
-          const images = document.querySelectorAll('img');
-          if (images[index] && typeof alt === 'string') {
-            images[index].setAttribute('alt', alt);
-            images[index].setAttribute('role', 'img');
-            appliedCount++;
-          }
-        });
-      }
+      // Uma única passada de applyDeterministicFixes() pode não bastar: revelar um
+      // bloco com aria-hidden pode expor texto com contraste ruim, um heading
+      // promovido a H1 muda o que outra regra vê como "primeiro heading", etc. Em vez
+      // de medir convergência por "quantas alterações apliquei" (algumas correções,
+      // como reaplicar o mesmo alt text, contam de novo mesmo sem mudar nada), rodamos
+      // de novo e comparamos quantos problemas reais sobram a cada rodada - é o mesmo
+      // sinal que uma reanálise manual usaria. Para no primeiro dos três casos: zerou,
+      // parou de melhorar, ou atingiu o limite de rodadas.
+      const maxRounds = 4;
+      let previousIssueCount = Number.POSITIVE_INFINITY;
 
-      if (optimizations.structureChanges) {
-        optimizations.structureChanges.forEach((change) => {
-          const element = this.resolveSelector(change.selector);
-          if (!element) {
-            return;
-          }
+      for (let round = 0; round < maxRounds; round++) {
+        roundsRun++;
+        appliedCount += this.applyDeterministicFixes();
 
-          if (change.newTag) {
-            this.replaceElementTag(element, change.newTag, change.attributes || {});
-            appliedCount++;
-          } else if (change.attributes) {
-            Object.keys(change.attributes).forEach((key) => {
-              const value = change.attributes[key];
-              if (value === null || value === undefined) {
-                element.removeAttribute(key);
-              } else {
-                element.setAttribute(key, value);
-              }
-            });
-            appliedCount++;
-          }
-        });
-      }
+        if (round === 0) {
+          appliedCount += this.applyAiProvidedOptimizations(optimizations);
+        }
 
-      if (optimizations.textChanges) {
-        optimizations.textChanges.forEach(({ selector, text }) => {
-          const element = this.resolveSelector(selector);
-          if (element && typeof text === 'string' && text.trim().length > 0) {
-            element.textContent = text;
-            appliedCount++;
-          }
-        });
-      }
+        const evaluator = new WCAGEvaluator();
+        this.evaluator = evaluator;
+        remainingIssues = evaluator.evaluate().length;
 
-      if (optimizations.styles) {
-        const existingStyles = document.querySelectorAll('style[data-accessibility="true"]:not(#accessify-deterministic-styles)');
-        existingStyles.forEach((style) => style.remove());
+        if (remainingIssues === 0 || remainingIssues >= previousIssueCount) {
+          break;
+        }
 
-        const style = document.createElement('style');
-        style.textContent = optimizations.styles;
-        style.setAttribute('data-accessibility', 'true');
-        document.head.appendChild(style);
-        appliedCount++;
-      }
-
-      if (optimizations.ariaLabels) {
-        optimizations.ariaLabels.forEach(({ selector, label, role }) => {
-          const element = this.resolveSelector(selector);
-          if (element) {
-            element.setAttribute('aria-label', label);
-            if (role) {
-              element.setAttribute('role', role);
-            }
-            appliedCount++;
-          }
-        });
+        previousIssueCount = remainingIssues;
       }
 
       if (appliedCount === 0) {
@@ -364,7 +431,7 @@ class AccessibilityAnalyzer {
         };
       }
 
-      return { success: true, appliedCount };
+      return { success: true, appliedCount, roundsRun, remainingIssues };
     } catch (error) {
       console.error('Erro ao aplicar otimizações:', error);
       return { success: false, error: error.message };
@@ -457,21 +524,12 @@ class AccessibilityAnalyzer {
         if (!target.id) {
           target.id = 'accessify-main-content';
         }
+        this.ensureAccessifySrOnlyStyles();
         const skipLink = document.createElement('a');
         skipLink.href = `#${target.id}`;
         skipLink.textContent = 'Pular para o conteúdo principal';
         skipLink.setAttribute('data-accessify-skip', 'true');
-        skipLink.style.cssText = 'position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;';
-        skipLink.addEventListener('focus', () => {
-          skipLink.style.position = 'static';
-          skipLink.style.width = 'auto';
-          skipLink.style.height = 'auto';
-        });
-        skipLink.addEventListener('blur', () => {
-          skipLink.style.position = 'absolute';
-          skipLink.style.width = '1px';
-          skipLink.style.height = '1px';
-        });
+        skipLink.className = 'accessify-sr-only accessify-skip-link';
         document.body.insertBefore(skipLink, document.body.firstChild);
         appliedCount++;
       }
@@ -620,11 +678,16 @@ class AccessibilityAnalyzer {
     appliedCount += this.fixEmptyLinksAndButtons(evaluator);
     appliedCount += this.fixMissingImageAlts(evaluator);
     appliedCount += this.fixGraphicFallbacks(evaluator);
-    appliedCount += this.fixBrokenAriaReferences();
+    appliedCount += this.fixBrokenAriaReferences(evaluator);
     appliedCount += this.fixPositiveTabindex();
     appliedCount += this.fixLabelInName(evaluator);
     appliedCount += this.fixAriaHiddenContent();
-    appliedCount += this.fixLowContrast(evaluator);
+    appliedCount += this.fixNewTabLinks(evaluator);
+    appliedCount += this.fixAutoplayMedia();
+    appliedCount += this.fixDuplicateLandmarks(evaluator);
+    appliedCount += this.fixUnlinkedFieldErrors(evaluator);
+    const removeUnderlineCount = this.fixUnderlinedNonLinkText(evaluator);
+    appliedCount += removeUnderlineCount;
 
     let leftAlignNeeded = false;
     let minFontNeeded = false;
@@ -672,31 +735,141 @@ class AccessibilityAnalyzer {
       }
     });
 
-    contrastNeeded = !!document.querySelector('[data-accessify-contrast]');
-    nonTextContrastNeeded = this.markLowNonTextContrast(evaluator);
-
     const focusNeeded = evaluator.checkForOutlineRemoval();
-    if (underlineNeeded || focusNeeded || leftAlignNeeded || minFontNeeded || contrastNeeded || nonTextContrastNeeded) {
-      this.ensureAccessifyStyles({
-        focusNeeded,
-        underlineNeeded,
-        leftAlignNeeded,
-        minFontNeeded,
-        contrastNeeded,
-        nonTextContrastNeeded
-      });
+    const reducedMotionNeeded = this.hasInfiniteAnimation();
+    const removeUnderlineNeeded = removeUnderlineCount > 0;
+
+    // O contraste de um elemento pode depender do fundo herdado de um ancestral que
+    // TAMBÉM recebe correção (ex.: uma caixa "solid-dark" muda o background-color do
+    // pai). Como a folha de estilo com as correções só existe depois de inserida no
+    // <head>, uma única passada pode deixar alguns casos pendentes até a folha entrar
+    // em vigor. Por isso repetimos aqui - dentro do mesmo clique em "Aplicar" - até não
+    // sobrar nada novo, em vez de depender do usuário clicar duas vezes.
+    const maxConvergencePasses = 3;
+    for (let pass = 0; pass < maxConvergencePasses; pass++) {
+      const contrastFixesThisPass = this.fixLowContrast(evaluator);
+      appliedCount += contrastFixesThisPass;
+      contrastNeeded = contrastNeeded || !!document.querySelector('[data-accessify-contrast]');
+      nonTextContrastNeeded = this.markLowNonTextContrast(evaluator) || nonTextContrastNeeded;
+
+      if (
+        underlineNeeded || focusNeeded || leftAlignNeeded || minFontNeeded
+        || contrastNeeded || nonTextContrastNeeded || reducedMotionNeeded || removeUnderlineNeeded
+      ) {
+        this.ensureAccessifyStyles({
+          focusNeeded,
+          underlineNeeded,
+          leftAlignNeeded,
+          minFontNeeded,
+          contrastNeeded,
+          nonTextContrastNeeded,
+          reducedMotionNeeded,
+          removeUnderlineNeeded
+        });
+      }
+
+      if (contrastFixesThisPass === 0) {
+        break;
+      }
+    }
+
+    if (
+      underlineNeeded || focusNeeded || leftAlignNeeded || minFontNeeded
+      || contrastNeeded || nonTextContrastNeeded || reducedMotionNeeded || removeUnderlineNeeded
+    ) {
       appliedCount++;
     }
 
     return appliedCount;
   }
 
+  /**
+   * Detecta animações CSS contínuas (infinite) em elementos visíveis, para
+   * decidir se vale injetar a media query prefers-reduced-motion.
+   */
+  hasInfiniteAnimation() {
+    const elements = document.querySelectorAll('*');
+    let checked = 0;
+
+    for (const element of elements) {
+      if (checked > 1000) {
+        break;
+      }
+      if (this.isAccessifyUi(element)) {
+        continue;
+      }
+      checked++;
+
+      const style = window.getComputedStyle(element);
+      const duration = parseFloat(style.animationDuration) || 0;
+      const isInfinite = duration > 0
+        && style.animationIterationCount.split(',').some((value) => value.trim() === 'infinite');
+
+      if (isInfinite) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   isAccessifyUi(element) {
     return !!(
       element.closest('[data-accessibility="true"]')
       || element.closest('[data-accessify-skip]')
+      || element.closest('[data-accessify-sr-h1]')
+      || element.closest('.accessify-sr-only')
       || element.id?.startsWith('accessify-')
     );
+  }
+
+  /**
+   * CSS padrão "sr-only" (clip-path) para conteúdo visualmente oculto mas
+   * exposto a leitores de tela. Substitui a técnica antiga de
+   * `left:-9999px`, que ferramentas como a WAVE nem sempre reconhecem como
+   * oculta e cujo texto herda a cor do site sem um fundo local garantido -
+   * o que podia gerar um NOVO problema de contraste em vez de corrigi-lo.
+   */
+  ensureAccessifySrOnlyStyles() {
+    if (document.getElementById('accessify-sr-only-styles')) {
+      return;
+    }
+
+    const style = document.createElement('style');
+    style.id = 'accessify-sr-only-styles';
+    style.setAttribute('data-accessibility', 'true');
+    style.textContent = `
+      .accessify-sr-only {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        clip-path: inset(50%) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+      }
+      .accessify-skip-link:focus {
+        position: fixed !important;
+        top: 8px !important;
+        left: 8px !important;
+        width: auto !important;
+        height: auto !important;
+        padding: 8px 16px !important;
+        margin: 0 !important;
+        overflow: visible !important;
+        clip: auto !important;
+        clip-path: none !important;
+        white-space: normal !important;
+        background: #ffffff !important;
+        color: #111111 !important;
+        z-index: 2147483647 !important;
+        outline: 2px solid #1976d2 !important;
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   fixPageTitle() {
@@ -728,10 +901,11 @@ class AccessibilityAnalyzer {
       return 0;
     }
 
+    this.ensureAccessifySrOnlyStyles();
     const heading = document.createElement('h1');
     heading.textContent = title;
     heading.setAttribute('data-accessify-sr-h1', 'true');
-    heading.style.cssText = 'position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;';
+    heading.className = 'accessify-sr-only';
     document.body.insertBefore(heading, document.body.firstChild);
     return 1;
   }
@@ -878,7 +1052,12 @@ class AccessibilityAnalyzer {
         return;
       }
 
-      if (evaluator.isSpacerImage(img) || evaluator.isEmojiImage(img)) {
+      if (
+        evaluator.isSpacerImage(img)
+        || evaluator.isEmojiImage(img)
+        || evaluator.isDecorativeIconImage(img)
+        || evaluator.isMarkedDecorative(img)
+      ) {
         img.setAttribute('alt', '');
         appliedCount++;
         return;
@@ -976,11 +1155,12 @@ class AccessibilityAnalyzer {
     return appliedCount;
   }
 
-  fixBrokenAriaReferences() {
+  fixBrokenAriaReferences(evaluator) {
     let appliedCount = 0;
+    const attributeNames = evaluator.getIdReferenceAriaAttributes();
 
-    document.querySelectorAll('[aria-labelledby], [aria-describedby]').forEach((element) => {
-      ['aria-labelledby', 'aria-describedby'].forEach((attributeName) => {
+    document.querySelectorAll(attributeNames.map((name) => `[${name}]`).join(', ')).forEach((element) => {
+      attributeNames.forEach((attributeName) => {
         const value = element.getAttribute(attributeName);
         if (!value) {
           return;
@@ -1110,9 +1290,15 @@ class AccessibilityAnalyzer {
       const whiteContrast = evaluator.calculateContrast('rgb(255, 255, 255)', bgColor);
       const fgLuminance = evaluator.getLuminance(fg);
 
-      if (blackContrast >= minimumContrast && blackContrast >= whiteContrast) {
+      // Se o fundo efetivo detectado vem de uma cor sólida "adivinhada" (ex.: caiu no
+      // branco padrão porque um ancestral tem background-image/gradiente), trocar só a
+      // cor do texto pode piorar o contraste real. Nesse caso, usamos sempre a caixa
+      // sólida, que garante o contraste independente do que estiver por trás.
+      const uncertainBackground = evaluator.hasUncertainBackground(element);
+
+      if (!uncertainBackground && blackContrast >= minimumContrast && blackContrast >= whiteContrast) {
         element.setAttribute('data-accessify-contrast', 'dark');
-      } else if (whiteContrast >= minimumContrast) {
+      } else if (!uncertainBackground && whiteContrast >= minimumContrast) {
         element.setAttribute('data-accessify-contrast', 'light');
       } else if (fgLuminance >= 0.5) {
         element.setAttribute('data-accessify-contrast', 'solid-dark');
@@ -1120,6 +1306,151 @@ class AccessibilityAnalyzer {
         element.setAttribute('data-accessify-contrast', 'solid-light');
       }
 
+      appliedCount++;
+    });
+
+    return appliedCount;
+  }
+
+  fixNewTabLinks(evaluator) {
+    let appliedCount = 0;
+
+    document.querySelectorAll('a[target="_blank"][href]').forEach((link) => {
+      if (this.isAccessifyUi(link)) {
+        return;
+      }
+
+      const accessibleName = evaluator.getAccessibleLinkText(link);
+      const normalized = evaluator.normalizeComparableText(accessibleName);
+      if (!normalized || /nova aba|nova janela|new tab|new window|abre em/.test(normalized)) {
+        return;
+      }
+
+      const baseLabel = (link.getAttribute('aria-label') || accessibleName).trim();
+      link.setAttribute('aria-label', `${baseLabel} (abre em nova aba)`.slice(0, 160));
+      appliedCount++;
+    });
+
+    return appliedCount;
+  }
+
+  fixAutoplayMedia() {
+    let appliedCount = 0;
+
+    document.querySelectorAll('audio[autoplay], video[autoplay]').forEach((media) => {
+      if (this.isAccessifyUi(media) || media.hasAttribute('muted') || media.muted) {
+        return;
+      }
+
+      if (!media.hasAttribute('controls')) {
+        media.setAttribute('controls', '');
+        appliedCount++;
+      }
+
+      if (!media.paused) {
+        try {
+          media.pause();
+          appliedCount++;
+        } catch (error) {
+          // Alguns navegadores podem recusar pause() antes do primeiro gesto do usuário
+        }
+      }
+    });
+
+    return appliedCount;
+  }
+
+  fixDuplicateLandmarks(evaluator) {
+    let appliedCount = 0;
+    const groups = {
+      'nav, [role="navigation"]': 'Navegação',
+      'aside, [role="complementary"]': 'Conteúdo complementar'
+    };
+
+    Object.entries(groups).forEach(([selector, fallbackLabel]) => {
+      const elements = Array.from(document.querySelectorAll(selector)).filter((element) => !this.isAccessifyUi(element));
+      if (elements.length < 2) {
+        return;
+      }
+
+      elements.forEach((element, index) => {
+        if (evaluator.hasAccessibleLandmarkLabel(element)) {
+          return;
+        }
+
+        const heading = element.querySelector('h1, h2, h3, h4, h5, h6');
+        const headingText = heading ? evaluator.getRelevantElementText(heading) : '';
+        const positional = element.closest('header')
+          ? `${fallbackLabel} principal`
+          : element.closest('footer')
+            ? `${fallbackLabel} do rodapé`
+            : `${fallbackLabel} ${index + 1}`;
+
+        element.setAttribute('aria-label', (headingText || positional).slice(0, 160));
+        appliedCount++;
+      });
+    });
+
+    return appliedCount;
+  }
+
+  fixUnlinkedFieldErrors(evaluator) {
+    let appliedCount = 0;
+
+    document.querySelectorAll('input, textarea, select').forEach((field) => {
+      if (this.isAccessifyUi(field) || evaluator.shouldIgnoreFormControl(field) || !evaluator.isVisible(field)) {
+        return;
+      }
+
+      const errorElement = evaluator.findNearbyErrorText(field);
+      if (!errorElement) {
+        return;
+      }
+
+      if (!errorElement.id) {
+        errorElement.id = `accessify-error-${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      const describedBy = new Set((field.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+      if (describedBy.has(errorElement.id)) {
+        return;
+      }
+
+      describedBy.add(errorElement.id);
+      field.setAttribute('aria-describedby', Array.from(describedBy).join(' '));
+      if (!field.hasAttribute('aria-invalid')) {
+        field.setAttribute('aria-invalid', 'true');
+      }
+      appliedCount++;
+    });
+
+    return appliedCount;
+  }
+
+  fixUnderlinedNonLinkText(evaluator) {
+    let appliedCount = 0;
+    const candidates = document.querySelectorAll('u, span, strong, em, b, i, small, p, li, td, th, div, label');
+
+    candidates.forEach((element) => {
+      if (this.isAccessifyUi(element) || !evaluator.isVisible(element)) {
+        return;
+      }
+
+      if (element.closest('a, [role="link"], button, [role="button"], ins')) {
+        return;
+      }
+
+      if (!evaluator.hasDirectTextContent(element)) {
+        return;
+      }
+
+      const style = window.getComputedStyle(element);
+      const decoration = `${style.textDecorationLine || ''} ${style.textDecoration || ''}`.toLowerCase();
+      if (!decoration.includes('underline')) {
+        return;
+      }
+
+      element.setAttribute('data-accessify-remove-underline', 'true');
       appliedCount++;
     });
 
@@ -1163,7 +1494,16 @@ class AccessibilityAnalyzer {
     return marked;
   }
 
-  ensureAccessifyStyles({ focusNeeded, underlineNeeded, leftAlignNeeded, minFontNeeded, contrastNeeded, nonTextContrastNeeded }) {
+  ensureAccessifyStyles({
+    focusNeeded,
+    underlineNeeded,
+    leftAlignNeeded,
+    minFontNeeded,
+    contrastNeeded,
+    nonTextContrastNeeded,
+    reducedMotionNeeded,
+    removeUnderlineNeeded
+  }) {
     let style = document.getElementById('accessify-deterministic-styles');
     if (!style) {
       style = document.createElement('style');
@@ -1179,6 +1519,9 @@ class AccessibilityAnalyzer {
     if (underlineNeeded) {
       rules.push('a[data-accessify-underline="true"] { text-decoration: underline; }');
     }
+    if (removeUnderlineNeeded) {
+      rules.push('[data-accessify-remove-underline="true"] { text-decoration: none !important; }');
+    }
     if (leftAlignNeeded) {
       rules.push('[data-accessify-left-align="true"] { text-align: left !important; }');
     }
@@ -1193,6 +1536,16 @@ class AccessibilityAnalyzer {
     }
     if (nonTextContrastNeeded) {
       rules.push('[data-accessify-control-outline="true"] { outline: 2px solid #111111; outline-offset: 2px; }');
+    }
+    if (reducedMotionNeeded) {
+      rules.push(`@media (prefers-reduced-motion: reduce) {
+        *:not([data-accessibility="true"]):not([data-accessibility="true"] *) {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }`);
     }
     style.textContent = rules.join('\n');
   }

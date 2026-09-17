@@ -105,38 +105,59 @@ class AccessibilityOptimizer {
     return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   }
 
-  async getAnalysisJob() {
+  /**
+   * O estado da análise é isolado por aba (cada aba tem sua própria chave no
+   * storage), para que abrir uma aba diferente nunca mostre o resultado de outra.
+   */
+  jobStorageKeyForTab(tabId) {
+    if (!Number.isFinite(tabId)) {
+      throw new Error('tabId é obrigatório para acessar o estado da análise');
+    }
+
+    return `${this.analysisJobStorageKey}:${tabId}`;
+  }
+
+  async getAnalysisJob(tabId) {
+    const key = this.jobStorageKeyForTab(tabId);
     return new Promise((resolve) => {
-      chrome.storage.local.get([this.analysisJobStorageKey], (result) => {
-        resolve(result[this.analysisJobStorageKey] || this.getDefaultAnalysisJob());
+      chrome.storage.local.get([key], (result) => {
+        resolve(result[key] || this.getDefaultAnalysisJob());
       });
     });
   }
 
-  async setAnalysisJob(job) {
+  async setAnalysisJob(tabId, job) {
+    const key = this.jobStorageKeyForTab(tabId);
     return new Promise((resolve) => {
-      chrome.storage.local.set({ [this.analysisJobStorageKey]: job }, () => resolve(job));
+      chrome.storage.local.set({ [key]: job }, () => resolve(job));
     });
   }
 
-  async updateAnalysisJob(patch) {
-    const currentJob = await this.getAnalysisJob();
+  async removeAnalysisJob(tabId) {
+    const key = this.jobStorageKeyForTab(tabId);
+    return new Promise((resolve) => {
+      chrome.storage.local.remove([key], () => resolve());
+    });
+  }
+
+  async updateAnalysisJob(tabId, patch) {
+    const currentJob = await this.getAnalysisJob(tabId);
     const updatedJob = { ...currentJob, ...patch };
-    await this.setAnalysisJob(updatedJob);
+    await this.setAnalysisJob(tabId, updatedJob);
     return updatedJob;
   }
 
-  async isRunCurrent(runId) {
-    const currentJob = await this.getAnalysisJob();
+  async isRunCurrent(tabId, runId) {
+    const currentJob = await this.getAnalysisJob(tabId);
     return currentJob.runId === runId;
   }
 
-  async updateAnalysisJobForRun(runId, patch) {
-    if (!(await this.isRunCurrent(runId))) {
+  async updateAnalysisJobForRun(tabId, runId, patch) {
+    if (!(await this.isRunCurrent(tabId, runId))) {
       return null;
     }
 
-    return this.updateAnalysisJob(patch);
+    return this.updateAnalysisJob(tabId, patch);
   }
 
   createAnalysisSteps() {
@@ -197,6 +218,63 @@ class AccessibilityOptimizer {
     });
   }
 
+  /**
+   * O Accessify nunca manda nada para o servidor - as correções ficam só no DOM da
+   * aba. Se a página não foi recarregada desde a última aplicação, essas marcas
+   * (atributos data-accessify-*, aria-label injetados, a folha de estilo própria)
+   * continuam lá, então uma nova análise naturalmente encontra bem menos problemas.
+   * Isso não é um bug, mas engana quem quer comparar "antes x depois" sem recarregar
+   * a página manualmente - por isso detectamos esse resíduo aqui.
+   */
+  async hasExistingAccessifyChanges(tabId) {
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => !!document.querySelector(
+          '[data-accessibility="true"], [data-accessify-skip], [data-accessify-sr-h1], [id^="accessify-"], [class*="accessify-"]'
+        )
+      });
+      return !!results?.[0]?.result;
+    } catch (error) {
+      console.warn('Não foi possível checar mudanças anteriores do Accessify na aba:', error);
+      return false;
+    }
+  }
+
+  async reloadTabAndWait(tabId, timeoutMs = 15000) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+
+      const cleanup = () => {
+        settled = true;
+        clearTimeout(timeoutId);
+        chrome.tabs.onUpdated.removeListener(listener);
+      };
+
+      const listener = (updatedTabId, changeInfo) => {
+        if (updatedTabId === tabId && changeInfo.status === 'complete' && !settled) {
+          cleanup();
+          resolve();
+        }
+      };
+
+      const timeoutId = setTimeout(() => {
+        if (!settled) {
+          cleanup();
+          reject(new Error('Tempo esgotado esperando a página recarregar.'));
+        }
+      }, timeoutMs);
+
+      chrome.tabs.onUpdated.addListener(listener);
+      chrome.tabs.reload(tabId, {}, () => {
+        if (chrome.runtime.lastError && !settled) {
+          cleanup();
+          reject(new Error(chrome.runtime.lastError.message));
+        }
+      });
+    });
+  }
+
   async startAnalysisJob(tabId, windowId, options = {}) {
     const runId = this.generateRunId();
     const startedAt = new Date().toISOString();
@@ -204,12 +282,20 @@ class AccessibilityOptimizer {
     let steps = this.createAnalysisSteps();
     steps = this.markStepStatus(steps, 0, 'active');
 
-    await this.setAnalysisJob({
+    let currentTabInfo = null;
+    try {
+      currentTabInfo = await chrome.tabs.get(tabId);
+    } catch (error) {
+      // Aba pode ter sido fechada entre o clique e aqui; segue com o que temos
+    }
+    const pageUrl = options.pageUrl || currentTabInfo?.url || null;
+
+    await this.setAnalysisJob(tabId, {
       ...this.getDefaultAnalysisJob(),
       runId,
       status: 'running',
-      progress: 10,
-      progressText: 'Analisando página...',
+      progress: 5,
+      progressText: 'Preparando análise...',
       steps,
       targetTabId: tabId,
       windowId,
@@ -219,15 +305,34 @@ class AccessibilityOptimizer {
       optimizationsApplied: false,
       appliedChanges: 0,
       applyError: null,
-      pageUrl: options.pageUrl || null
+      pageUrl
     });
 
     try {
+      const hasPriorChanges = !autoTriggered && await this.hasExistingAccessifyChanges(tabId);
+      if (hasPriorChanges) {
+        await this.updateAnalysisJobForRun(tabId, runId, {
+          progress: 8,
+          progressText: 'Recarregando a página para analisar o estado original (sem correções de uma execução anterior)...'
+        });
+
+        await this.reloadTabAndWait(tabId);
+
+        if (!(await this.isRunCurrent(tabId, runId))) {
+          return await this.getAnalysisJob(tabId);
+        }
+      }
+
+      await this.updateAnalysisJobForRun(tabId, runId, {
+        progress: 10,
+        progressText: 'Analisando página...'
+      });
+
       await this.refreshSettings();
 
       const analysisResult = await this.sendMessageToTab(tabId, { action: 'analyzeAccessibility' });
-      if (!(await this.isRunCurrent(runId))) {
-        return await this.getAnalysisJob();
+      if (!(await this.isRunCurrent(tabId, runId))) {
+        return await this.getAnalysisJob(tabId);
       }
 
       if (!analysisResult?.success) {
@@ -243,8 +348,8 @@ class AccessibilityOptimizer {
           ? ACCESSIFY_AI_CONFIG.localLimits.maxImages
           : 8
       });
-      if (!(await this.isRunCurrent(runId))) {
-        return await this.getAnalysisJob();
+      if (!(await this.isRunCurrent(tabId, runId))) {
+        return await this.getAnalysisJob(tabId);
       }
 
       const images = Array.isArray(extractedImages) ? extractedImages : [];
@@ -260,7 +365,7 @@ class AccessibilityOptimizer {
         localLimits: this.isLocalProvider() ? ACCESSIFY_AI_CONFIG.localLimits : null
       });
 
-      await this.updateAnalysisJobForRun(runId, {
+      await this.updateAnalysisJobForRun(tabId, runId, {
         analysisResult,
         progress: requiresImageProcessing ? 40 : 60,
         progressText: requiresImageProcessing ? 'Processando imagens...' : 'Gerando recomendações...',
@@ -270,8 +375,8 @@ class AccessibilityOptimizer {
       let imageAltResults = [];
       if (requiresImageProcessing) {
         const imageResults = await this.processImages(images);
-        if (!(await this.isRunCurrent(runId))) {
-          return await this.getAnalysisJob();
+        if (!(await this.isRunCurrent(tabId, runId))) {
+          return await this.getAnalysisJob(tabId);
         }
 
         imageAltResults = imageResults.filter((result) => result.success && result.alt);
@@ -280,7 +385,7 @@ class AccessibilityOptimizer {
       steps = this.markStepStatus(steps, 1, 'completed');
 
       steps = this.markStepStatus(steps, 2, 'active');
-      await this.updateAnalysisJobForRun(runId, {
+      await this.updateAnalysisJobForRun(tabId, runId, {
         imageAltResults,
         progress: 75,
         progressText: 'Gerando recomendações...',
@@ -295,19 +400,19 @@ class AccessibilityOptimizer {
         );
       } catch (optimizationError) {
         console.warn('IA de recomendações falhou; seguindo com correções determinísticas:', optimizationError);
-        await this.updateAnalysisJobForRun(runId, {
+        await this.updateAnalysisJobForRun(tabId, runId, {
           progressText: 'IA não retornou JSON válido. Seguindo com correções automáticas...'
         });
       }
-      if (!(await this.isRunCurrent(runId))) {
-        return await this.getAnalysisJob();
+      if (!(await this.isRunCurrent(tabId, runId))) {
+        return await this.getAnalysisJob(tabId);
       }
 
       steps = this.markStepStatus(steps, 2, 'completed');
       steps = this.markStepStatus(steps, 3, 'completed');
 
       const completedAt = new Date().toISOString();
-      await this.updateAnalysisJobForRun(runId, {
+      await this.updateAnalysisJobForRun(tabId, runId, {
         status: 'completed',
         progress: 100,
         progressText: 'Análise concluída.',
@@ -318,11 +423,11 @@ class AccessibilityOptimizer {
         error: null
       });
 
-      return await this.getAnalysisJob();
+      return await this.getAnalysisJob(tabId);
     } catch (error) {
-      if (await this.isRunCurrent(runId)) {
+      if (await this.isRunCurrent(tabId, runId)) {
         const completedAt = new Date().toISOString();
-        await this.updateAnalysisJob({
+        await this.updateAnalysisJob(tabId, {
           status: 'error',
           progressText: `Erro: ${error.message}`,
           error: error.message,
@@ -335,8 +440,8 @@ class AccessibilityOptimizer {
     }
   }
 
-  async resetAnalysisJob() {
-    await this.setAnalysisJob(this.getDefaultAnalysisJob());
+  async resetAnalysisJob(tabId) {
+    await this.setAnalysisJob(tabId, this.getDefaultAnalysisJob());
   }
 
   buildOptimizationsForApplication(optimizations, imageAltResults = []) {
@@ -428,7 +533,24 @@ class AccessibilityOptimizer {
   }
 
   async handleTabCompleted(tab) {
-    if (!tab?.id || !tab?.windowId || !tab?.active || !this.isSupportedTab(tab)) {
+    if (!tab?.id || !tab?.windowId || !this.isSupportedTab(tab)) {
+      return;
+    }
+
+    // A aba navegou para uma URL diferente da que gerou o job salvo: o resultado
+    // antigo não pertence mais a essa página, então some com ele (mesmo sem
+    // auto-otimizar) para não exibir uma análise desatualizada quando o popup abrir.
+    // Qualquer carregamento completo (nova URL OU um F5 na mesma URL, inclusive o
+    // reload que o próprio startAnalysisJob dispara para "limpar o cache") significa
+    // que o DOM está fresco de novo. Um resultado "completed"/"error" de antes não
+    // descreve mais essa página. Nunca mexe num job "running": é assim que evitamos
+    // apagar o job do nosso próprio reload controlado no meio de uma análise.
+    const existingJob = await this.getAnalysisJob(tab.id);
+    if (existingJob.status === 'completed' || existingJob.status === 'error') {
+      await this.resetAnalysisJob(tab.id);
+    }
+
+    if (!tab.active) {
       return;
     }
 
@@ -439,8 +561,8 @@ class AccessibilityOptimizer {
       return;
     }
 
-    const currentJob = await this.getAnalysisJob();
-    if (currentJob.status === 'running' && currentJob.targetTabId === tab.id && currentJob.pageUrl === tab.url) {
+    const currentJob = await this.getAnalysisJob(tab.id);
+    if (currentJob.status === 'running' && currentJob.pageUrl === tab.url) {
       return;
     }
 
@@ -470,7 +592,7 @@ class AccessibilityOptimizer {
       return job;
     }
 
-    await this.updateAnalysisJobForRun(job.runId, {
+    await this.updateAnalysisJobForRun(tab.id, job.runId, {
       status: 'running',
       progress: 90,
       progressText: 'Aplicando otimizações automaticamente...',
@@ -507,7 +629,7 @@ class AccessibilityOptimizer {
           durationMs: this.getDurationMs(job.startedAt, completedAt)
         };
 
-    await this.updateAnalysisJobForRun(job.runId, updatePatch);
+    await this.updateAnalysisJobForRun(tab.id, job.runId, updatePatch);
 
     return {
       ...job,
@@ -1306,6 +1428,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     .catch((error) => console.error('Erro ao tratar carregamento da aba:', error));
 });
 
+// Evita acumular estado de análise de abas que não existem mais no storage.
+chrome.tabs.onRemoved.addListener((tabId) => {
+  optimizer.removeAnalysisJob(tabId)
+    .catch((error) => console.error('Erro ao limpar estado da análise da aba fechada:', error));
+});
+
 // Escutar mensagens do popup e content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getSettings') {
@@ -1389,14 +1517,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === 'getAnalysisJob') {
-    optimizer.getAnalysisJob()
+    if (!Number.isFinite(request.tabId)) {
+      sendResponse({ success: false, error: 'tabId é obrigatório para consultar o estado da análise' });
+      return false;
+    }
+    optimizer.getAnalysisJob(request.tabId)
       .then((job) => sendResponse({ success: true, job }))
       .catch((error) => sendResponse({ success: false, error: error.message }));
     return true;
   }
 
   if (request.action === 'resetAnalysisJob') {
-    optimizer.resetAnalysisJob()
+    if (!Number.isFinite(request.tabId)) {
+      sendResponse({ success: false, error: 'tabId é obrigatório para reiniciar o estado da análise' });
+      return false;
+    }
+    optimizer.resetAnalysisJob(request.tabId)
       .then(() => sendResponse({ success: true }))
       .catch((error) => sendResponse({ success: false, error: error.message }));
     return true;

@@ -180,10 +180,14 @@ class OptionsController {
 
     if (input.type === 'password') {
       input.type = 'text';
-      btn.textContent = '🙈';
+      btn.innerHTML = '<span aria-hidden="true">🙈</span>';
+      btn.setAttribute('aria-label', 'Ocultar chave de API');
+      btn.setAttribute('aria-pressed', 'true');
     } else {
       input.type = 'password';
-      btn.textContent = '👁️';
+      btn.innerHTML = '<span aria-hidden="true">👁️</span>';
+      btn.setAttribute('aria-label', 'Mostrar chave de API');
+      btn.setAttribute('aria-pressed', 'false');
     }
   }
 

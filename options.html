@@ -197,6 +197,22 @@
             align-items: center;
             gap: 8px;
         }
+
+        .provider-fieldset {
+            border: none;
+            padding: 0;
+            margin: 0 0 16px 0;
+        }
+
+        .provider-fieldset legend {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding: 0;
+        }
+
+        .model-list {
             background: #f9f9f9;
             border: 1px solid #e0e0e0;
             border-radius: 4px;
@@ -292,23 +308,32 @@
         .footer a:hover {
             text-decoration: underline;
         }
+
+        .toggle-password-btn:focus-visible,
+        .button:focus-visible,
+        .form-group input[type="text"]:focus-visible,
+        .form-group input[type="password"]:focus-visible,
+        .form-group select:focus-visible {
+            outline: 3px solid #1976d2;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>⚙️ Configurações</h1>
+            <h1><span aria-hidden="true">⚙️</span> Configurações</h1>
             <p>Accessify</p>
         </div>
 
         <!-- API Configuration Section -->
         <div class="section">
-            <h2><span class="section-icon">🤖</span> Provedor de IA</h2>
+            <h2><span class="section-icon" aria-hidden="true">🤖</span> Provedor de IA</h2>
 
             <form id="settings-form">
-                <div class="form-group">
-                    <label>Provedor</label>
+                <fieldset class="provider-fieldset">
+                    <legend>Provedor</legend>
                     <div class="provider-options">
                         <label>
                             <input type="radio" name="provider" id="provider-local" value="local" checked>
@@ -319,7 +344,7 @@
                             OpenRouter
                         </label>
                     </div>
-                </div>
+                </fieldset>
 
                 <div id="local-settings">
                     <div class="info-box">
@@ -357,7 +382,7 @@
                         <label for="api-key">Chave de API OpenRouter</label>
                         <div class="toggle-password">
                             <input type="password" id="api-key" placeholder="sk-or-...">
-                            <button type="button" class="toggle-password-btn" id="toggle-password">👁️</button>
+                            <button type="button" class="toggle-password-btn" id="toggle-password" aria-label="Mostrar chave de API" aria-pressed="false"><span aria-hidden="true">👁️</span></button>
                         </div>
                         <div class="help-text">
                             Sua chave de API é armazenada localmente no seu navegador e nunca é enviada para servidores de terceiros.
@@ -380,7 +405,7 @@
                     <button type="button" class="button button-secondary" id="test-api-btn">🧪 Testar Conexão</button>
                 </div>
 
-                <div id="status-message" class="status-message"></div>
+                <div id="status-message" class="status-message" role="status" aria-live="polite"></div>
             </form>
         </div>
 
@@ -388,7 +413,7 @@
 
         <!-- Behavior Section -->
         <div class="section">
-            <h2><span class="section-icon">⚡</span> Comportamento</h2>
+            <h2><span class="section-icon" aria-hidden="true">⚡</span> Comportamento</h2>
 
             <div class="form-group">
                 <label>
@@ -415,7 +440,7 @@
 
         <!-- About Section -->
         <div class="section">
-            <h2><span class="section-icon">ℹ️</span> Sobre</h2>
+            <h2><span class="section-icon" aria-hidden="true">ℹ️</span> Sobre</h2>
 
             <div class="info-box">
                 <strong>Accessify v1.1.0</strong><br><br>

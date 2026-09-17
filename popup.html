@@ -313,14 +313,18 @@
             border-top: 1px solid #e0e0e0;
         }
 
-        .settings-link a {
+        .settings-link-button {
             color: #1976d2;
             text-decoration: none;
             font-size: 12px;
             cursor: pointer;
+            background: none;
+            border: none;
+            padding: 4px;
+            font-family: inherit;
         }
 
-        .settings-link a:hover {
+        .settings-link-button:hover {
             text-decoration: underline;
         }
 
@@ -397,6 +401,27 @@
             font-size: 11px;
         }
 
+        a[role="button"]:focus-visible,
+        .collapse-button:focus-visible,
+        .toggle-switch:focus-visible,
+        .button:focus-visible,
+        .section-toggle:focus-visible {
+            outline: 3px solid #1976d2;
+            outline-offset: 2px;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
         .report-status {
             font-size: 12px;
             font-weight: 600;
@@ -426,16 +451,17 @@
                     <div class="status-text" id="status-text">Verificando configuração...</div>
                 </div>
             </div>
-            <button class="collapse-button" id="collapse-toggle" type="button" aria-label="Colapsar painel" title="Colapsar painel">◂</button>
+            <button class="collapse-button" id="collapse-toggle" type="button" aria-label="Colapsar painel" aria-expanded="true" aria-controls="container-body" title="Colapsar painel">◂</button>
         </div>
 
+        <div id="container-body">
         <!-- Status Section -->
         <div class="section">
             <div class="toggle-container">
-                <span class="toggle-label">Aplicar melhorias automaticamente ao carregar páginas</span>
-                <div class="toggle-switch" id="auto-optimize-toggle"></div>
+                <span class="toggle-label" id="auto-optimize-label">Aplicar melhorias automaticamente ao carregar páginas</span>
+                <div class="toggle-switch" id="auto-optimize-toggle" role="switch" tabindex="0" aria-checked="false" aria-labelledby="auto-optimize-label"></div>
             </div>
-            <div class="info-box" id="status-info">
+            <div class="info-box" id="status-info" role="status" aria-live="polite">
                 Carregando status...
             </div>
         </div>
@@ -443,7 +469,7 @@
         <!-- Main Action Section -->
         <div class="section" id="main-section">
             <button class="button button-primary" id="analyze-btn">
-                <span class="section-icon">🔍</span>
+                <span class="section-icon" aria-hidden="true">🔍</span>
                 Analisar Acessibilidade
             </button>
             <div class="info-box" style="margin-top: 10px;">
@@ -453,50 +479,51 @@
 
         <!-- Progress Section (Hidden by default) -->
         <div class="section" id="progress-section" style="display: none;">
-            <h2><span class="section-icon">⟳</span> Processando...</h2>
+            <h2><span class="section-icon" aria-hidden="true">⟳</span> Processando...</h2>
             <div class="progress-container">
-                <div class="progress-bar">
+                <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="progress-text">
                     <div class="progress-fill" id="progress-fill"></div>
                 </div>
-                <div class="progress-text" id="progress-text">Iniciando análise...</div>
+                <div class="progress-text" id="progress-text" role="status" aria-live="polite">Iniciando análise...</div>
                 <div class="processing-time" id="processing-time" style="display: none;">Tempo de processamento: --</div>
             </div>
-            <div id="steps-container" style="margin-top: 15px;"></div>
+            <div id="steps-container" style="margin-top: 15px;" role="list" aria-label="Etapas da análise"></div>
             <button class="button button-secondary" id="restart-analysis-btn" style="margin-top: 12px;">
-                <span class="section-icon">↻</span>
+                <span class="section-icon" aria-hidden="true">↻</span>
                 Reiniciar Análise
             </button>
         </div>
 
         <!-- Results Section (Hidden by default) -->
         <div class="section" id="results-section" style="display: none;">
-            <h2><span class="section-icon">✓</span> Análise Completa</h2>
-            <div class="summary" id="results-summary"></div>
+            <h2><span class="section-icon" aria-hidden="true">✓</span> Análise Completa</h2>
+            <div class="summary" id="results-summary" role="status" aria-live="polite"></div>
             <button class="button button-primary" id="apply-optimizations-btn" style="margin-top: 15px;">
-                <span class="section-icon">✨</span>
+                <span class="section-icon" aria-hidden="true">✨</span>
                 Aplicar Otimizações
             </button>
             <button class="button button-secondary" id="new-analysis-btn" style="margin-top: 10px;">
-                <span class="section-icon">🔄</span>
+                <span class="section-icon" aria-hidden="true">🔄</span>
                 Nova Análise
             </button>
         </div>
 
         <div class="section" id="report-section" style="display: none;">
             <div class="section-header">
-                <h2><span class="section-icon">🧾</span> Relatório da Execução</h2>
-                <button class="section-toggle" id="report-toggle" type="button">Ocultar</button>
+                <h2><span class="section-icon" aria-hidden="true">🧾</span> Relatório da Execução</h2>
+                <button class="section-toggle" id="report-toggle" type="button" aria-expanded="true" aria-controls="report-body">Ocultar</button>
             </div>
             <div id="report-body">
-                <div class="report-status" id="report-status"></div>
+                <div class="report-status" id="report-status" role="status" aria-live="polite"></div>
                 <div class="summary" id="report-summary"></div>
-                <div id="report-steps" style="margin-top: 12px;"></div>
+                <div id="report-steps" style="margin-top: 12px;" role="list" aria-label="Etapas da aplicação"></div>
             </div>
         </div>
 
         <!-- Settings Link -->
         <div class="settings-link">
-            <a id="settings-link">⚙️ Configurações</a>
+            <button type="button" class="settings-link-button" id="settings-link"><span aria-hidden="true">⚙️</span> Configurações</button>
+        </div>
         </div>
     </div>
 
