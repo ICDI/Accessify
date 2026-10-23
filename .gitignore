@@ -1,0 +1,27 @@
+# Arquivos de apoio ao desenvolvimento (instruções do Claude Code, plano de trabalho):
+# ficam só na máquina de quem desenvolve.
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+docs/PLANO_AVALIACAO.md
+
+# Dependências e perfis do harness
+eval/node_modules/
+.pw-profile*/
+eval/.pw-profile*/
+
+# Snapshots congelados das páginas (conteúdo de terceiros, volume alto): ficam fora
+# do git e são arquivados à parte. O índice com o sha256 de cada arquivo é versionado.
+eval/snapshots/*
+!eval/snapshots/index.csv
+
+# Extensão WAVE (só se a decisão D6 for permissão escrita da WebAIM): não redistribuir.
+# Versão e hash ficam registrados em docs/ESTADO_ATUAL.md.
+eval/vendor/wave-extension/
+
+# JSON bruto por run: volume alto, arquivado à parte; o sha256 de cada um vai em runs.csv.
+eval/results/raw/
+
+# Locais
+.env
+*.log
