@@ -64,8 +64,7 @@ Essa rotina:
    - titulo
    - URL
    - idioma
-   - HTML truncado em 50.000 caracteres
-   - lista de imagens com `src`, `alt` e `title`
+   - HTML truncado em 1.500 caracteres (so usado no OpenRouter)
 
 Importante: essa fase e local. Nenhuma chamada ao LLM acontece aqui.
 
@@ -82,55 +81,61 @@ O metodo `evaluate()` executa as seguintes verificacoes no DOM:
 7. `evaluateColorContrast()`
 8. `evaluateTextPresentation()`
 9. `evaluatePageRegions()`
-10. `evaluateSemanticHTML()`
-11. `evaluateAriaHidden()`
-12. `evaluateAriaReferences()`
-13. `evaluateLanguage()`
-14. `evaluatePageTitle()`
-15. `evaluateKeyboardNavigation()`
-16. `evaluateFocusIndicators()`
+10. `evaluateTables()`
+11. `evaluateSemanticHTML()`
+12. `evaluateClickableNonSemantic()`
+13. `evaluateAriaHidden()`
+14. `evaluateAriaReferences()`
+15. `evaluateIframes()`
+16. `evaluateDuplicateIds()`
+17. `evaluateLanguage()`
+18. `evaluatePageTitle()`
+19. `evaluateKeyboardNavigation()`
+20. `evaluateFocusIndicators()`
+21. `evaluateColorOnlyLinks()`
+22. `evaluateViewportZoom()`
+23. `evaluateInputPurpose()`
+24. `evaluateLabelInName()`
+25. `evaluateReadingOrder()`
+26. `evaluateNonTextAlternatives()`
+27. `evaluateBypassBlocks()`
+28. `evaluateNonTextContrast()`
 
 Cada issue recebe severidade, criterio WCAG associado, mensagem e, quando aplicavel, a flag `requires_llm`.
 
 ### 5. Decisao sobre uso de LLM
 
-Depois da analise local, o background usa `analysisResult.summary.requiresLLM > 0` para decidir se a etapa "Processando imagens" deve ser ativada.
+Depois da analise local, o background pede `extractImages` e so ativa a etapa de imagens se houver imagens sem `alt` (nao espacadoras). Contraste baixo ou link generico ja nao abrem essa etapa sozinhos.
 
-Na implementacao atual, `requiresLLM` sobe quando existe pelo menos um problema marcado com `requires_llm: true`, incluindo:
-
-- imagens sem alt
-- alt muito curto
-- alt muito longo
-- links com texto generico
-- contraste insuficiente
-
-Observacao importante: essa decisao ativa a etapa de processamento de imagens, mas a extracao de imagens para essa etapa considera apenas imagens sem atributo `alt`. Isso significa que a etapa pode ser aberta mesmo quando o problema que acionou `requiresLLM` nao e uma imagem sem alt.
+Na implementacao atual, `requiresLLM` continua existindo no resumo (problemas que o modelo ainda ajuda a remediacao, como contraste e alt), mas **nao** dispara mais a etapa de imagens.
 
 ### 6. Acionamento do LLM para imagens
 
-Se a etapa de imagens for ativada, o background pede ao content script `action: extractImages`.
+Se houver imagens sem `alt`, o background ja recebeu a lista de `extractImages`.
 
-O content script retorna apenas imagens que:
+O content script retorna imagens que:
 
 - nao sao espacadoras
 - nao possuem atributo `alt`
+- incluem contexto serializavel: `fileName`, `figcaption`, `adjacentText`, `parentAriaLabel`, `dataUrl` quando possivel
 
-Para cada imagem retornada, o background executa `processImages()` e, dentro dela, chama `generateImageAltText(image.src)`.
+Para cada imagem retornada, o background executa `processImages()` e chama `generateImageAltText(image)` com o objeto completo.
+
+No Ollama, o prompt usa o contexto da pagina (texto, nao visao). No OpenRouter, modelos com visao recebem `dataUrl` ou `image_url`.
 
 #### Quando o LLM e acionado aqui
 
-O LLM e acionado uma vez por imagem elegivel.
+O LLM e acionado uma vez por imagem elegivel, com teto: **2 no Ollama** e **8 no OpenRouter**. Emojis e imagens com figcaption/texto adjacente suficiente nao disparam o modelo local.
 
 #### Por que o LLM e acionado aqui
 
-Porque a extensao nao consegue inferir de forma confiavel, apenas pelo DOM, o conteudo visual da imagem. O modelo e usado para gerar uma descricao curta e util como texto alternativo.
+Porque uma descricao util da imagem exige contexto (e visao, quando disponivel). O Qwen3 8B local nao ve a imagem; o OpenRouter com modelo de visao pode recebe-la.
 
 #### O que e enviado ao LLM aqui
 
-O prompt de alt text envia principalmente:
-
-- a URL da imagem
-- uma instrucao de sistema pedindo um alt text conciso, descritivo e sem explicacoes extras
+- contexto textual: figcaption, title, texto adjacente, nome do arquivo, aria-label do pai
+- no OpenRouter com visao: `dataUrl` (quando same-origin) ou URL da imagem
+- instrucao pedindo alt text conciso, sem explicacoes extras
 
 #### Resultado esperado
 
@@ -138,7 +143,9 @@ O modelo deve retornar apenas o alt text. Se a chamada falhar, a rotina registra
 
 ### 7. Acionamento do LLM para recomendacoes de remediacao
 
-Independentemente de haver ou nao imagens a processar, o background executa `analyzePageForOptimizations(pageContent, issues)` ao final da analise local.
+Independentemente de haver ou nao imagens a processar, o background tenta `analyzePageForOptimizations(pageContent, issues)` ao final da analise local. No Ollama essa chamada so acontece se existir problema essencial (H1, salto de heading ou link generico). Contraste, SVG, tabela, iframe e label ficam nas regras fixas.
+
+Se o JSON da IA vier quebrado, a analise **nao aborta**: o plugin repara o JSON quando da, ou conclui com correcoes deterministicas.
 
 Essa e a principal chamada de LLM para raciocinio sobre correcao.
 
@@ -148,14 +155,7 @@ O LLM e acionado apos a etapa de analise local, durante a etapa "Gerando recomen
 
 #### Por que o LLM e acionado aqui
 
-Porque transformar problemas brutos do DOM em recomendacoes tecnicas aplicaveis exige interpretacao contextual. O modelo e usado para:
-
-- priorizar correcoes
-- sugerir mudancas semanticas
-- propor `aria-label`
-- sugerir alteracoes de texto visivel
-- gerar CSS para contraste, foco e legibilidade
-- relacionar cada recomendacao a um criterio WCAG
+Porque headings e links genericos exigem contexto. Contraste, SVG, tabela, iframe, label e zoom nao passam mais pelo modelo: regras fixas ou fallback do popup.
 
 #### O que e enviado ao LLM aqui
 
@@ -163,46 +163,21 @@ O prompt inclui:
 
 - titulo da pagina
 - URL
-- idioma
-- resumo dos problemas encontrados
+- idioma (OpenRouter)
+- resumo **filtrado** dos problemas: no Ollama so headings e links genericos, 1 exemplo por tipo; no OpenRouter, tipos que ainda precisam de julgamento (sem os que ja tem regra fixa)
 
-Esse resumo e gerado por `prepareIssuesSummary()` e pode incluir, conforme o tipo de problema:
-
-- seletor CSS
-- `aria-labelledby`
-- `aria-describedby`
-- trecho de HTML
-- `placeholder`
-- `title_attribute`
-- `element_text`
-- `alt_text`
-- `adjacent_text`
-- `name`
-- `id`
-- `input_type`
-- `text_content`
-- `foreground_color`
-- `background_color`
-- `contrast_ratio`
-- `minimum_contrast`
-- `font_size`
-- `font_weight`
-- indicacao de texto grande
-- `background_image`
-
-Observacao importante: embora `pageContent` contenha o HTML truncado da pagina, o prompt atual de recomendacoes usa explicitamente titulo, URL, idioma e o resumo dos problemas. O HTML extraido nao aparece no prompt montado hoje.
+No Ollama o trecho HTML **nao** e enviado. No OpenRouter o HTML e limitado a 1.500 caracteres. O resumo compacto leva `seletor`, `href`, `texto` e, no OpenRouter, cores de contraste.
 
 #### Estrutura de resposta esperada do LLM
 
 O modelo deve devolver um JSON com:
 
-- `optimizations`
 - `structureChanges`
 - `ariaLabels`
 - `textChanges`
 - `styles`
 
-Esse formato existe para que a extensao consiga aplicar correcoes de forma controlada depois da analise.
+A lista `optimizations` (usada so no resumo da UI) e derivada desses arrays se o modelo omitir.
 
 ### 8. Consolidacao e encerramento
 
@@ -370,9 +345,9 @@ Em outras palavras: o LLM nao descobre os problemas iniciais. Ele entra depois, 
 
 ## Observacoes relevantes sobre o comportamento atual
 
-1. A etapa "Processando imagens" e ativada por `summary.requiresLLM > 0`, mas a extracao de imagens so considera imagens sem `alt`. Isso pode deixar a etapa ativa mesmo sem imagens elegiveis para gerar alt text.
-2. O HTML da pagina e extraido no content script, mas o prompt atual de recomendacoes nao usa esse HTML explicitamente.
-3. Problemas de contraste e texto generico em links ja marcam `requires_llm: true`, o que influencia a progressao do job mesmo antes de qualquer chamada especifica de alt text.
+1. A etapa de imagens so roda quando `extractImages` devolve ao menos uma imagem sem `alt`.
+2. No Ollama, no maximo 2 imagens e um prompt minimo de recomendacoes (H1 / heading / link generico). No OpenRouter o prompt inclui titulo, URL, idioma, resumo filtrado e um trecho HTML de 1.500 caracteres.
+3. Correcoes simples (lang, spacer alt, th em tabelas, iframe title, skip link, teclado em div onclick, zoom, autocomplete, sublinhado de link) sao aplicadas de forma deterministica, sem esperar o LLM.
 
 ## Conclusao
 

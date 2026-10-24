@@ -2,7 +2,9 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
+    <!-- Delay propositalmente longo (5 min) para não atrapalhar uma sessão de teste manual, só para disparar a detecção -->
+    <meta http-equiv="refresh" content="300">
     <title>Página de Teste - WCAG Accessibility Plugin</title>
     <style>
         * {
@@ -142,6 +144,28 @@
         .hidden-alert {
             opacity: 0.2;
         }
+
+        @keyframes accessify-test-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .spinning-badge {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 6px solid #0066cc;
+            border-top-color: transparent;
+            animation: accessify-test-spin 1.5s linear infinite;
+            margin: 15px 0;
+        }
+
+        .field-error {
+            color: #c62828;
+            font-size: 13px;
+            margin-top: -10px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -182,6 +206,7 @@
                 <li><a href="#" class="generic-link">clique aqui</a> para saber mais</li>
                 <li><a href="#" class="generic-link">leia mais</a> sobre este tópico</li>
                 <li><a href="#" class="generic-link">saiba mais</a> informações</li>
+                <li><a href="https://www.w3.org/WAI/" target="_blank">Diretrizes de acessibilidade do W3C</a> (abre em nova aba, sem aviso)</li>
             </ul>
         </div>
 
@@ -190,8 +215,9 @@
             <h3>Seção 3: Formulário</h3>
             <form class="form-section">
                 <p>Formulário com campos sem labels associados:</p>
-                <input type="text" placeholder="Nome completo">
-                <input type="email" placeholder="E-mail">
+                <input type="text" name="nome" placeholder="Nome completo">
+                <input type="email" name="email" placeholder="E-mail">
+                <div class="field-error">E-mail inválido, tente novamente.</div>
                 <textarea placeholder="Mensagem" rows="4"></textarea>
                 <button type="submit">Enviar</button>
             </form>
@@ -220,6 +246,29 @@
         </div>
 
         <div class="section">
+            <h3>Seção 4b: Landmarks, Mídia e Movimento</h3>
+
+            <p>Duas navegações sem <code>aria-label</code> para diferenciá-las:</p>
+            <nav>
+                <a href="#">Início</a> | <a href="#">Produtos</a> | <a href="#">Contato</a>
+            </nav>
+            <nav>
+                <a href="#">Categoria A</a> | <a href="#">Categoria B</a>
+            </nav>
+
+            <p>Vídeo com autoplay e som, sem controles:</p>
+            <video autoplay width="320" height="180" src="media/exemplo-autoplay.mp4"></video>
+
+            <p>Animação CSS contínua sem respeitar <code>prefers-reduced-motion</code>:</p>
+            <div class="spinning-badge" aria-hidden="true"></div>
+
+            <p>Widget de CAPTCHA (simulado, sem script real) sem alternativa acessível conhecida:</p>
+            <div class="captcha-widget" style="border:1px dashed #999; padding:15px; width:250px;">
+                [ ] Não sou um robô
+            </div>
+        </div>
+
+        <div class="section">
             <h3>Seção 5: Alertas de Legibilidade</h3>
             <p class="justified-sample">Este é um bloco propositalmente muito longo para disparar o alerta de texto justificado no plugin. O objetivo aqui é reproduzir um cenário em que um parágrafo extenso foi configurado com alinhamento totalmente justificado, criando espaçamentos irregulares entre palavras, rios de branco e piorando a leitura para pessoas com baixa visão, dislexia ou dificuldades cognitivas. Como o algoritmo desejado considera elementos do tipo parágrafo, divisão ou célula de tabela com mais de quinhentos caracteres e text-align: justify, este texto continua se estendendo com conteúdo repetido para ultrapassar com folga esse limiar, permitindo validar que a correção automática remove o alinhamento justificado e retorna o texto para uma apresentação mais estável e previsível na tela.</p>
             <p title="Saiba mais sobre acessibilidade">Saiba mais sobre acessibilidade</p>
@@ -233,7 +282,13 @@
             <p>Observe que pulamos de H3 para H5, violando a hierarquia de títulos.</p>
             
             <h3>Voltando para H3</h3>
-            <p>Isto viola as regras de estrutura semântica.</p>
+            <p>Este parágrafo contém um <a href="#conteudo" style="color:#0066cc; text-decoration:none;">link distinguido só por cor</a> no meio do texto.</p>
+            <p id="dup">Primeiro elemento com ID duplicado</p>
+            <p id="dup">Segundo elemento com ID duplicado</p>
+            <svg width="80" height="40" aria-hidden="false">
+                <rect width="80" height="40" fill="#1976d2"></rect>
+            </svg>
+            <iframe src="about:blank" width="300" height="80"></iframe>
         </div>
 
         <!-- Seção 7: Elemento interativo sem role -->
@@ -265,14 +320,27 @@
                     <li>❌ Links com texto genérico</li>
                     <li>❌ Formulário sem labels</li>
                     <li>❌ Tabela sem headers semânticos</li>
+                    <li>❌ Div com onclick (não semântico / teclado)</li>
+                    <li>❌ iframe sem title</li>
+                    <li>❌ SVG sem nome acessível</li>
+                    <li>❌ IDs duplicados</li>
+                    <li>❌ Link distinguido só por cor</li>
+                    <li>❌ Viewport impedindo zoom</li>
+                    <li>❌ Campos sem autocomplete</li>
                     <li>❌ Contraste de cores baixo</li>
                     <li>❌ Texto longo justificado</li>
                     <li>❌ Texto muito pequeno</li>
                     <li>❌ Conteúdo com aria-hidden</li>
                     <li>❌ Title redundante</li>
                     <li>❌ Alt redundante com texto adjacente</li>
-                    <li>❌ Div com onclick (não semântico)</li>
                     <li>❌ Sem indicador de foco visual</li>
+                    <li>❌ Meta refresh automático sem controle do usuário</li>
+                    <li>❌ Link em nova aba sem aviso</li>
+                    <li>❌ Landmarks de navegação duplicados sem rótulo</li>
+                    <li>❌ Vídeo com autoplay e som, sem controles</li>
+                    <li>❌ Animação CSS contínua sem prefers-reduced-motion</li>
+                    <li>❌ CAPTCHA sem alternativa acessível conhecida</li>
+                    <li>❌ Erro de formulário não anunciado (sem aria-describedby)</li>
                 </ul>
             </div>
         </div>

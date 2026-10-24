@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Accessify",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Transforma páginas web em acessíveis seguindo as diretrizes WCAG para usuários cegos ou de baixa visão",
   "permissions": [
     "activeTab",
@@ -12,7 +12,9 @@
     "sidePanel"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "http://127.0.0.1:11434/*",
+    "http://localhost:11434/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -20,12 +22,17 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": ["wcag-evaluator.js", "content.js"],
       "run_at": "document_end"
     }
   ],
   "action": {
-    "default_title": "Accessify"
+    "default_title": "Accessify",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
   },
   "commands": {
     "trigger-accessibility-analysis": {

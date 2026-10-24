@@ -185,6 +185,33 @@
             margin-top: 20px;
         }
 
+        .provider-options {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .provider-options label {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .provider-fieldset {
+            border: none;
+            padding: 0;
+            margin: 0 0 16px 0;
+        }
+
+        .provider-fieldset legend {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding: 0;
+        }
+
         .model-list {
             background: #f9f9f9;
             border: 1px solid #e0e0e0;
@@ -281,76 +308,96 @@
         .footer a:hover {
             text-decoration: underline;
         }
+
+        .toggle-password-btn:focus-visible,
+        .button:focus-visible,
+        .form-group input[type="text"]:focus-visible,
+        .form-group input[type="password"]:focus-visible,
+        .form-group select:focus-visible {
+            outline: 3px solid #1976d2;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>⚙️ Configurações</h1>
+            <h1><span aria-hidden="true">⚙️</span> Configurações</h1>
             <p>Accessify</p>
         </div>
 
         <!-- API Configuration Section -->
         <div class="section">
-            <h2><span class="section-icon">🔑</span> Configuração da API OpenRouter</h2>
-
-            <div class="info-box">
-                <strong>Como obter uma chave de API:</strong><br>
-                1. Acesse <a href="https://openrouter.ai" target="_blank">openrouter.ai</a><br>
-                2. Crie uma conta ou faça login<br>
-                3. Vá para a seção de chaves de API<br>
-                4. Crie uma nova chave e copie-a<br>
-                5. Cole a chave abaixo
-            </div>
+            <h2><span class="section-icon" aria-hidden="true">🤖</span> Provedor de IA</h2>
 
             <form id="settings-form">
-                <div class="form-group">
-                    <label for="api-key">Chave de API OpenRouter</label>
-                    <div class="toggle-password">
-                        <input type="password" id="api-key" placeholder="sk-or-..." required>
-                        <button type="button" class="toggle-password-btn" id="toggle-password">👁️</button>
+                <fieldset class="provider-fieldset">
+                    <legend>Provedor</legend>
+                    <div class="provider-options">
+                        <label>
+                            <input type="radio" name="provider" id="provider-local" value="local" checked>
+                            Ollama local (Qwen3 8B)
+                        </label>
+                        <label>
+                            <input type="radio" name="provider" id="provider-openrouter" value="openrouter">
+                            OpenRouter
+                        </label>
                     </div>
-                    <div class="help-text">
-                        Sua chave de API é armazenada localmente no seu navegador e nunca é enviada para servidores de terceiros.
+                </fieldset>
+
+                <div id="local-settings">
+                    <div class="info-box">
+                        <strong>Como usar o Ollama local:</strong><br>
+                        1. Instale o <a href="https://ollama.com" target="_blank">Ollama</a> no Windows<br>
+                        2. No terminal: <code>ollama pull qwen3:8b</code><br>
+                        3. Mantenha o Ollama em execução (porta 11434)<br>
+                        4. Se o teste retornar 403, defina a variável de ambiente <code>OLLAMA_ORIGINS=chrome-extension://*</code> e reinicie o Ollama
+                    </div>
+
+                    <div class="form-group">
+                        <label for="local-base-url">URL da API local</label>
+                        <input type="text" id="local-base-url" value="http://127.0.0.1:11434/v1">
+                        <div class="help-text">Endpoint OpenAI-compatible do Ollama. O padrão é http://127.0.0.1:11434/v1</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="local-model">Modelo local</label>
+                        <input type="text" id="local-model" value="qwen3:8b">
+                        <div class="help-text">Qwen3 8B é texto (sem visão). O alt text usa o contexto da página (figcaption, texto adjacente, nome do arquivo).</div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="model-select">Modelo de IA</label>
-                    <select id="model-select" required>
-                        <option value="openai/gpt-5-nano">OpenAI GPT-5 Nano</option>
-                        <option value="moonshotai/kimi-k2.5">MoonshotAI Kimi K2.5</option>
-                        <option value="qwen/qwen3.5-flash-02-23">Qwen 3.5 Flash</option>
-                        <option value="google/gemini-3.1-flash-lite-preview">Google Gemini 3.1 Flash Lite</option>
-                        <option value="x-ai/grok-4.1-fast">X.AI Grok 4.1 Fast</option>
-                    </select>
-                    <div class="help-text">
-                        Escolha o modelo de IA que será usado para analisar e otimizar suas páginas. Modelos mais avançados produzem melhores resultados, mas custam mais.
+                <div id="openrouter-settings" hidden>
+                    <div class="info-box">
+                        <strong>Como obter uma chave de API:</strong><br>
+                        1. Acesse <a href="https://openrouter.ai" target="_blank">openrouter.ai</a><br>
+                        2. Crie uma conta ou faça login<br>
+                        3. Vá para a seção de chaves de API<br>
+                        4. Crie uma nova chave e copie-a<br>
+                        5. Cole a chave abaixo
                     </div>
-                </div>
 
-                <div class="model-list">
-                    <div class="model-item">
-                        <div class="model-name">🚀 OpenAI GPT-5 Nano</div>
-                        <div class="model-description">Modelo mais recente da OpenAI, otimizado para velocidade e eficiência. Excelente para análises de acessibilidade.</div>
+                    <div class="form-group">
+                        <label for="api-key">Chave de API OpenRouter</label>
+                        <div class="toggle-password">
+                            <input type="password" id="api-key" placeholder="sk-or-...">
+                            <button type="button" class="toggle-password-btn" id="toggle-password" aria-label="Mostrar chave de API" aria-pressed="false"><span aria-hidden="true">👁️</span></button>
+                        </div>
+                        <div class="help-text">
+                            Sua chave de API é armazenada localmente no seu navegador e nunca é enviada para servidores de terceiros.
+                        </div>
                     </div>
-                    <div class="model-item">
-                        <div class="model-name">🌙 MoonshotAI Kimi K2.5</div>
-                        <div class="model-description">Modelo da MoonshotAI com boa capacidade de raciocínio e contexto longo, útil para recomendações detalhadas de acessibilidade.</div>
+
+                    <div class="form-group">
+                        <label for="model-select">Modelo de IA</label>
+                        <select id="model-select"></select>
+                        <div class="help-text">
+                            Modelos baratos e suficientes para JSON de remediação. Gemini 2.5 Flash Lite e GPT-5 Nano aceitam visão para alt text.
+                        </div>
                     </div>
-                    <div class="model-item">
-                        <div class="model-name">⚡ Qwen 3.5 Flash</div>
-                        <div class="model-description">Modelo rápido e eficiente da Alibaba, ótimo para processamento em tempo real.</div>
-                    </div>
-                    <div class="model-item">
-                        <div class="model-name">🔮 Google Gemini 3.1 Flash Lite</div>
-                        <div class="model-description">Versão leve do Gemini, rápida e econômica, perfeita para análises de acessibilidade.</div>
-                    </div>
-                    <div class="model-item">
-                        <div class="model-name">⚙️ X.AI Grok 4.1 Fast</div>
-                        <div class="model-description">Modelo rápido do Grok, com excelente compreensão de contexto e análise detalhada.</div>
-                    </div>
+
+                    <div class="model-list" id="model-list"></div>
                 </div>
 
                 <div class="button-group">
@@ -358,7 +405,7 @@
                     <button type="button" class="button button-secondary" id="test-api-btn">🧪 Testar Conexão</button>
                 </div>
 
-                <div id="status-message" class="status-message"></div>
+                <div id="status-message" class="status-message" role="status" aria-live="polite"></div>
             </form>
         </div>
 
@@ -366,7 +413,7 @@
 
         <!-- Behavior Section -->
         <div class="section">
-            <h2><span class="section-icon">⚡</span> Comportamento</h2>
+            <h2><span class="section-icon" aria-hidden="true">⚡</span> Comportamento</h2>
 
             <div class="form-group">
                 <label>
@@ -393,10 +440,10 @@
 
         <!-- About Section -->
         <div class="section">
-            <h2><span class="section-icon">ℹ️</span> Sobre</h2>
+            <h2><span class="section-icon" aria-hidden="true">ℹ️</span> Sobre</h2>
 
             <div class="info-box">
-                <strong>Accessify v1.0.0</strong><br><br>
+                <strong>Accessify v1.1.0</strong><br><br>
                 Um plugin do Chrome que transforma páginas web em acessíveis seguindo as diretrizes WCAG 2.1, com foco em usuários cegos ou de baixa visão.<br><br>
                 <strong>Recursos:</strong>
                 <ul style="margin-left: 20px; margin-top: 10px;">
@@ -419,12 +466,14 @@
             <p>
                 <strong>Recursos úteis:</strong><br>
                 • <a href="https://www.w3.org/WAI/standards-guidelines/wcag/" target="_blank">Diretrizes WCAG 2.1</a><br>
+                • <a href="https://ollama.com" target="_blank">Ollama</a><br>
                 • <a href="https://openrouter.ai" target="_blank">OpenRouter</a><br>
                 • <a href="https://www.w3.org/WAI/" target="_blank">Web Accessibility Initiative (WAI)</a>
             </p>
         </div>
     </div>
 
+    <script src="ai-config.js"></script>
     <script src="options.js"></script>
 </body>
 </html>

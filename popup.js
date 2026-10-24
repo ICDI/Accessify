@@ -12,6 +12,7 @@ class PopupController {
     this.jobState = null;
     this.pollingId = null;
     this.reportCollapsed = false;
+    this.dismissedErrorKey = null;
     this.init();
   }
 
@@ -22,6 +23,7 @@ class PopupController {
     this.currentTab = await this.getCurrentTab();
     this.setupEventListeners();
     this.setupStorageListeners();
+    this.setupTabListeners();
     this.checkConfiguration();
     this.loadAutoOptimizeSettings();
     await this.loadPanelState();
@@ -47,8 +49,34 @@ class PopupController {
     document.getElementById('restart-analysis-btn').addEventListener('click', () => this.restartAnalysis());
     document.getElementById('settings-link').addEventListener('click', () => this.openSettings());
     document.getElementById('auto-optimize-toggle').addEventListener('click', () => this.toggleAutoOptimize());
+    document.getElementById('auto-optimize-toggle').addEventListener('keydown', (e) => this.handleTogglePress(e));
     document.getElementById('collapse-toggle').addEventListener('click', () => this.toggleCollapsed());
     document.getElementById('report-toggle').addEventListener('click', () => this.toggleReportCollapsed());
+  }
+
+  /**
+   * Permite acionar o switch customizado (div role="switch") via teclado.
+   */
+  handleTogglePress(event) {
+    if (event.key === ' ' || event.key === 'Enter') {
+      event.preventDefault();
+      this.toggleAutoOptimize();
+    }
+  }
+
+  /**
+   * O side panel não recarrega sozinho ao trocar de aba (é uma única instância por
+   * janela). Sem isso, o usuário só veria o estado da nova aba no próximo tick do
+   * polling (até 1s de atraso). Aqui refletimos a troca imediatamente.
+   */
+  setupTabListeners() {
+    if (!chrome.tabs?.onActivated) {
+      return;
+    }
+
+    chrome.tabs.onActivated.addListener(() => {
+      this.refreshJobState().catch((error) => console.error('Erro ao atualizar estado ao trocar de aba:', error));
+    });
   }
 
   setupStorageListeners() {
@@ -57,7 +85,7 @@ class PopupController {
         return;
       }
 
-      if (changes.selectedModel || changes.apiKey) {
+      if (changes.selectedModel || changes.apiKey || changes.provider || changes.localModel) {
         this.checkConfiguration();
       }
 
@@ -91,6 +119,7 @@ class PopupController {
     button.textContent = collapsed ? '▸' : '◂';
     button.title = collapsed ? 'Expandir painel' : 'Colapsar painel';
     button.setAttribute('aria-label', collapsed ? 'Expandir painel' : 'Colapsar painel');
+    button.setAttribute('aria-expanded', String(!collapsed));
   }
 
   async toggleReportCollapsed() {
@@ -109,6 +138,7 @@ class PopupController {
 
     body.style.display = this.reportCollapsed ? 'none' : 'block';
     toggle.textContent = this.reportCollapsed ? 'Expandir' : 'Ocultar';
+    toggle.setAttribute('aria-expanded', String(!this.reportCollapsed));
   }
 
   startPolling() {
@@ -124,7 +154,11 @@ class PopupController {
   async refreshJobState() {
     this.currentTab = await this.getCurrentTab();
 
-    const response = await this.sendMessageToBackground({ action: 'getAnalysisJob' });
+    if (!this.currentTab?.id) {
+      return;
+    }
+
+    const response = await this.sendMessageToBackground({ action: 'getAnalysisJob', tabId: this.currentTab.id });
     if (!response?.success) {
       return;
     }
@@ -136,16 +170,26 @@ class PopupController {
   renderJobState() {
     const job = this.jobState;
     if (!job || job.status === 'idle') {
+      // O job pode estar "idle" tanto por reset explícito quanto por termos trocado
+      // para uma aba diferente (cada aba tem seu próprio job). Nos dois casos, o
+      // estado em memória da aba anterior precisa ser descartado - senão "Aplicar
+      // Otimizações" nesta aba poderia reaplicar dados de outra aba/página.
       this.updateProcessingTime(null);
-      if (this.analysisResult || this.optimizations || this.imageAltResults.length > 0) {
-        document.getElementById('main-section').style.display = 'block';
-        document.getElementById('progress-section').style.display = 'none';
-        document.getElementById('results-section').style.display = 'none';
-      }
+      this.dismissedErrorKey = null;
+      this.analysisResult = null;
+      this.optimizations = null;
+      this.imageAltResults = [];
+      this.steps = [];
+      document.getElementById('main-section').style.display = 'block';
+      document.getElementById('progress-section').style.display = 'none';
+      document.getElementById('results-section').style.display = 'none';
+      document.getElementById('report-section').style.display = 'none';
+      this.clearReport();
       return;
     }
 
     if (job.status === 'running') {
+      this.dismissedErrorKey = null;
       this.analysisResult = job.analysisResult;
       this.imageAltResults = job.imageAltResults || [];
       this.showProgressSection();
@@ -157,6 +201,7 @@ class PopupController {
     }
 
     if (job.status === 'completed' && job.analysisResult) {
+      this.dismissedErrorKey = null;
       this.analysisResult = job.analysisResult;
       this.imageAltResults = job.imageAltResults || [];
       this.optimizations = this.combineOptimizations(job.optimizations, this.imageAltResults);
@@ -167,6 +212,12 @@ class PopupController {
     }
 
     if (job.status === 'error') {
+      const errorKey = `${job.runId || ''}:${job.error || ''}`;
+      if (this.dismissedErrorKey && errorKey === this.dismissedErrorKey) {
+        return;
+      }
+
+      this.dismissedErrorKey = null;
       this.updateProcessingTime(job);
       this.showError(`Erro: ${job.error || 'Falha desconhecida'}`);
     }
@@ -192,16 +243,8 @@ class PopupController {
     });
   }
 
-  getModelDisplayName(modelId) {
-    const modelNames = {
-      'openai/gpt-5-nano': 'OpenAI GPT-5 Nano',
-      'moonshotai/kimi-k2.5': 'MoonshotAI Kimi K2.5',
-      'qwen/qwen3.5-flash-02-23': 'Qwen 3.5 Flash',
-      'google/gemini-3.1-flash-lite-preview': 'Google Gemini 3.1 Flash Lite',
-      'x-ai/grok-4.1-fast': 'X.AI Grok 4.1 Fast'
-    };
-
-    return modelNames[modelId] || modelId || 'Modelo não definido';
+  getModelDisplayName(modelId, provider, localModel) {
+    return globalThis.getModelDisplayName(modelId, provider, localModel);
   }
 
   /**
@@ -212,10 +255,19 @@ class PopupController {
       const statusInfo = document.getElementById('status-info');
       const analyzeBtn = document.getElementById('analyze-btn');
 
+      if (!response) {
+        return;
+      }
+
       if (response.isConfigured) {
-        statusInfo.innerHTML = `✓ Modelo configurado: <strong>${this.getModelDisplayName(response.selectedModel)}</strong>`;
+        const label = response.displayName || this.getModelDisplayName(response.selectedModel, response.provider, response.localModel);
+        statusInfo.innerHTML = `✓ Modelo configurado: <strong>${label}</strong>`;
         statusInfo.className = 'info-box';
         analyzeBtn.disabled = false;
+      } else if (response.provider === 'local') {
+        statusInfo.innerHTML = `⚠️ Ollama local não configurado. Clique em "Configurações" para definir a URL e o modelo.`;
+        statusInfo.className = 'info-box warning';
+        analyzeBtn.disabled = true;
       } else {
         statusInfo.innerHTML = `⚠️ API não configurada. Clique em "Configurações" para adicionar sua chave de API do OpenRouter.`;
         statusInfo.className = 'info-box warning';
@@ -232,8 +284,10 @@ class PopupController {
   async loadAutoOptimizeSettings() {
     const settings = await chrome.storage.sync.get(['autoOptimize']);
     const toggle = document.getElementById('auto-optimize-toggle');
+    const isActive = settings.autoOptimize === true;
 
-    toggle.classList.toggle('active', settings.autoOptimize === true);
+    toggle.classList.toggle('active', isActive);
+    toggle.setAttribute('aria-checked', String(isActive));
   }
 
   /**
@@ -242,7 +296,8 @@ class PopupController {
   async toggleAutoOptimize() {
     const toggle = document.getElementById('auto-optimize-toggle');
     const isActive = toggle.classList.toggle('active');
-    
+    toggle.setAttribute('aria-checked', String(isActive));
+
     await chrome.storage.sync.set({ autoOptimize: isActive });
   }
 
@@ -257,6 +312,8 @@ class PopupController {
       return;
     }
 
+    this.dismissCurrentError();
+    this.restoreStatusInfo();
     this.showProgressSection();
     this.updateProgress('Analisando página...', 10);
     this.steps = [];
@@ -280,7 +337,8 @@ class PopupController {
   }
 
   async restartAnalysis() {
-    await this.sendMessageToBackground({ action: 'resetAnalysisJob' });
+    this.currentTab = await this.getCurrentTab();
+    await this.sendMessageToBackground({ action: 'resetAnalysisJob', tabId: this.currentTab?.id });
     this.analysisResult = null;
     this.optimizations = null;
     this.imageAltResults = [];
@@ -411,11 +469,12 @@ class PopupController {
     this.steps.forEach((step, index) => {
       const stepDiv = document.createElement('div');
       stepDiv.className = `step-item ${step.status}`;
-      
+      stepDiv.setAttribute('role', 'listitem');
+
       const statusIcon = step.status === 'completed' ? '✓' : step.status === 'active' ? '⟳' : '○';
-      
+
       stepDiv.innerHTML = `
-        <div class="step-title">${statusIcon} ${step.title}</div>
+        <div class="step-title"><span aria-hidden="true">${statusIcon}</span> ${step.title}</div>
         <div class="step-description">${step.description}</div>
       `;
 
@@ -429,6 +488,7 @@ class PopupController {
   updateProgress(text, percentage) {
     document.getElementById('progress-text').textContent = text;
     document.getElementById('progress-fill').style.width = percentage + '%';
+    document.querySelector('.progress-bar').setAttribute('aria-valuenow', String(percentage));
   }
 
   getJobDurationMs(job = this.jobState) {
@@ -503,10 +563,29 @@ class PopupController {
    * Mostra seção de progresso
    */
   showProgressSection() {
+    this.restoreStatusInfo();
     document.getElementById('main-section').style.display = 'none';
     document.getElementById('progress-section').style.display = 'block';
     document.getElementById('results-section').style.display = 'none';
+    document.getElementById('report-section').style.display = 'none';
+    this.clearReport();
     this.steps = [];
+  }
+
+  /**
+   * Limpa o conteúdo do "Relatório da Execução" (da aplicação de otimizações anterior).
+   * Chamado sempre que uma nova análise começa, para não deixar um relatório antigo
+   * visível/desatualizado enquanto a página é reanalisada.
+   */
+  clearReport() {
+    const reportStatus = document.getElementById('report-status');
+    const reportSummary = document.getElementById('report-summary');
+    const reportSteps = document.getElementById('report-steps');
+
+    reportStatus.className = 'report-status';
+    reportStatus.textContent = '';
+    reportSummary.innerHTML = '';
+    reportSteps.innerHTML = '';
   }
 
   /**
@@ -590,8 +669,8 @@ class PopupController {
 
     applyButton.disabled = autoApplied;
     applyButton.innerHTML = autoApplied
-      ? '<span class="section-icon">✓</span> Otimizações já aplicadas automaticamente'
-      : '<span class="section-icon">✨</span> Aplicar Otimizações';
+      ? '<span class="section-icon" aria-hidden="true">✓</span> Otimizações já aplicadas automaticamente'
+      : '<span class="section-icon" aria-hidden="true">✨</span> Aplicar Otimizações';
   }
 
   renderReport({ status, summaryLines, steps }) {
@@ -609,9 +688,10 @@ class PopupController {
     steps.forEach((step) => {
       const stepDiv = document.createElement('div');
       stepDiv.className = `step-item ${step.status}`;
+      stepDiv.setAttribute('role', 'listitem');
       const statusIcon = step.status === 'completed' ? '✓' : step.status === 'active' ? '⟳' : step.status === 'error' ? '✗' : '○';
       stepDiv.innerHTML = `
-        <div class="step-title">${statusIcon} ${step.title}</div>
+        <div class="step-title"><span aria-hidden="true">${statusIcon}</span> ${step.title}</div>
         <div class="step-description">${step.description}</div>
       `;
       reportSteps.appendChild(stepDiv);
@@ -660,7 +740,7 @@ class PopupController {
 
     try {
       const steps = [
-        { title: 'Aplicando primeira rodada', description: 'Executando correções geradas para a página atual', status: 'active' },
+        { title: 'Aplicando correções', description: 'Corrigindo e reavaliando a página até não sobrar nada novo (ou até o limite de rodadas)', status: 'active' },
         { title: 'Consolidando resultado final', description: 'Atualizando o relatório com o estado final da página', status: 'pending' }
       ];
 
@@ -674,18 +754,21 @@ class PopupController {
         steps
       });
 
-      const firstPassResult = await this.sendMessageToContent({
+      // A convergência (aplicar, reavaliar o que sobrou, aplicar de novo se preciso)
+      // acontece dentro do content.js num único envio de mensagem - não precisamos
+      // mais orquestrar rodadas manuais daqui nem depender de outro clique do usuário.
+      const applyResult = await this.sendMessageToContent({
         action: 'applyOptimizations',
         optimizations: this.optimizations
       });
 
-      if (!firstPassResult.success) {
+      if (!applyResult.success) {
         steps[0].status = 'error';
         const totalProcessDurationMs = analysisDurationMs + Math.max(0, Date.now() - optimizationStartedAt);
         this.renderReport({
           status: 'error',
           summaryLines: [
-            `Erro: ${firstPassResult.error}`,
+            `Erro: ${applyResult.error}`,
             `Tempo total do processo: ${this.formatDuration(totalProcessDurationMs)}`
           ],
           steps
@@ -698,7 +781,7 @@ class PopupController {
       this.renderReport({
         status: 'processing',
         summaryLines: [
-          `Primeira rodada aplicada: ${firstPassResult.appliedCount || 0} alterações`,
+          `${applyResult.appliedCount || 0} alterações em ${applyResult.roundsRun || 1} rodada(s)`,
           'Atualizando o relatório final da página...'
         ],
         steps
@@ -715,8 +798,8 @@ class PopupController {
       this.renderReport({
         status: 'success',
         summaryLines: [
-          `Primeira rodada: ${firstPassResult.appliedCount || 0} alterações`,
-          `Problemas restantes após a rotina: ${finalAnalysis.summary?.total || 0}`,
+          `${applyResult.appliedCount || 0} alterações aplicadas em ${applyResult.roundsRun || 1} rodada(s) automáticas`,
+          `Problemas restantes: ${finalAnalysis.summary?.total || 0}`,
           `Tempo total do processo: ${this.formatDuration(totalProcessDurationMs)}`
         ],
         steps
@@ -752,9 +835,33 @@ class PopupController {
   }
 
   /**
+   * Evita que o polling reexiba o erro antigo após um novo clique em analisar.
+   */
+  dismissCurrentError() {
+    const job = this.jobState;
+    if (job?.status === 'error') {
+      this.dismissedErrorKey = `${job.runId || ''}:${job.error || ''}`;
+    }
+  }
+
+  /**
+   * Remove a caixa vermelha e volta o status de configuração.
+   */
+  restoreStatusInfo() {
+    const statusInfo = document.getElementById('status-info');
+    if (statusInfo?.classList.contains('error')) {
+      statusInfo.className = 'info-box';
+      statusInfo.textContent = 'Carregando status...';
+      this.checkConfiguration();
+    }
+  }
+
+  /**
    * Reseta UI
    */
   resetUI() {
+    this.dismissedErrorKey = null;
+    this.restoreStatusInfo();
     document.getElementById('main-section').style.display = 'block';
     document.getElementById('progress-section').style.display = 'none';
     document.getElementById('results-section').style.display = 'none';
@@ -765,8 +872,9 @@ class PopupController {
     this.imageAltResults = [];
     this.jobState = null;
     document.getElementById('report-section').style.display = 'none';
+    this.clearReport();
     this.updateResultsActions();
-    this.sendMessageToBackground({ action: 'resetAnalysisJob' });
+    this.sendMessageToBackground({ action: 'resetAnalysisJob', tabId: this.currentTab?.id });
   }
 
   /**

@@ -1,0 +1,48 @@
+{
+  "startedAt": "2026-10-23T21:34:13.518Z",
+  "cases": [
+    {
+      "image": {
+        "fileName": "IMG_2034.jpg",
+        "width": 800,
+        "height": 600
+      },
+      "status": 200,
+      "ms": 52794,
+      "finish_reason": "length",
+      "usage": {
+        "prompt_tokens": 155,
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "completion_tokens": 64,
+        "total_tokens": 219
+      },
+      "content": "",
+      "reasoning": "Okay, the user wants an alt text for the image IMG_2034.jpg. The image is 800x600 pixels. They specified it should be between 10-100 characters, concise, and descriptive without inventing details. Let me think about what's",
+      "altGravadoPelaV110": "Okay, the user wants an alt text for the image IMG_2034.jpg. The image is 800x600 pixels. They"
+    },
+    {
+      "image": {
+        "fileName": "banner-home.webp",
+        "width": 1200,
+        "height": 400
+      },
+      "status": 200,
+      "ms": 30246,
+      "finish_reason": "length",
+      "usage": {
+        "prompt_tokens": 153,
+        "prompt_tokens_details": {
+          "cached_tokens": 128
+        },
+        "completion_tokens": 64,
+        "total_tokens": 217
+      },
+      "content": "",
+      "reasoning": "Okay, the user wants an alt text for the image \"banner-home.webp\" which is 1200x400. They specified it should be between 10-100 characters, concise and descriptive. Let me check the filename first. \"Banner-home\" suggests it's",
+      "altGravadoPelaV110": "Okay, the user wants an alt text for the image \"banner-home.webp\" which is 1200x400. They specified"
+    }
+  ],
+  "finishedAt": "2026-10-23T21:35:36.614Z"
+}
