@@ -253,6 +253,7 @@ class AccessibilityAnalyzer {
 
       images.push({
         index,
+        selector: this.getElementSelector(img),
         src: img.src,
         currentAlt: img.getAttribute('alt') || '',
         fileName: evaluator.getImageFileName(img.currentSrc || img.src),
@@ -316,13 +317,31 @@ class AccessibilityAnalyzer {
   applyAiProvidedOptimizations(optimizations) {
     let appliedCount = 0;
 
+    // Mesma contagem do log estruturado (C10), por categoria e origem do item
+    // ('llm', 'heuristic', 'limite', 'painel'); o total não muda. Item sem origem vem
+    // das recomendações da IA.
+    const tally = {};
+    const count = (category, origin, amount) => {
+      const key = `${category}:${origin || 'llm'}`;
+      if (amount > 0) {
+        tally[key] = (tally[key] || 0) + amount;
+      }
+      return amount;
+    };
+    const appliedImageAlts = [];
+    let overrodeDeterministicAlt = 0;
+
     if (optimizations.imageAlts) {
-      optimizations.imageAlts.forEach(({ index, alt }) => {
+      optimizations.imageAlts.forEach(({ index, alt, origin }) => {
         const images = document.querySelectorAll('img');
         if (images[index] && typeof alt === 'string') {
+          if (this.deterministicAltImages?.has(images[index])) {
+            overrodeDeterministicAlt++;
+          }
           images[index].setAttribute('alt', alt);
           images[index].setAttribute('role', 'img');
-          appliedCount++;
+          appliedImageAlts.push({ index, alt, origin: origin || 'llm' });
+          appliedCount += count('imageAlts', origin, 1);
         }
       });
     }
@@ -336,7 +355,7 @@ class AccessibilityAnalyzer {
 
         if (change.newTag) {
           this.replaceElementTag(element, change.newTag, change.attributes || {});
-          appliedCount++;
+          appliedCount += count('structureChanges', change.origin, 1);
         } else if (change.attributes) {
           Object.keys(change.attributes).forEach((key) => {
             const value = change.attributes[key];
@@ -346,17 +365,17 @@ class AccessibilityAnalyzer {
               element.setAttribute(key, value);
             }
           });
-          appliedCount++;
+          appliedCount += count('structureChanges', change.origin, 1);
         }
       });
     }
 
     if (optimizations.textChanges) {
-      optimizations.textChanges.forEach(({ selector, text }) => {
+      optimizations.textChanges.forEach(({ selector, text, origin }) => {
         const element = this.resolveSelector(selector);
         if (element && typeof text === 'string' && text.trim().length > 0) {
           element.textContent = text;
-          appliedCount++;
+          appliedCount += count('textChanges', origin, 1);
         }
       });
     }
@@ -369,30 +388,43 @@ class AccessibilityAnalyzer {
       style.textContent = optimizations.styles;
       style.setAttribute('data-accessibility', 'true');
       document.head.appendChild(style);
-      appliedCount++;
+      appliedCount += count('styles', optimizations.stylesOrigin, 1);
     }
 
     if (optimizations.ariaLabels) {
-      optimizations.ariaLabels.forEach(({ selector, label, role }) => {
+      optimizations.ariaLabels.forEach(({ selector, label, role, origin }) => {
         const element = this.resolveSelector(selector);
         if (element) {
           element.setAttribute('aria-label', label);
           if (role) {
             element.setAttribute('role', role);
           }
-          appliedCount++;
+          appliedCount += count('ariaLabels', origin, 1);
         }
       });
     }
 
+    this.lastAiTally = tally;
+    this.aiApplyDetails = { appliedImageAlts, overrodeDeterministicAlt };
     return appliedCount;
   }
 
-  async applyOptimizations(optimizations) {
+  async applyOptimizations(optimizations, runId = null) {
+    // Acumuladores do log estruturado (C10) ficam fora do try: se uma exceção
+    // interromper o laço, o log ainda recebe o que já foi aplicado ao DOM.
+    let appliedCount = 0;
+    let roundsRun = 0;
+    let remainingIssues = null;
+    let remaining = [];
+    const deterministicFixes = [];
+    const aiFixes = [];
+    const rounds = [];
+    let genericLabelsBefore = null;
+    this.deterministicAltImages = new WeakSet();
+    this.aiApplyDetails = { appliedImageAlts: [], overrodeDeterministicAlt: 0 };
+
     try {
-      let appliedCount = 0;
-      let roundsRun = 0;
-      let remainingIssues = null;
+      genericLabelsBefore = this.countGenericLabels();
 
       // Uma única passada de applyDeterministicFixes() pode não bastar: revelar um
       // bloco com aria-hidden pode expor texto com contraste ruim, um heading
@@ -407,15 +439,20 @@ class AccessibilityAnalyzer {
 
       for (let round = 0; round < maxRounds; round++) {
         roundsRun++;
+        const appliedBeforeRound = appliedCount;
         appliedCount += this.applyDeterministicFixes();
+        this.collectFixTally(deterministicFixes, roundsRun, this.lastFixTally, this.lastFixNoop);
 
         if (round === 0) {
           appliedCount += this.applyAiProvidedOptimizations(optimizations);
+          this.collectFixTally(aiFixes, roundsRun, this.lastAiTally);
         }
 
         const evaluator = new WCAGEvaluator();
         this.evaluator = evaluator;
-        remainingIssues = evaluator.evaluate().length;
+        remaining = evaluator.evaluate();
+        remainingIssues = remaining.length;
+        rounds.push({ round: roundsRun, applied: appliedCount - appliedBeforeRound, remainingIssues });
 
         if (remainingIssues === 0 || remainingIssues >= previousIssueCount) {
           break;
@@ -424,18 +461,139 @@ class AccessibilityAnalyzer {
         previousIssueCount = remainingIssues;
       }
 
+      // Campos aditivos do log estruturado (C10): quem lia o retorno antes continua
+      // encontrando success/appliedCount/roundsRun/remainingIssues como estavam.
+      const instrumentation = this.buildApplyInstrumentation({ deterministicFixes, aiFixes, rounds, remaining, genericLabelsBefore });
+
       if (appliedCount === 0) {
-        return {
+        return this.reportApplyResult({
           success: false,
-          error: 'Nenhuma alteração aplicável foi encontrada para a página atual.'
-        };
+          error: 'Nenhuma alteração aplicável foi encontrada para a página atual.',
+          nothingToApply: true,
+          appliedCount,
+          roundsRun,
+          remainingIssues,
+          ...instrumentation,
+          runId
+        });
       }
 
-      return { success: true, appliedCount, roundsRun, remainingIssues };
+      return this.reportApplyResult({ success: true, appliedCount, roundsRun, remainingIssues, ...instrumentation, runId });
     } catch (error) {
       console.error('Erro ao aplicar otimizações:', error);
-      return { success: false, error: error.message };
+      return this.reportApplyResult({
+        success: false,
+        error: error.message,
+        partial: appliedCount > 0,
+        appliedCount,
+        roundsRun,
+        remainingIssues,
+        ...this.buildApplyInstrumentation({ deterministicFixes, aiFixes, rounds, remaining, genericLabelsBefore }),
+        runId
+      });
     }
+  }
+
+  buildApplyInstrumentation({ deterministicFixes, aiFixes, rounds, remaining, genericLabelsBefore }) {
+    let genericLabels = null;
+    try {
+      genericLabels = genericLabelsBefore ? this.diffGenericLabels(genericLabelsBefore, this.countGenericLabels()) : null;
+    } catch (error) {
+      genericLabels = null;
+    }
+
+    return {
+      deterministicFixes,
+      aiFixes,
+      rounds,
+      remainingByType: this.countIssuesByType(remaining),
+      genericLabels,
+      appliedImageAlts: this.aiApplyDetails?.appliedImageAlts || [],
+      overrodeDeterministicAlt: this.aiApplyDetails?.overrodeDeterministicAlt || 0
+    };
+  }
+
+  collectFixTally(target, round, tally, noop = {}) {
+    Object.keys(tally || {}).sort().forEach((type) => {
+      target.push(noop[type] ? { round, type, applied: tally[type], noop: true } : { round, type, applied: tally[type] });
+    });
+  }
+
+  countIssuesByType(issues) {
+    const byType = {};
+    (issues || []).forEach((issue) => {
+      byType[issue.type] = (byType[issue.type] || 0) + 1;
+    });
+
+    return Object.keys(byType).sort().reduce((sorted, type) => {
+      sorted[type] = byType[type];
+      return sorted;
+    }, {});
+  }
+
+  /**
+   * Conta no DOM os rótulos genéricos de fallback ("Abrir link N", alt "Imagem" etc.).
+   * O log usa a diferença entre antes e depois da aplicação, então rótulos iguais que a
+   * página já tinha não entram na conta, venham as correções do content, do background
+   * ou do painel.
+   */
+  countGenericLabels() {
+    const matchesAttribute = (selector, attribute, pattern) => Array.from(document.querySelectorAll(selector))
+      .filter((element) => pattern.test((element.getAttribute(attribute) || '').trim()));
+    const matchesText = (selector, pattern) => Array.from(document.querySelectorAll(selector))
+      .filter((element) => pattern.test((element.textContent || '').replace(/\s+/g, ' ').trim()));
+    const unique = (...groups) => new Set(groups.flat()).size;
+
+    const linkPattern = /^Abrir link \d+$/;
+    const buttonPattern = /^Acionar botão \d+$/;
+    const fieldPattern = /^(Campo do formulário|Campo de texto|Selecione uma opção) \d+$/;
+
+    return {
+      link: unique(matchesAttribute('[aria-label]', 'aria-label', linkPattern), matchesText('a', linkPattern)),
+      button: unique(
+        matchesAttribute('[aria-label]', 'aria-label', buttonPattern),
+        matchesAttribute('input[value]', 'value', buttonPattern),
+        matchesText('button', buttonPattern)
+      ),
+      field: unique(matchesAttribute('[aria-label]', 'aria-label', fieldPattern), matchesAttribute('[title]', 'title', fieldPattern)),
+      image: document.querySelectorAll('img[alt="Imagem"]').length,
+      graphic: document.querySelectorAll('svg[aria-label="Gráfico"]').length,
+      iframe: document.querySelectorAll('iframe[title="Conteúdo incorporado"]').length,
+      inputImage: document.querySelectorAll('input[type="image"][alt="Enviar"]').length,
+      area: document.querySelectorAll('area[alt="Área do mapa"]').length,
+      pageTitle: document.title === 'Página da web' ? 1 : 0
+    };
+  }
+
+  diffGenericLabels(before, after) {
+    const byKind = {};
+    let total = 0;
+
+    Object.keys(after).forEach((kind) => {
+      const added = Math.max(0, (after[kind] || 0) - (before[kind] || 0));
+      byKind[kind] = added;
+      total += added;
+    });
+
+    return { total, byKind };
+  }
+
+  /**
+   * Avisa o background do resultado da aplicação, qualquer que seja o caminho que a
+   * disparou (painel, otimização automática ou gancho de automação), para o log
+   * estruturado da aba. Devolve o próprio resultado.
+   */
+  reportApplyResult(result) {
+    try {
+      chrome.runtime.sendMessage({ action: 'recordApplyResult', result }, () => {
+        // Sem log para gravar (ex.: aplicação sem análise prévia) não é erro aqui
+        void chrome.runtime.lastError;
+      });
+    } catch (error) {
+      console.warn('Não foi possível registrar o resultado da aplicação no log:', error);
+    }
+
+    return result;
   }
 
   replaceElementTag(element, newTag, attributes) {
@@ -461,16 +619,27 @@ class AccessibilityAnalyzer {
     let appliedCount = 0;
     const evaluator = this.evaluator || new WCAGEvaluator();
 
+    // Contagem por regra para o log estruturado (C10). Só registra o que já era somado
+    // em appliedCount: o total devolvido continua exatamente o mesmo.
+    const stylesBefore = document.getElementById('accessify-deterministic-styles')?.textContent ?? null;
+    const tally = {};
+    const count = (rule, amount) => {
+      if (amount > 0) {
+        tally[rule] = (tally[rule] || 0) + amount;
+      }
+      return amount;
+    };
+
     document.querySelectorAll('img').forEach((img) => {
       if (evaluator.isSpacerImage(img) && !img.hasAttribute('alt')) {
         img.setAttribute('alt', '');
-        appliedCount++;
+        appliedCount += count('spacer-image-missing-alt', 1);
       }
     });
 
     if (!document.documentElement.getAttribute('lang')) {
       document.documentElement.setAttribute('lang', navigator.language || 'pt-BR');
-      appliedCount++;
+      appliedCount += count('no-language-declared', 1);
     }
 
     document.querySelectorAll('table').forEach((table) => {
@@ -489,7 +658,7 @@ class AccessibilityAnalyzer {
         }
 
         this.replaceElementTag(cell, 'th', { scope: 'col' });
-        appliedCount++;
+        appliedCount += count('table-missing-headers', 1);
       });
     });
 
@@ -511,7 +680,7 @@ class AccessibilityAnalyzer {
       }
 
       iframe.setAttribute('title', inferred);
-      appliedCount++;
+      appliedCount += count('iframe-missing-title', 1);
     });
 
     const hasSkipLink = Array.from(document.querySelectorAll('a[href^="#"]')).some((link) => (
@@ -531,7 +700,7 @@ class AccessibilityAnalyzer {
         skipLink.setAttribute('data-accessify-skip', 'true');
         skipLink.className = 'accessify-sr-only accessify-skip-link';
         document.body.insertBefore(skipLink, document.body.firstChild);
-        appliedCount++;
+        appliedCount += count('no-bypass-blocks', 1);
       }
     }
 
@@ -543,11 +712,11 @@ class AccessibilityAnalyzer {
 
       if (!element.hasAttribute('tabindex')) {
         element.setAttribute('tabindex', '0');
-        appliedCount++;
+        appliedCount += count('clickable-non-semantic', 1);
       }
       if (!element.getAttribute('role')) {
         element.setAttribute('role', 'button');
-        appliedCount++;
+        appliedCount += count('clickable-non-semantic', 1);
       }
       if (!element.dataset.accessifyKeyboard) {
         element.dataset.accessifyKeyboard = 'true';
@@ -557,7 +726,7 @@ class AccessibilityAnalyzer {
             element.click();
           }
         });
-        appliedCount++;
+        appliedCount += count('clickable-non-semantic', 1);
       }
     });
 
@@ -578,7 +747,7 @@ class AccessibilityAnalyzer {
       const titleText = this.getParentAccessibleName(svg) || 'Gráfico';
       svg.setAttribute('role', 'img');
       svg.setAttribute('aria-label', titleText);
-      appliedCount++;
+      appliedCount += count('svg-missing-name', 1);
     });
 
     const seenIds = new Map();
@@ -594,7 +763,7 @@ class AccessibilityAnalyzer {
           suffix += 1;
         }
         element.id = `${id}-accessify-${suffix}`;
-        appliedCount++;
+        appliedCount += count('duplicate-id', 1);
       } else {
         seenIds.set(id, element);
       }
@@ -619,7 +788,7 @@ class AccessibilityAnalyzer {
         label.setAttribute('for', input.id);
         label.textContent = nameText;
         input.parentNode?.insertBefore(label, input);
-        appliedCount++;
+        appliedCount += count('form-field-no-visible-label', 1);
       }
     });
 
@@ -633,7 +802,7 @@ class AccessibilityAnalyzer {
             .replace(/user-scalable\s*=\s*(no|0)/ig, 'user-scalable=yes')
             .replace(/maximum-scale\s*=\s*1(\.0+)?/ig, 'maximum-scale=5')
         );
-        appliedCount++;
+        appliedCount += count('zoom-restricted', 1);
       }
     }
 
@@ -646,13 +815,13 @@ class AccessibilityAnalyzer {
       const identity = `${input.name || ''} ${input.id || ''}`.toLowerCase();
       if (type === 'email' || /e-?mail/.test(identity)) {
         input.setAttribute('autocomplete', 'email');
-        appliedCount++;
+        appliedCount += count('missing-autocomplete', 1);
       } else if (type === 'tel' || /(tel|phone|fone|celular)/.test(identity)) {
         input.setAttribute('autocomplete', 'tel');
-        appliedCount++;
+        appliedCount += count('missing-autocomplete', 1);
       } else if (/(^|[_-])(name|nome)($|[_-])/.test(identity)) {
         input.setAttribute('autocomplete', 'name');
-        appliedCount++;
+        appliedCount += count('missing-autocomplete', 1);
       }
     });
 
@@ -668,26 +837,26 @@ class AccessibilityAnalyzer {
 
       if (normalizedTitle && normalizedComparison && normalizedTitle === normalizedComparison) {
         element.removeAttribute('title');
-        appliedCount++;
+        appliedCount += count('redundant-title-text', 1);
       }
     });
 
-    appliedCount += this.fixPageTitle();
-    appliedCount += this.fixMissingH1();
-    appliedCount += this.fixGenericLinks(evaluator);
-    appliedCount += this.fixEmptyLinksAndButtons(evaluator);
-    appliedCount += this.fixMissingImageAlts(evaluator);
-    appliedCount += this.fixGraphicFallbacks(evaluator);
-    appliedCount += this.fixBrokenAriaReferences(evaluator);
-    appliedCount += this.fixPositiveTabindex();
-    appliedCount += this.fixLabelInName(evaluator);
-    appliedCount += this.fixAriaHiddenContent();
-    appliedCount += this.fixNewTabLinks(evaluator);
-    appliedCount += this.fixAutoplayMedia();
-    appliedCount += this.fixDuplicateLandmarks(evaluator);
-    appliedCount += this.fixUnlinkedFieldErrors(evaluator);
+    appliedCount += count('page-title', this.fixPageTitle());
+    appliedCount += count('no-h1', this.fixMissingH1());
+    appliedCount += count('link-generic-text', this.fixGenericLinks(evaluator));
+    appliedCount += count('empty-links-and-buttons', this.fixEmptyLinksAndButtons(evaluator));
+    appliedCount += count('image-missing-alt', this.fixMissingImageAlts(evaluator));
+    appliedCount += count('graphic-fallbacks', this.fixGraphicFallbacks(evaluator));
+    appliedCount += count('broken-aria-reference', this.fixBrokenAriaReferences(evaluator));
+    appliedCount += count('excessive-positive-tabindex', this.fixPositiveTabindex());
+    appliedCount += count('label-in-name-mismatch', this.fixLabelInName(evaluator));
+    appliedCount += count('aria-hidden-content', this.fixAriaHiddenContent());
+    appliedCount += count('new-tab-link-no-warning', this.fixNewTabLinks(evaluator));
+    appliedCount += count('autoplay-media-no-control', this.fixAutoplayMedia());
+    appliedCount += count('duplicate-landmark-no-label', this.fixDuplicateLandmarks(evaluator));
+    appliedCount += count('form-error-not-announced', this.fixUnlinkedFieldErrors(evaluator));
     const removeUnderlineCount = this.fixUnderlinedNonLinkText(evaluator);
-    appliedCount += removeUnderlineCount;
+    appliedCount += count('underlined-non-link-text', removeUnderlineCount);
 
     let leftAlignNeeded = false;
     let minFontNeeded = false;
@@ -710,13 +879,13 @@ class AccessibilityAnalyzer {
       if (Number.isFinite(fontSize) && fontSize < 14) {
         element.setAttribute('data-accessify-min-font', 'true');
         minFontNeeded = true;
-        appliedCount++;
+        appliedCount += count('small-text', 1);
       }
 
       if (textContent.length > 500 && style.textAlign === 'justify') {
         element.setAttribute('data-accessify-left-align', 'true');
         leftAlignNeeded = true;
-        appliedCount++;
+        appliedCount += count('justified-text', 1);
       }
     });
 
@@ -748,7 +917,7 @@ class AccessibilityAnalyzer {
     const maxConvergencePasses = 3;
     for (let pass = 0; pass < maxConvergencePasses; pass++) {
       const contrastFixesThisPass = this.fixLowContrast(evaluator);
-      appliedCount += contrastFixesThisPass;
+      appliedCount += count('low-color-contrast', contrastFixesThisPass);
       contrastNeeded = contrastNeeded || !!document.querySelector('[data-accessify-contrast]');
       nonTextContrastNeeded = this.markLowNonTextContrast(evaluator) || nonTextContrastNeeded;
 
@@ -777,9 +946,15 @@ class AccessibilityAnalyzer {
       underlineNeeded || focusNeeded || leftAlignNeeded || minFontNeeded
       || contrastNeeded || nonTextContrastNeeded || reducedMotionNeeded || removeUnderlineNeeded
     ) {
-      appliedCount++;
+      appliedCount += count('accessify-styles', 1);
     }
 
+    // A folha própria é reaproveitada a cada rodada: quando o texto não mudou, a
+    // contagem de 'accessify-styles' (que continua somando em appliedCount) é marcada
+    // como noop no log.
+    const stylesAfter = document.getElementById('accessify-deterministic-styles')?.textContent ?? null;
+    this.lastFixNoop = tally['accessify-styles'] && stylesAfter === stylesBefore ? { 'accessify-styles': true } : {};
+    this.lastFixTally = tally;
     return appliedCount;
   }
 
@@ -1059,12 +1234,14 @@ class AccessibilityAnalyzer {
         || evaluator.isMarkedDecorative(img)
       ) {
         img.setAttribute('alt', '');
+        this.deterministicAltImages?.add(img);
         appliedCount++;
         return;
       }
 
       const alt = this.buildHeuristicImageAlt(img, evaluator);
       img.setAttribute('alt', alt);
+      this.deterministicAltImages?.add(img);
       appliedCount++;
     });
 
@@ -1691,7 +1868,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === 'applyOptimizations') {
-    window.accessibilityAnalyzer.applyOptimizations(request.optimizations)
+    window.accessibilityAnalyzer.applyOptimizations(request.optimizations, request.runId || null)
       .then((result) => sendResponse(result))
       .catch((error) => sendResponse({ success: false, error: error.message }));
     return true;

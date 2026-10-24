@@ -5,6 +5,24 @@
 
 importScripts('ai-config.js');
 
+/**
+ * Para o log estruturado (C10): que tipos de problema do WCAGEvaluator cada regra de
+ * correção de applyDeterministicFixes() atende, quando a chave da regra não é o próprio
+ * tipo de problema. Serve para cruzar deterministicFixes com issuesFound.
+ */
+const ACCESSIFY_FIX_RULE_ISSUE_TYPES = {
+  'page-title': ['no-page-title', 'page-title-too-short'],
+  'no-h1': ['no-h1', 'no-headings'],
+  'empty-links-and-buttons': ['link-no-text', 'empty-button'],
+  'image-missing-alt': ['image-missing-alt', 'linked-image-missing-alt', 'spacer-image-missing-alt'],
+  'graphic-fallbacks': ['input-image-missing-alt', 'area-missing-alt'],
+  'form-field-no-visible-label': ['form-field-no-visible-label', 'form-field-no-label'],
+  'accessify-styles': [
+    'focus-outline-removed', 'color-only-link', 'justified-text', 'small-text', 'low-color-contrast',
+    'low-non-text-contrast', 'infinite-animation-no-reduced-motion', 'underlined-non-link-text'
+  ]
+};
+
 class AccessibilityOptimizer {
   constructor() {
     this.apiKey = null;
@@ -22,6 +40,8 @@ class AccessibilityOptimizer {
       128: 'icons/icon-128.png'
     };
     this.enabledIconCache = new Map();
+    this.runLogQueues = new Map();
+    this.runLogWriteErrors = new Map();
     this.loadSettings();
     this.initializeSidePanel();
   }
@@ -145,6 +165,329 @@ class AccessibilityOptimizer {
     const updatedJob = { ...currentJob, ...patch };
     await this.setAnalysisJob(tabId, updatedJob);
     return updatedJob;
+  }
+
+  /**
+   * Log estruturado da execução (C10), numa chave própria por aba e ligado ao job
+   * pelo runId. Fica fora do job porque o job é zerado a cada carregamento da aba.
+   */
+  runLogStorageKeyForTab(tabId) {
+    if (!Number.isFinite(tabId)) {
+      throw new Error('tabId é obrigatório para acessar o log estruturado');
+    }
+
+    return `analysisRunLog:${tabId}`;
+  }
+
+  async readRunLog(tabId) {
+    const key = this.runLogStorageKeyForTab(tabId);
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.get([key], (result) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(result[key] || null);
+      });
+    });
+  }
+
+  async writeRunLog(tabId, runLog) {
+    const key = this.runLogStorageKeyForTab(tabId);
+    return new Promise((resolve, reject) => {
+      chrome.storage.local.set({ [key]: runLog }, () => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve(runLog);
+      });
+    });
+  }
+
+  async removeRunLog(tabId) {
+    const key = this.runLogStorageKeyForTab(tabId);
+    return new Promise((resolve) => {
+      chrome.storage.local.remove([key], () => resolve());
+    });
+  }
+
+  /**
+   * Toda leitura e escrita do log passa por uma fila por aba: o resultado da aplicação
+   * chega do content script em paralelo às atualizações do background, e duas
+   * leituras-escritas concorrentes perderiam uma das partes. A entrada da fila sai do
+   * Map quando a última tarefa termina.
+   */
+  enqueueRunLogTask(tabId, task) {
+    const previous = this.runLogQueues.get(tabId) || Promise.resolve();
+    const next = previous.catch(() => {}).then(task);
+    this.runLogQueues.set(tabId, next);
+    next.catch(() => {}).finally(() => {
+      if (this.runLogQueues.get(tabId) === next) {
+        this.runLogQueues.delete(tabId);
+      }
+    });
+    return next;
+  }
+
+  /**
+   * Grava no log sem segurar o fluxo da análise: a fila garante a ordem das escritas, e
+   * uma falha do log nunca interrompe o que a extensão faz (fica registrada à parte e é
+   * devolvida por getRunLog).
+   */
+  logRun(tabId, task) {
+    this.enqueueRunLogTask(tabId, task).catch((error) => {
+      console.error('Falha ao gravar o log estruturado da aba:', error);
+      this.runLogWriteErrors.set(tabId, error.message);
+    });
+  }
+
+  startRunLog(tabId, runLog) {
+    this.runLogWriteErrors.delete(tabId);
+    this.logRun(tabId, () => this.writeRunLog(tabId, runLog));
+  }
+
+  logRunUpdate(tabId, runId, mutate) {
+    this.logRun(tabId, () => this.applyRunLogMutation(tabId, runId, mutate));
+  }
+
+  async applyRunLogMutation(tabId, runId, mutate) {
+    const runLog = await this.readRunLog(tabId);
+    if (!runLog || (runId && runLog.runId !== runId)) {
+      return null;
+    }
+
+    mutate(runLog);
+    return this.writeRunLog(tabId, runLog);
+  }
+
+  async updateRunLog(tabId, runId, mutate) {
+    return this.enqueueRunLogTask(tabId, () => this.applyRunLogMutation(tabId, runId, mutate));
+  }
+
+  createRunLog({ runId, tabId, pageUrl, startedAt }) {
+    return {
+      runId,
+      version: chrome.runtime.getManifest().version,
+      url: pageUrl,
+      tabId,
+      timestamp: startedAt,
+      provider: this.provider,
+      model: this.getActiveModel(),
+      modelId: null,
+      temperature: null,
+      issuesTotal: null,
+      issuesFound: [],
+      deterministicFixes: [],
+      aiFixes: [],
+      fixRuleIssueTypes: ACCESSIFY_FIX_RULE_ISSUE_TYPES,
+      rounds: [],
+      roundsRun: 0,
+      altTexts: [],
+      llmCalls: [],
+      genericLabels: 0,
+      genericLabelsByKind: {},
+      remainingIssues: null,
+      remainingByType: {},
+      apply: null,
+      applies: [],
+      totals: { tokensIn: 0, tokensOut: 0, latencyMs: 0 },
+      errors: []
+    };
+  }
+
+  summarizeIssues(issues) {
+    const grouped = new Map();
+
+    (issues || []).forEach((issue) => {
+      if (!grouped.has(issue.type)) {
+        grouped.set(issue.type, { type: issue.type, count: 0, severity: issue.severity || null, selectors: [] });
+      }
+
+      const entry = grouped.get(issue.type);
+      entry.count += 1;
+      if (issue.selector && entry.selectors.length < 10) {
+        entry.selectors.push(issue.selector);
+      }
+    });
+
+    return Array.from(grouped.values()).sort((left, right) => left.type.localeCompare(right.type));
+  }
+
+  recordLlmCall(runLog, stage, meta, selector = null, error = null) {
+    // Só entra quem chegou a tentar a requisição (isConfigured passou)
+    if (!meta?.attempted) {
+      return;
+    }
+
+    runLog.llmCalls.push({
+      stage,
+      selector,
+      model: meta.model || null,
+      modelId: meta.modelId || null,
+      temperature: Number.isFinite(meta.temperature) ? meta.temperature : null,
+      maxTokens: meta.maxTokens || null,
+      latencyMs: Number.isFinite(meta.latencyMs) ? meta.latencyMs : null,
+      tokensIn: Number.isFinite(meta.tokensIn) ? meta.tokensIn : null,
+      tokensOut: Number.isFinite(meta.tokensOut) ? meta.tokensOut : null,
+      finishReason: meta.finishReason || null,
+      contentChars: Number.isFinite(meta.contentChars) ? meta.contentChars : null,
+      reasoningChars: Number.isFinite(meta.reasoningChars) ? meta.reasoningChars : null,
+      httpStatus: meta.httpStatus || null,
+      networkError: meta.networkError || null,
+      error
+    });
+
+    runLog.modelId = meta.modelId || runLog.modelId;
+    if (Number.isFinite(meta.temperature)) {
+      runLog.temperature = meta.temperature;
+    }
+    runLog.totals = this.computeRunLogTotals(runLog);
+  }
+
+  recordImageResults(runLog, imageResults) {
+    imageResults.forEach((result) => {
+      const llm = result.llm || null;
+      const selector = result.selector || null;
+      // Resultado com success:false é descartado antes de aplicar: o alt final dessa
+      // imagem vem da heurística do content.js, então o texto daqui não descreve o DOM.
+      const eligible = !!(result.success && result.alt);
+
+      runLog.altTexts.push({
+        selector,
+        index: result.index,
+        source: result.source || null,
+        alt: eligible ? result.alt : null,
+        discardedAlt: eligible ? null : (typeof result.alt === 'string' ? result.alt : null),
+        chars: eligible ? result.alt.length : 0,
+        eligible,
+        applied: false,
+        finalAlt: null,
+        fallbackHeuristic: result.source !== 'llm',
+        // O Ollama devolveu o texto só em message.reasoning e extractMessageText o usou
+        // como alt text (o raciocínio do modelo virou a descrição da imagem).
+        reasoningAsAlt: !!(result.success && llm && llm.contentChars === 0 && llm.reasoningChars > 0),
+        latencyMs: Number.isFinite(llm?.latencyMs) ? llm.latencyMs : null,
+        tokensIn: Number.isFinite(llm?.tokensIn) ? llm.tokensIn : null,
+        tokensOut: Number.isFinite(llm?.tokensOut) ? llm.tokensOut : null,
+        error: result.error || null
+      });
+
+      if (llm) {
+        this.recordLlmCall(runLog, 'alt-text', llm, selector, result.error || null);
+      }
+
+      if (result.error) {
+        runLog.errors.push({ stage: 'alt-text', message: result.error, selector });
+      }
+    });
+  }
+
+  /**
+   * Registra o resultado de uma aplicação (painel, otimização automática ou gancho).
+   * Os campos de topo descrevem a aplicação mais recente; `applies` guarda o histórico.
+   * Devolve { recorded, reason } para quem enviou.
+   */
+  async recordApplyResult(tabId, tabUrl, result) {
+    const withoutHash = (url) => (typeof url === 'string' ? url.split('#')[0] : url);
+    let outcome = { recorded: false, reason: 'sem-log' };
+
+    await this.updateRunLog(tabId, result?.runId || null, (runLog) => {
+      const recordedAt = new Date().toISOString();
+
+      // Uma aplicação numa página diferente da analisada não entra nas métricas, mas
+      // fica registrada como erro para não sumir em silêncio
+      if (tabUrl && runLog.url && withoutHash(tabUrl) !== withoutHash(runLog.url)) {
+        runLog.errors.push({ stage: 'aplicacao', message: 'Aplicação ignorada: URL diferente da analisada.', tabUrl, recordedAt });
+        outcome = { recorded: false, reason: 'url-divergente' };
+        return;
+      }
+
+      const status = result?.success ? 'aplicado' : (result?.nothingToApply ? 'nada-a-aplicar' : 'falha');
+      const error = result?.success ? null : (result?.error || null);
+      const appliedCount = Number.isFinite(result?.appliedCount) ? result.appliedCount : 0;
+
+      runLog.apply = {
+        status,
+        appliedCount,
+        partial: !!result?.partial,
+        error,
+        overrodeDeterministicAlt: result?.overrodeDeterministicAlt || 0,
+        recordedAt
+      };
+      runLog.applies.push({ status, appliedCount, partial: !!result?.partial, error, recordedAt });
+      runLog.deterministicFixes = result?.deterministicFixes || [];
+      runLog.aiFixes = result?.aiFixes || [];
+      runLog.rounds = result?.rounds || [];
+      runLog.roundsRun = result?.roundsRun || 0;
+      runLog.remainingIssues = Number.isFinite(result?.remainingIssues) ? result.remainingIssues : null;
+      runLog.remainingByType = result?.remainingByType || {};
+      runLog.genericLabels = result?.genericLabels?.total || 0;
+      runLog.genericLabelsByKind = result?.genericLabels?.byKind || {};
+
+      // Marca nos alts do background os que de fato chegaram ao DOM (o último vence)
+      const finalAltByIndex = new Map((result?.appliedImageAlts || []).map(({ index, alt }) => [index, alt]));
+      runLog.altTexts.forEach((altText) => {
+        altText.applied = finalAltByIndex.has(altText.index) && finalAltByIndex.get(altText.index) === altText.alt;
+        altText.finalAlt = finalAltByIndex.has(altText.index) ? finalAltByIndex.get(altText.index) : null;
+      });
+
+      const alreadyRecorded = runLog.errors.some((entry) => entry.stage === 'aplicacao' && entry.message === error);
+      if (status === 'falha' && !alreadyRecorded) {
+        runLog.errors.push({ stage: 'aplicacao', message: error, recordedAt });
+      }
+      outcome = { recorded: true, reason: null };
+    });
+
+    return outcome;
+  }
+
+  computeRunLogTotals(runLog) {
+    const totals = { tokensIn: 0, tokensOut: 0, latencyMs: 0 };
+
+    (runLog.llmCalls || []).forEach((call) => {
+      totals.tokensIn += call.tokensIn || 0;
+      totals.tokensOut += call.tokensOut || 0;
+      totals.latencyMs += call.latencyMs || 0;
+    });
+
+    return totals;
+  }
+
+  /**
+   * Log estruturado da última execução na aba (C10). Lê pela mesma fila das escritas,
+   * então já inclui tudo o que foi enfileirado antes do pedido.
+   */
+  async getRunLog(tabId) {
+    return this.enqueueRunLogTask(tabId, async () => {
+      const runLog = await this.readRunLog(tabId);
+      if (!runLog) {
+        return null;
+      }
+
+      const writeError = this.runLogWriteErrors.get(tabId);
+      return {
+        ...runLog,
+        totals: this.computeRunLogTotals(runLog),
+        ...(writeError ? { storageError: writeError } : {})
+      };
+    });
+  }
+
+  /**
+   * Logs de abas que não existem mais (sessão anterior, extensão recarregada) não são
+   * alcançáveis por getRunLog: some com eles na inicialização.
+   */
+  async removeOrphanRunLogs() {
+    const tabs = await chrome.tabs.query({});
+    const openTabIds = new Set(tabs.map((tab) => String(tab.id)));
+    const everything = await chrome.storage.local.get(null);
+    const orphanKeys = Object.keys(everything)
+      .filter((key) => key.startsWith('analysisRunLog:') && !openTabIds.has(key.slice('analysisRunLog:'.length)));
+
+    if (orphanKeys.length > 0) {
+      await chrome.storage.local.remove(orphanKeys);
+    }
   }
 
   async isRunCurrent(tabId, runId) {
@@ -307,16 +650,25 @@ class AccessibilityOptimizer {
       applyError: null,
       pageUrl
     });
+    this.startRunLog(tabId, this.createRunLog({ runId, tabId, pageUrl, startedAt }));
+    let stage = 'preparacao';
 
     try {
       const hasPriorChanges = !autoTriggered && await this.hasExistingAccessifyChanges(tabId);
       if (hasPriorChanges) {
+        stage = 'recarga';
         await this.updateAnalysisJobForRun(tabId, runId, {
           progress: 8,
           progressText: 'Recarregando a página para analisar o estado original (sem correções de uma execução anterior)...'
         });
 
         await this.reloadTabAndWait(tabId);
+        // Um redirect no reload muda a URL que de fato será analisada
+        chrome.tabs.get(tabId)
+          .then((reloadedTab) => this.logRunUpdate(tabId, runId, (runLog) => {
+            runLog.url = reloadedTab?.url || runLog.url;
+          }))
+          .catch(() => {});
 
         if (!(await this.isRunCurrent(tabId, runId))) {
           return await this.getAnalysisJob(tabId);
@@ -329,6 +681,11 @@ class AccessibilityOptimizer {
       });
 
       await this.refreshSettings();
+      this.logRunUpdate(tabId, runId, (runLog) => {
+        runLog.provider = this.provider;
+        runLog.model = this.getActiveModel();
+      });
+      stage = 'analise';
 
       const analysisResult = await this.sendMessageToTab(tabId, { action: 'analyzeAccessibility' });
       if (!(await this.isRunCurrent(tabId, runId))) {
@@ -339,6 +696,11 @@ class AccessibilityOptimizer {
         throw new Error(analysisResult?.error || 'Erro ao analisar página');
       }
 
+      this.logRunUpdate(tabId, runId, (runLog) => {
+        runLog.issuesTotal = Number.isFinite(analysisResult.summary?.total) ? analysisResult.summary.total : null;
+        runLog.issuesFound = this.summarizeIssues(analysisResult.issues);
+      });
+      stage = 'imagens';
       steps = this.markStepStatus(steps, 0, 'completed');
 
       const extractedImages = await this.sendMessageToTab(tabId, {
@@ -375,6 +737,7 @@ class AccessibilityOptimizer {
       let imageAltResults = [];
       if (requiresImageProcessing) {
         const imageResults = await this.processImages(images);
+        this.logRunUpdate(tabId, runId, (runLog) => this.recordImageResults(runLog, imageResults));
         if (!(await this.isRunCurrent(tabId, runId))) {
           return await this.getAnalysisJob(tabId);
         }
@@ -392,16 +755,33 @@ class AccessibilityOptimizer {
         steps
       });
 
+      stage = 'recomendacoes';
       let optimizations = this.getEmptyOptimizations();
+      const recommendationMeta = {};
+      let recommendationError = null;
       try {
         optimizations = await this.analyzePageForOptimizations(
           analysisResult.pageContent,
-          analysisResult.summary.issues
+          analysisResult.summary.issues,
+          recommendationMeta
         );
       } catch (optimizationError) {
+        recommendationError = optimizationError;
         console.warn('IA de recomendações falhou; seguindo com correções determinísticas:', optimizationError);
         await this.updateAnalysisJobForRun(tabId, runId, {
           progressText: 'IA não retornou JSON válido. Seguindo com correções automáticas...'
+        });
+      }
+
+      // No modo local nenhum problema vai à IA de recomendações (meta fica sem attempted)
+      if (recommendationMeta.attempted || recommendationError) {
+        this.logRunUpdate(tabId, runId, (runLog) => {
+          if (recommendationMeta.attempted) {
+            this.recordLlmCall(runLog, 'recomendacoes', recommendationMeta, null, recommendationError?.message || null);
+          }
+          if (recommendationError) {
+            runLog.errors.push({ stage: 'recomendacoes', message: recommendationError.message });
+          }
         });
       }
       if (!(await this.isRunCurrent(tabId, runId))) {
@@ -425,6 +805,10 @@ class AccessibilityOptimizer {
 
       return await this.getAnalysisJob(tabId);
     } catch (error) {
+      this.logRunUpdate(tabId, runId, (runLog) => {
+        runLog.errors.push({ stage, message: error.message });
+      });
+
       if (await this.isRunCurrent(tabId, runId)) {
         const completedAt = new Date().toISOString();
         await this.updateAnalysisJob(tabId, {
@@ -445,9 +829,10 @@ class AccessibilityOptimizer {
   }
 
   buildOptimizationsForApplication(optimizations, imageAltResults = []) {
+    // `origin` só alimenta o log estruturado (C10): quem aplica ignora o campo.
     const imageAlts = imageAltResults
       .filter((result) => result?.success && typeof result.alt === 'string')
-      .map(({ index, alt }) => ({ index, alt }));
+      .map(({ index, alt, source }) => ({ index, alt, origin: source || 'llm' }));
 
     return {
       ...optimizations,
@@ -581,14 +966,20 @@ class AccessibilityOptimizer {
       return job;
     }
 
+    const logSkippedApply = (reason) => this.logRunUpdate(tab.id, job.runId, (runLog) => {
+      runLog.apply = runLog.apply || { status: 'pulado', reason, recordedAt: new Date().toISOString() };
+    });
+
     let currentTab = null;
     try {
       currentTab = await chrome.tabs.get(tab.id);
     } catch (error) {
+      logSkippedApply('aba-indisponivel');
       return job;
     }
 
     if (!currentTab || currentTab.url !== initialUrl) {
+      logSkippedApply('url-mudou');
       return job;
     }
 
@@ -600,10 +991,29 @@ class AccessibilityOptimizer {
     });
 
     const optimizations = this.buildOptimizationsForApplication(job.optimizations, job.imageAltResults);
-    const applyResult = await this.sendMessageToTab(tab.id, {
-      action: 'applyOptimizations',
-      optimizations
-    });
+    let applyResult;
+    try {
+      applyResult = await this.sendMessageToTab(tab.id, {
+        action: 'applyOptimizations',
+        optimizations,
+        runId: job.runId
+      });
+    } catch (error) {
+      this.logRunUpdate(tab.id, job.runId, (runLog) => {
+        runLog.errors.push({ stage: 'aplicacao', message: error.message });
+      });
+      throw error;
+    }
+
+    // Sem resposta do content script ele não chegou a reportar nada ao log
+    if (!applyResult?.success && !Number.isFinite(applyResult?.appliedCount)) {
+      this.logRunUpdate(tab.id, job.runId, (runLog) => {
+        if (!runLog.apply) {
+          runLog.apply = { status: 'falha', appliedCount: 0, error: applyResult?.error || null, recordedAt: new Date().toISOString() };
+          runLog.errors.push({ stage: 'aplicacao', message: applyResult?.error || 'Falha ao aplicar otimizações automaticamente.' });
+        }
+      });
+    }
 
     const completedAt = new Date().toISOString();
 
@@ -929,7 +1339,11 @@ class AccessibilityOptimizer {
     return headers;
   }
 
-  async chatCompletion({ messages, maxTokens, temperature = 0.3, json = false }) {
+  /**
+   * `meta`, quando informado, recebe as medições da chamada para o log estruturado
+   * (C10): latência, tokens, finish_reason e o tamanho de content e de reasoning.
+   */
+  async chatCompletion({ messages, maxTokens, temperature = 0.3, json = false, meta = null }) {
     await this.refreshSettings();
 
     if (!this.isConfigured()) {
@@ -957,13 +1371,37 @@ class AccessibilityOptimizer {
       requestBody.response_format = { type: 'json_object' };
     }
 
-    const response = await fetch(`${this.getActiveBaseURL()}/chat/completions`, {
-      method: 'POST',
-      headers: this.buildChatHeaders(),
-      body: JSON.stringify(requestBody)
-    });
+    if (meta) {
+      meta.attempted = true;
+      meta.model = requestBody.model;
+      meta.temperature = requestBody.temperature;
+      meta.maxTokens = maxTokens;
+    }
 
-    const responseText = await response.text();
+    const requestStartedAt = Date.now();
+    let response;
+    let responseText;
+    try {
+      response = await fetch(`${this.getActiveBaseURL()}/chat/completions`, {
+        method: 'POST',
+        headers: this.buildChatHeaders(),
+        body: JSON.stringify(requestBody)
+      });
+
+      responseText = await response.text();
+    } catch (networkError) {
+      if (meta) {
+        meta.latencyMs = Date.now() - requestStartedAt;
+        meta.httpStatus = null;
+        meta.networkError = networkError.message;
+      }
+      throw networkError;
+    }
+
+    if (meta) {
+      meta.latencyMs = Date.now() - requestStartedAt;
+      meta.httpStatus = response.status;
+    }
 
     if (!response.ok) {
       try {
@@ -978,6 +1416,18 @@ class AccessibilityOptimizer {
     }
 
     const data = JSON.parse(responseText);
+
+    if (meta) {
+      const message = data.choices?.[0]?.message || {};
+      meta.modelId = data.model || null;
+      meta.systemFingerprint = data.system_fingerprint || null;
+      meta.tokensIn = data.usage?.prompt_tokens ?? null;
+      meta.tokensOut = data.usage?.completion_tokens ?? null;
+      meta.finishReason = data.choices?.[0]?.finish_reason || null;
+      meta.contentChars = typeof message.content === 'string' ? message.content.length : 0;
+      meta.reasoningChars = typeof message.reasoning === 'string' ? message.reasoning.length : 0;
+    }
+
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       throw new Error('Resposta inválida: estrutura inesperada');
     }
@@ -1071,7 +1521,7 @@ class AccessibilityOptimizer {
   /**
    * Gera alt text para imagens usando IA
    */
-  async generateImageAltText(image) {
+  async generateImageAltText(image, meta = null) {
     const imageData = typeof image === 'string' ? { src: image } : (image || {});
     const useVision = !this.isLocalProvider()
       && openRouterModelSupportsVision(this.selectedModel)
@@ -1098,7 +1548,8 @@ class AccessibilityOptimizer {
       maxTokens: this.isLocalProvider()
         ? ACCESSIFY_AI_CONFIG.tokens.localAltText
         : ACCESSIFY_AI_CONFIG.tokens.altText,
-      temperature: 0.3
+      temperature: 0.3,
+      meta
     });
 
     const altText = this.normalizeAltText(this.extractMessageText(data.choices?.[0]?.message));
@@ -1112,7 +1563,7 @@ class AccessibilityOptimizer {
   /**
    * Analisa página e gera recomendações de otimização
    */
-  async analyzePageForOptimizations(pageContent, issues) {
+  async analyzePageForOptimizations(pageContent, issues, meta = null) {
     const selectedIssues = this.selectIssuesForLlm(issues);
     if (selectedIssues.length === 0) {
       console.log('Nenhum problema essencial para a IA; pulando recomendações.');
@@ -1135,7 +1586,8 @@ class AccessibilityOptimizer {
         ? ACCESSIFY_AI_CONFIG.tokens.localOptimizations
         : ACCESSIFY_AI_CONFIG.tokens.optimizations,
       temperature: this.isLocalProvider() ? 0.1 : 0.3,
-      json: true
+      json: true,
+      meta
     });
 
     const content = this.extractMessageText(data.choices?.[0]?.message);
@@ -1300,14 +1752,19 @@ Forneça as recomendações em JSON válido.`
       ? ACCESSIFY_AI_CONFIG.localLimits.maxImageLlmCalls
       : images.length;
 
+    // `source`, `selector` e `llm` só alimentam o log estruturado (C10); quem aplica os
+    // alts continua lendo apenas index/alt/success.
     for (const image of images) {
+      const selector = image.selector || null;
       const heuristicAlt = this.buildHeuristicImageAlt(image);
       if (heuristicAlt && this.isLocalProvider()) {
         results.push({
           index: image.index,
           src: image.src,
           alt: heuristicAlt,
-          success: true
+          success: true,
+          source: 'heuristic',
+          selector
         });
         continue;
       }
@@ -1317,19 +1774,25 @@ Forneça as recomendações em JSON válido.`
           index: image.index,
           src: image.src,
           alt: heuristicAlt || this.humanizeFileName(image.fileName) || 'Imagem',
-          success: true
+          success: true,
+          source: 'limite',
+          selector
         });
         continue;
       }
 
+      const llm = {};
       try {
         llmCalls += 1;
-        const altText = await this.generateImageAltText(image);
+        const altText = await this.generateImageAltText(image, llm);
         results.push({
           index: image.index,
           src: image.src,
           alt: altText,
-          success: true
+          success: true,
+          source: 'llm',
+          selector,
+          llm
         });
 
         await new Promise((resolve) => setTimeout(resolve, this.isLocalProvider() ? 150 : 500));
@@ -1339,7 +1802,10 @@ Forneça as recomendações em JSON válido.`
           src: image.src,
           alt: heuristicAlt || image.currentAlt || this.humanizeFileName(image.fileName) || 'Imagem',
           success: false,
-          error: error.message
+          error: error.message,
+          source: 'erro',
+          selector,
+          llm
         });
       }
     }
@@ -1396,6 +1862,8 @@ chrome.runtime.onInstalled.addListener(() => {
   optimizer.getAutoOptimizeSetting()
     .then((enabled) => optimizer.updateActionIcon(enabled))
     .catch((error) => console.error('Erro ao atualizar ícone da extensão na instalação:', error));
+  optimizer.removeOrphanRunLogs()
+    .catch((error) => console.error('Erro ao limpar logs estruturados órfãos:', error));
 });
 
 chrome.runtime.onStartup.addListener(() => {
@@ -1403,6 +1871,8 @@ chrome.runtime.onStartup.addListener(() => {
   optimizer.getAutoOptimizeSetting()
     .then((enabled) => optimizer.updateActionIcon(enabled))
     .catch((error) => console.error('Erro ao atualizar ícone da extensão na inicialização:', error));
+  optimizer.removeOrphanRunLogs()
+    .catch((error) => console.error('Erro ao limpar logs estruturados órfãos:', error));
 });
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -1432,6 +1902,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
   optimizer.removeAnalysisJob(tabId)
     .catch((error) => console.error('Erro ao limpar estado da análise da aba fechada:', error));
+  // Pela fila: uma escrita do log já em andamento não pode recriar a chave depois
+  optimizer.enqueueRunLogTask(tabId, () => optimizer.removeRunLog(tabId))
+    .then(() => optimizer.runLogWriteErrors.delete(tabId))
+    .catch((error) => console.error('Erro ao limpar o log estruturado da aba fechada:', error));
 });
 
 // Escutar mensagens do popup e content script
@@ -1523,6 +1997,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     optimizer.getAnalysisJob(request.tabId)
       .then((job) => sendResponse({ success: true, job }))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+
+  if (request.action === 'getRunLog') {
+    const tabId = Number.isFinite(request.tabId) ? request.tabId : sender.tab?.id;
+    if (!Number.isFinite(tabId)) {
+      sendResponse({ success: false, error: 'tabId é obrigatório para consultar o log estruturado' });
+      return false;
+    }
+    optimizer.getRunLog(tabId)
+      .then((runLog) => sendResponse({ success: true, runLog }))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+
+  if (request.action === 'recordApplyResult') {
+    if (!Number.isFinite(sender.tab?.id)) {
+      sendResponse({ success: false, error: 'recordApplyResult só é aceito vindo de uma aba' });
+      return false;
+    }
+    optimizer.recordApplyResult(sender.tab.id, sender.tab.url, request.result)
+      .then((outcome) => sendResponse({ success: true, ...outcome }))
       .catch((error) => sendResponse({ success: false, error: error.message }));
     return true;
   }
