@@ -3,7 +3,7 @@
  * Gerencia a integração com Ollama local e OpenRouter
  */
 
-importScripts('ai-config.js');
+importScripts('ai-config.js', 'panel-fixes.js');
 
 /**
  * Para o log estruturado (C10): que tipos de problema do WCAGEvaluator cada regra de
@@ -42,6 +42,9 @@ class AccessibilityOptimizer {
     this.enabledIconCache = new Map();
     this.runLogQueues = new Map();
     this.runLogWriteErrors = new Map();
+    // Gancho de automação (C11): overrides que valem só durante um run, um run por vez
+    this.automationOverrides = null;
+    this.automationQueue = Promise.resolve();
     this.loadSettings();
     this.initializeSidePanel();
   }
@@ -76,6 +79,12 @@ class AccessibilityOptimizer {
         this.selectedModel = result.selectedModel || ACCESSIFY_AI_CONFIG.defaults.selectedModel;
         this.localBaseUrl = result.localBaseUrl || ACCESSIFY_AI_CONFIG.defaults.localBaseUrl;
         this.localModel = result.localModel || ACCESSIFY_AI_CONFIG.defaults.localModel;
+        // Durante um run do gancho de automação, provedor e modelo vêm da configuração do
+        // run, não das opções salvas (refreshSettings roda a cada chamada ao LLM)
+        if (this.automationOverrides) {
+          this.provider = this.automationOverrides.provider;
+          this.localModel = this.automationOverrides.model || this.localModel;
+        }
         console.log('Settings loaded:', {
           provider: this.provider,
           apiKeyConfigured: !!this.apiKey,
@@ -335,6 +344,10 @@ class AccessibilityOptimizer {
       reasoningChars: Number.isFinite(meta.reasoningChars) ? meta.reasoningChars : null,
       httpStatus: meta.httpStatus || null,
       networkError: meta.networkError || null,
+      vision: meta.vision === true,
+      visionSource: meta.visionSource || null,
+      visionError: meta.visionError || null,
+      reasoningEffort: meta.reasoningEffort || null,
       error
     });
 
@@ -370,6 +383,9 @@ class AccessibilityOptimizer {
         latencyMs: Number.isFinite(llm?.latencyMs) ? llm.latencyMs : null,
         tokensIn: Number.isFinite(llm?.tokensIn) ? llm.tokensIn : null,
         tokensOut: Number.isFinite(llm?.tokensOut) ? llm.tokensOut : null,
+        vision: llm?.vision === true,
+        visionSource: llm?.visionSource || null,
+        visionError: llm?.visionError || null,
         error: result.error || null
       });
 
@@ -379,6 +395,11 @@ class AccessibilityOptimizer {
 
       if (result.error) {
         runLog.errors.push({ stage: 'alt-text', message: result.error, selector });
+      }
+
+      // Condição de visão sem imagem: o alt saiu só do texto, e isso precisa aparecer
+      if (llm?.visionError) {
+        runLog.errors.push({ stage: 'visao', message: llm.visionError, selector });
       }
     });
   }
@@ -522,16 +543,24 @@ class AccessibilityOptimizer {
     });
   }
 
-  async ensureContentScript(tabId) {
+  async ensureContentScript(tabId, documentId = null) {
     await chrome.scripting.executeScript({
-      target: { tabId },
+      target: documentId ? { tabId, documentIds: [documentId] } : { tabId },
       files: ['wcag-evaluator.js', 'content.js']
     });
   }
 
-  async sendMessageToTab(tabId, message) {
+  /**
+   * `documentId` (só o gancho de automação usa) prende a mensagem a um documento: se a
+   * aba navegou ou recarregou, a chamada falha em vez de chegar ao documento novo.
+   */
+  async sendMessageToTab(tabId, message, documentId = null) {
+    const send = (callback) => (documentId
+      ? chrome.tabs.sendMessage(tabId, message, { documentId }, callback)
+      : chrome.tabs.sendMessage(tabId, message, callback));
+
     return new Promise((resolve, reject) => {
-      chrome.tabs.sendMessage(tabId, message, async (response) => {
+      send(async (response) => {
         if (!chrome.runtime.lastError) {
           resolve(response || { success: false, error: 'Sem resposta do content script' });
           return;
@@ -541,8 +570,8 @@ class AccessibilityOptimizer {
 
         if (runtimeError.includes('Receiving end does not exist')) {
           try {
-            await this.ensureContentScript(tabId);
-            chrome.tabs.sendMessage(tabId, message, (retryResponse) => {
+            await this.ensureContentScript(tabId, documentId);
+            send((retryResponse) => {
               if (chrome.runtime.lastError) {
                 reject(new Error(chrome.runtime.lastError.message));
                 return;
@@ -569,16 +598,20 @@ class AccessibilityOptimizer {
    * Isso não é um bug, mas engana quem quer comparar "antes x depois" sem recarregar
    * a página manualmente - por isso detectamos esse resíduo aqui.
    */
-  async hasExistingAccessifyChanges(tabId) {
+  async hasExistingAccessifyChanges(tabId, { documentId = null, throwOnError = false } = {}) {
     try {
       const results = await chrome.scripting.executeScript({
-        target: { tabId },
+        target: documentId ? { tabId, documentIds: [documentId] } : { tabId },
+        // #accessify-result é o resultado do gancho de automação, não uma correção
         func: () => !!document.querySelector(
-          '[data-accessibility="true"], [data-accessify-skip], [data-accessify-sr-h1], [id^="accessify-"], [class*="accessify-"]'
+          '[data-accessibility="true"], [data-accessify-skip], [data-accessify-sr-h1], [id^="accessify-"]:not(#accessify-result), [class*="accessify-"]'
         )
       });
       return !!results?.[0]?.result;
     } catch (error) {
+      if (throwOnError) {
+        throw new Error(`Não foi possível checar marcas anteriores do Accessify: ${error.message}`);
+      }
       console.warn('Não foi possível checar mudanças anteriores do Accessify na aba:', error);
       return false;
     }
@@ -619,9 +652,16 @@ class AccessibilityOptimizer {
   }
 
   async startAnalysisJob(tabId, windowId, options = {}) {
+    // Uma análise manual (painel, atalho, otimização automática) espera os runs do gancho
+    // de automação terminarem, para nunca herdar os overrides de modelo/temperatura deles
+    if (!options.automation && this.automationOverrides) {
+      await this.automationQueue.catch(() => {});
+    }
+
     const runId = this.generateRunId();
     const startedAt = new Date().toISOString();
     const autoTriggered = !!options.autoTriggered;
+    const documentId = options.documentId || null;
     let steps = this.createAnalysisSteps();
     steps = this.markStepStatus(steps, 0, 'active');
 
@@ -650,11 +690,21 @@ class AccessibilityOptimizer {
       applyError: null,
       pageUrl
     });
-    this.startRunLog(tabId, this.createRunLog({ runId, tabId, pageUrl, startedAt }));
+    this.startRunLog(tabId, {
+      ...this.createRunLog({ runId, tabId, pageUrl, startedAt }),
+      automation: options.automation || null
+    });
     let stage = 'preparacao';
 
     try {
-      const hasPriorChanges = !autoTriggered && await this.hasExistingAccessifyChanges(tabId);
+      // O gancho de automação pede `priorChanges: 'fail'`: checa as marcas também e, se
+      // houver, falha em vez de recarregar a página por conta própria
+      const failOnPriorChanges = options.priorChanges === 'fail';
+      const hasPriorChanges = (failOnPriorChanges || !autoTriggered)
+        && await this.hasExistingAccessifyChanges(tabId, { documentId, throwOnError: failOnPriorChanges });
+      if (hasPriorChanges && failOnPriorChanges) {
+        throw new Error('A página já tem marcas do Accessify de uma execução anterior; abra uma aba limpa.');
+      }
       if (hasPriorChanges) {
         stage = 'recarga';
         await this.updateAnalysisJobForRun(tabId, runId, {
@@ -687,7 +737,7 @@ class AccessibilityOptimizer {
       });
       stage = 'analise';
 
-      const analysisResult = await this.sendMessageToTab(tabId, { action: 'analyzeAccessibility' });
+      const analysisResult = await this.sendMessageToTab(tabId, { action: 'analyzeAccessibility' }, documentId);
       if (!(await this.isRunCurrent(tabId, runId))) {
         return await this.getAnalysisJob(tabId);
       }
@@ -705,16 +755,20 @@ class AccessibilityOptimizer {
 
       const extractedImages = await this.sendMessageToTab(tabId, {
         action: 'extractImages',
-        includeDataUrl: !this.isLocalProvider() && openRouterModelSupportsVision(this.selectedModel),
+        includeDataUrl: (!this.isLocalProvider() && openRouterModelSupportsVision(this.selectedModel)) || this.isLocalVisionEnabled(),
+        opaqueBackground: this.isLocalVisionEnabled(),
         maxImages: this.isLocalProvider()
           ? ACCESSIFY_AI_CONFIG.localLimits.maxImages
           : 8
-      });
+      }, documentId);
       if (!(await this.isRunCurrent(tabId, runId))) {
         return await this.getAnalysisJob(tabId);
       }
 
-      const images = Array.isArray(extractedImages) ? extractedImages : [];
+      // Visão local: quando o canvas foi bloqueado (CORS), o recorte sai da própria aba
+      const images = (Array.isArray(extractedImages) ? extractedImages : []).map((image) => (
+        this.isLocalVisionEnabled() ? { ...image, captureTarget: { tabId, windowId, documentId } } : image
+      ));
       const requiresImageProcessing = images.length > 0;
       if (requiresImageProcessing) {
         steps = this.markStepStatus(steps, 1, 'active');
@@ -983,6 +1037,21 @@ class AccessibilityOptimizer {
       return job;
     }
 
+    const optimizations = this.buildOptimizationsForApplication(job.optimizations, job.imageAltResults);
+    const { updatePatch } = await this.applyJobOptimizations(tab, job, optimizations);
+
+    return {
+      ...job,
+      ...updatePatch
+    };
+  }
+
+  /**
+   * Envia o payload de um job concluído para o content script aplicar e atualiza o job.
+   * Usado pela otimização automática (payload de buildOptimizationsForApplication) e pelo
+   * gancho de automação (payload do painel, AccessifyPanelFixes).
+   */
+  async applyJobOptimizations(tab, job, optimizations, documentId = null) {
     await this.updateAnalysisJobForRun(tab.id, job.runId, {
       status: 'running',
       progress: 90,
@@ -990,14 +1059,13 @@ class AccessibilityOptimizer {
       durationMs: this.getDurationMs(job.startedAt)
     });
 
-    const optimizations = this.buildOptimizationsForApplication(job.optimizations, job.imageAltResults);
     let applyResult;
     try {
       applyResult = await this.sendMessageToTab(tab.id, {
         action: 'applyOptimizations',
         optimizations,
         runId: job.runId
-      });
+      }, documentId);
     } catch (error) {
       this.logRunUpdate(tab.id, job.runId, (runLog) => {
         runLog.errors.push({ stage: 'aplicacao', message: error.message });
@@ -1041,10 +1109,232 @@ class AccessibilityOptimizer {
 
     await this.updateAnalysisJobForRun(tab.id, job.runId, updatePatch);
 
+    return { updatePatch, applyResult };
+  }
+
+  /**
+   * Configuração aceita pelo gancho de automação (C11), por lista branca. Qualquer campo
+   * fora dela invalida o run. Devolve { config } normalizada ou { error }.
+   */
+  validateAutomationConfig(raw) {
+    const allowed = new Set(['provider', 'model', 'temperature', 'apply', 'runId', 'vision', 'reasoning', 'timeoutMs']);
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      return { error: 'Configuração ausente ou inválida.' };
+    }
+
+    const unknown = Object.keys(raw).filter((key) => !allowed.has(key));
+    if (unknown.length > 0) {
+      return { error: `Campos não aceitos na configuração: ${unknown.join(', ')}.` };
+    }
+
+    const provider = raw.provider === undefined ? ACCESSIFY_AI_CONFIG.providers.local : raw.provider;
+    if (provider !== ACCESSIFY_AI_CONFIG.providers.local) {
+      return { error: 'O gancho de automação só aceita provider "local".' };
+    }
+
+    if (typeof raw.model !== 'string' || !/^[\w.:/-]{1,100}$/.test(raw.model)) {
+      return { error: 'model precisa ser o nome de um modelo do Ollama (ex.: qwen3:8b).' };
+    }
+
+    if (raw.temperature !== undefined && !(typeof raw.temperature === 'number' && raw.temperature >= 0 && raw.temperature <= 2)) {
+      return { error: 'temperature precisa ser um número entre 0 e 2.' };
+    }
+
+    for (const flag of ['apply', 'vision']) {
+      if (raw[flag] !== undefined && typeof raw[flag] !== 'boolean') {
+        return { error: `${flag} precisa ser booleano.` };
+      }
+    }
+
+    if (raw.runId !== undefined && !(typeof raw.runId === 'string' && /^[\w.:-]{1,200}$/.test(raw.runId))) {
+      return { error: 'runId aceita até 200 caracteres entre letras, números, ".", ":", "_" e "-".' };
+    }
+
+    if (raw.reasoning !== undefined && !['original', 'none'].includes(raw.reasoning)) {
+      return { error: 'reasoning precisa ser "original" ou "none".' };
+    }
+
+    if (raw.timeoutMs !== undefined && !(Number.isInteger(raw.timeoutMs) && raw.timeoutMs >= 10000 && raw.timeoutMs <= 290000)) {
+      return { error: 'timeoutMs precisa ser um inteiro entre 10000 e 290000.' };
+    }
+
     return {
-      ...job,
-      ...updatePatch
+      config: {
+        provider,
+        model: raw.model,
+        temperature: raw.temperature === undefined ? null : raw.temperature,
+        apply: raw.apply !== false,
+        runId: raw.runId || null,
+        vision: raw.vision === true,
+        reasoning: raw.reasoning || 'original',
+        timeoutMs: raw.timeoutMs || 170000
+      }
     };
+  }
+
+  /**
+   * Runs de automação um de cada vez: os overrides de modelo/temperatura valem para a
+   * instância inteira enquanto o run durar.
+   */
+  enqueueAutomation(task) {
+    const next = this.automationQueue.catch(() => {}).then(task);
+    this.automationQueue = next;
+    return next;
+  }
+
+  async handleAutomationRun(sender, rawConfig) {
+    const failure = (stage, message, extra = {}) => ({
+      status: 'falha',
+      runId: typeof rawConfig?.runId === 'string' ? rawConfig.runId : null,
+      errors: [{ stage, message }],
+      ...extra
+    });
+
+    if (!Number.isFinite(sender.tab?.id)) {
+      return failure('automacao', 'O gancho de automação só aceita pedidos vindos de uma aba.');
+    }
+
+    const self = await chrome.management.getSelf();
+    if (self.installType !== 'development') {
+      return failure('automacao', 'O gancho de automação só funciona com a extensão descompactada (modo desenvolvedor).');
+    }
+
+    // Opt-in que só o harness grava (pelo service worker): sem ele, uma página qualquer
+    // não consegue disparar runs na extensão descompactada do dia a dia
+    const { automationHookEnabled } = await chrome.storage.local.get(['automationHookEnabled']);
+    if (automationHookEnabled !== true) {
+      return failure('automacao', 'O gancho de automação está desligado (automationHookEnabled).');
+    }
+
+    const { config, error } = this.validateAutomationConfig(rawConfig);
+    if (error) {
+      return failure('config', error);
+    }
+
+    const enqueuedAtMs = Date.now();
+    const target = { tab: sender.tab, documentId: sender.documentId || null };
+    return this.enqueueAutomation(async () => {
+      const queueWaitMs = Date.now() - enqueuedAtMs;
+      // Quem pediu pode ter ido embora (aba fechada) ou esperado mais que o prazo inteiro
+      const tabStillOpen = await chrome.tabs.get(target.tab.id).then(() => true, () => false);
+      if (!tabStillOpen) {
+        return failure('automacao', 'A aba foi fechada antes de o run sair da fila.', { queueWaitMs });
+      }
+      if (queueWaitMs >= config.timeoutMs) {
+        return failure('tempo', `O run esperou ${queueWaitMs} ms na fila, mais que o prazo de ${config.timeoutMs} ms.`, { queueWaitMs });
+      }
+      return this.runAutomation(target.tab, config, { documentId: target.documentId, queueWaitMs });
+    });
+  }
+
+  /**
+   * Run do gancho de automação: mesmo fluxo da análise e do "Aplicar" do painel (o payload
+   * vem de AccessifyPanelFixes), com overrides de modelo, temperatura, raciocínio e visão
+   * que valem só durante este run. Nunca recarrega a página: com marcas do Accessify no
+   * DOM, o run falha. O prazo conta a partir daqui (fora da fila) e é conferido de novo
+   * antes de aplicar; as chamadas ao LLM são abortadas quando ele acaba.
+   */
+  async runAutomation(tab, config, { documentId = null, queueWaitMs = 0 } = {}) {
+    const startedAtMs = Date.now();
+    const deadline = startedAtMs + config.timeoutMs - 5000;
+    const condition = { ...config };
+    const withoutHash = (url) => (typeof url === 'string' ? url.split('#')[0] : url);
+    let job = null;
+    let applyResult = null;
+
+    this.automationOverrides = {
+      provider: config.provider,
+      model: config.model,
+      temperature: config.temperature,
+      reasoning: config.reasoning,
+      vision: config.vision,
+      deadline
+    };
+
+    try {
+      await this.refreshSettings();
+      await this.assertLocalModelAvailable(config.model);
+
+      job = await this.startAnalysisJob(tab.id, tab.windowId, {
+        pageUrl: tab.url,
+        priorChanges: 'fail',
+        automation: condition,
+        documentId
+      });
+
+      if (!job || job.status !== 'completed' || !job.analysisResult) {
+        throw new Error(job?.error || 'A análise não terminou.');
+      }
+
+      if (config.apply) {
+        if (Date.now() > deadline) {
+          throw new Error(`Prazo de ${config.timeoutMs} ms esgotado antes da aplicação; nada foi aplicado.`);
+        }
+
+        const currentTab = await chrome.tabs.get(tab.id);
+        if (withoutHash(currentTab.url) !== withoutHash(tab.url)) {
+          throw new Error('A aba navegou durante a análise.');
+        }
+
+        const optimizations = new AccessifyPanelFixes(job.analysisResult)
+          .combineOptimizations(job.optimizations, job.imageAltResults || []);
+        ({ applyResult } = await this.applyJobOptimizations(tab, job, optimizations, documentId));
+      }
+
+      const runLog = await this.getRunLog(tab.id);
+      const applied = !config.apply || !!applyResult?.success || !!applyResult?.nothingToApply;
+      // O run aplicou, mas alguma chamada ao LLM falhou (o alt caiu na heurística)
+      // (ou, na condição de visão, um alt saiu sem a imagem)
+      const llmFailed = (runLog?.llmCalls || []).some((call) => call.error || call.networkError || (call.httpStatus && call.httpStatus >= 400))
+        || (runLog?.altTexts || []).some((altText) => altText.source === 'erro')
+        || (config.vision && (runLog?.altTexts || []).some((altText) => altText.source === 'llm' && !altText.vision));
+
+      return {
+        status: !applied ? 'falha' : (llmFailed ? 'parcial' : 'ok'),
+        runId: config.runId,
+        condition,
+        jobRunId: job.runId,
+        applied: config.apply ? !!applyResult?.success : false,
+        appliedChanges: applyResult?.appliedCount || 0,
+        nothingToApply: !!applyResult?.nothingToApply,
+        queueWaitMs,
+        durationMs: Date.now() - startedAtMs,
+        runLog,
+        errors: runLog?.errors || []
+      };
+    } catch (error) {
+      const runLog = await this.getRunLog(tab.id).catch(() => null);
+      const timedOut = Date.now() > deadline || /Prazo/.test(error.message);
+      return {
+        status: 'falha',
+        runId: config.runId,
+        condition,
+        jobRunId: job?.runId || null,
+        queueWaitMs,
+        durationMs: Date.now() - startedAtMs,
+        runLog,
+        errors: [...(runLog?.errors || []), { stage: timedOut ? 'tempo' : 'automacao', message: error.message }]
+      };
+    } finally {
+      this.automationOverrides = null;
+      await this.refreshSettings();
+    }
+  }
+
+  /**
+   * O modelo pedido pelo run precisa existir no Ollama: sem isso, todas as chamadas de
+   * alt text falhariam e o run cairia na heurística parecendo um sucesso.
+   */
+  async assertLocalModelAvailable(model) {
+    const response = await fetch(`${this.getActiveBaseURL()}/models`, { signal: AbortSignal.timeout(10000) });
+    if (!response.ok) {
+      throw new Error(`Ollama respondeu ${response.status} ao listar os modelos.`);
+    }
+
+    const modelIds = ((await response.json()).data || []).map((item) => item.id);
+    if (!modelIds.includes(model)) {
+      throw new Error(`O modelo "${model}" não está no Ollama (ollama pull ${model}).`);
+    }
   }
 
   async getActiveTab() {
@@ -1126,6 +1416,14 @@ class AccessibilityOptimizer {
 
   isLocalProvider() {
     return this.provider === ACCESSIFY_AI_CONFIG.providers.local;
+  }
+
+  /**
+   * Alt text com visão no Ollama: só no gancho de automação com `vision: true`
+   * (condição v1.1.0-vision do estudo). O uso manual continua só com texto.
+   */
+  isLocalVisionEnabled() {
+    return this.isLocalProvider() && this.automationOverrides?.vision === true;
   }
 
   getActiveModel() {
@@ -1352,21 +1650,30 @@ class AccessibilityOptimizer {
         : 'API key não configurada. Acesse as opções do plugin.');
     }
 
+    // No gancho de automação a temperatura do run substitui o literal de cada chamador
+    const overrides = this.automationOverrides;
+    const effectiveTemperature = Number.isFinite(overrides?.temperature) ? overrides.temperature : temperature;
+
     const requestBody = {
       model: this.getActiveModel(),
       messages,
       max_tokens: maxTokens,
-      temperature
+      temperature: effectiveTemperature
     };
 
     if (this.isLocalProvider()) {
       requestBody.think = false;
       requestBody.chat_template_kwargs = { enable_thinking: false };
       requestBody.options = {
-        temperature,
+        temperature: effectiveTemperature,
         num_predict: maxTokens,
         num_ctx: ACCESSIFY_AI_CONFIG.localLimits.numCtx
       };
+      // O /v1 do Ollama ignora think/chat_template_kwargs; o que desliga o raciocínio é
+      // reasoning_effort. Só na condição v1.1.0-fix do estudo (gancho com reasoning 'none').
+      if (overrides?.reasoning === 'none') {
+        requestBody.reasoning_effort = 'none';
+      }
     } else if (json) {
       requestBody.response_format = { type: 'json_object' };
     }
@@ -1376,6 +1683,13 @@ class AccessibilityOptimizer {
       meta.model = requestBody.model;
       meta.temperature = requestBody.temperature;
       meta.maxTokens = maxTokens;
+      meta.reasoningEffort = requestBody.reasoning_effort || null;
+    }
+
+    // No gancho de automação a chamada respeita o prazo do run (o uso manual não tem prazo)
+    const deadline = overrides?.deadline || null;
+    if (deadline && Date.now() >= deadline) {
+      throw new Error('Prazo do run de automação esgotado antes da chamada ao LLM.');
     }
 
     const requestStartedAt = Date.now();
@@ -1385,15 +1699,20 @@ class AccessibilityOptimizer {
       response = await fetch(`${this.getActiveBaseURL()}/chat/completions`, {
         method: 'POST',
         headers: this.buildChatHeaders(),
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
+        ...(deadline ? { signal: AbortSignal.timeout(Math.max(1000, deadline - Date.now())) } : {})
       });
 
       responseText = await response.text();
     } catch (networkError) {
+      const timedOut = networkError?.name === 'TimeoutError';
       if (meta) {
         meta.latencyMs = Date.now() - requestStartedAt;
         meta.httpStatus = null;
-        meta.networkError = networkError.message;
+        meta.networkError = timedOut ? 'timeout (prazo do run de automação)' : networkError.message;
+      }
+      if (timedOut) {
+        throw new Error('Prazo do run de automação esgotado durante a chamada ao LLM.');
       }
       throw networkError;
     }
@@ -1523,14 +1842,45 @@ class AccessibilityOptimizer {
    */
   async generateImageAltText(image, meta = null) {
     const imageData = typeof image === 'string' ? { src: image } : (image || {});
-    const useVision = !this.isLocalProvider()
+
+    // Visão local (condição v1.1.0-vision): o Ollama só aceita imagem em base64. Os bytes
+    // vêm do canvas da página ou, quando o canvas foi bloqueado (CORS), de um recorte da
+    // captura da aba. Nunca de um fetch pelo service worker: ele iria à rede ao vivo (fora
+    // do snapshot do estudo) e deixaria uma página ler imagens de outras origens.
+    let localVisionDataUrl = null;
+    let visionSource = null;
+    let visionError = null;
+    if (this.isLocalVisionEnabled()) {
+      if (imageData.dataUrl) {
+        localVisionDataUrl = imageData.dataUrl;
+        visionSource = 'canvas';
+      } else if (imageData.captureTarget) {
+        try {
+          localVisionDataUrl = await this.captureImageFromTab(imageData.captureTarget, imageData.index);
+          visionSource = 'captura-da-aba';
+        } catch (error) {
+          visionError = error.message;
+        }
+      } else {
+        visionError = 'Sem bytes da imagem para a visão.';
+      }
+    }
+
+    const useVision = (!this.isLocalProvider()
       && openRouterModelSupportsVision(this.selectedModel)
-      && !!(imageData.dataUrl || imageData.src);
+      && !!(imageData.dataUrl || imageData.src))
+      || !!localVisionDataUrl;
+
+    if (meta) {
+      meta.vision = useVision;
+      meta.visionSource = visionSource;
+      meta.visionError = visionError;
+    }
 
     const userContent = useVision
       ? [
           { type: 'text', text: this.buildImageContextPrompt(imageData) },
-          { type: 'image_url', image_url: { url: imageData.dataUrl || imageData.src } }
+          { type: 'image_url', image_url: { url: localVisionDataUrl || imageData.dataUrl || imageData.src } }
         ]
       : this.buildImageContextPrompt(imageData);
 
@@ -1558,6 +1908,48 @@ class AccessibilityOptimizer {
     }
 
     return altText;
+  }
+
+  /**
+   * Recorta uma imagem da captura da aba (os pixels que a página de fato mostra) e
+   * devolve um data URL JPEG de no máximo 768 px, o mesmo formato do canvas do content
+   * script. captureVisibleTab é coberto pela permissão <all_urls> que a extensão já tem.
+   */
+  async captureImageFromTab({ tabId, windowId, documentId }, index) {
+    await chrome.tabs.update(tabId, { active: true });
+    const rect = await this.sendMessageToTab(tabId, { action: 'prepareImageCapture', index }, documentId);
+    if (!rect?.success) {
+      throw new Error(rect?.error || 'Não foi possível posicionar a imagem para a captura.');
+    }
+
+    const screenshot = await chrome.tabs.captureVisibleTab(windowId, { format: 'png' });
+    const bitmap = await createImageBitmap(await (await fetch(screenshot)).blob());
+    try {
+      const dpr = rect.devicePixelRatio || 1;
+      const sx = Math.max(0, Math.round(rect.x * dpr));
+      const sy = Math.max(0, Math.round(rect.y * dpr));
+      const sw = Math.min(bitmap.width - sx, Math.round(rect.width * dpr));
+      const sh = Math.min(bitmap.height - sy, Math.round(rect.height * dpr));
+      if (sw <= 0 || sh <= 0) {
+        throw new Error('A imagem ficou fora da área capturada.');
+      }
+
+      const maxSize = 768;
+      const scale = Math.min(1, maxSize / Math.max(sw, sh));
+      const canvas = new OffscreenCanvas(Math.max(1, Math.round(sw * scale)), Math.max(1, Math.round(sh * scale)));
+      canvas.getContext('2d').drawImage(bitmap, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      const jpeg = await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.7 });
+      const bytes = new Uint8Array(await jpeg.arrayBuffer());
+
+      let binary = '';
+      for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+      }
+
+      return `data:image/jpeg;base64,${btoa(binary)}`;
+    } finally {
+      bitmap.close();
+    }
   }
 
   /**
@@ -1998,6 +2390,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     optimizer.getAnalysisJob(request.tabId)
       .then((job) => sendResponse({ success: true, job }))
       .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+
+  if (request.action === 'automationRun') {
+    optimizer.handleAutomationRun(sender, request.config)
+      .then((result) => sendResponse(result))
+      .catch((error) => sendResponse({
+        status: 'falha',
+        runId: typeof request.config?.runId === 'string' ? request.config.runId : null,
+        errors: [{ stage: 'automacao', message: error.message }]
+      }));
     return true;
   }
 

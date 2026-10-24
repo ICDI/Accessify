@@ -60,6 +60,52 @@ Teste (Playwright 1.64.1, Chromium 1248, extensão descompactada, painel `popup.
 
 O último caso confirma, dentro da extensão, o defeito que a sonda tinha mostrado fora dela (D5).
 
+## Sessão de 23/10/2026 — Fase 2 (C11, gancho de automação)
+
+Branch `eval/fase-2-c11`, encadeada na da Fase 1.
+
+Contrato:
+
+- A página dispara `document.dispatchEvent(new CustomEvent('accessify:run', { detail: JSON.stringify(config) }))`. O resultado aparece em `<script type="application/json" id="accessify-result">`, também em falha. `accessify:ping` → `accessify:ready` diz que o listener está pronto; `accessify:ack` confirma cada disparo (`accepted: false` quando já há um run na aba).
+- Config aceita (lista branca; qualquer outro campo invalida o run): `provider` (só `local`), `model`, `temperature` (0–2), `apply` (padrão `true`; `false` só analisa), `runId`, `vision`, `reasoning` (`original` | `none`), `timeoutMs` (10 000–290 000, padrão 170 000).
+- Resultado: `status` (`ok`, `parcial` quando alguma chamada ao LLM falhou ou a visão ficou sem imagem, `falha`), `runId`, `condition`, `appliedChanges`, `nothingToApply`, `queueWaitMs`, `durationMs`, `runLog` (C10) e `errors`.
+
+Proteções (a revisão independente mostrou que, sem elas, qualquer site aberto num navegador com a extensão descompactada conseguiria usar o gancho):
+
+- Opt-in: o gancho só existe com `automationHookEnabled: true` no `chrome.storage.local`, que só o harness grava pelo service worker; além disso exige `installType === 'development'`.
+- Overrides de modelo, temperatura, raciocínio e visão só valem durante o run de automação, um por vez (fila); uma análise manual espera a fila esvaziar.
+- Prazo contado a partir de quando o run sai da fila; as chamadas ao LLM são abortadas quando ele acaba e, se ele acabou, nada é aplicado. Runs cuja aba fechou ou que esperaram mais que o prazo na fila são descartados.
+- Todas as mensagens do run vão presas ao `documentId` de quem pediu: navegação ou recarga no meio faz o run falhar.
+- Página com marcas de uma execução anterior → falha (nunca recarrega). O próprio `#accessify-result` não conta como marca.
+- O modelo pedido é conferido no Ollama antes do run.
+- Visão local: os bytes vêm do canvas da página (com fundo branco, porque JPEG não tem transparência) ou, quando o canvas fica bloqueado por CORS, de um recorte da captura da aba (`captureVisibleTab`, coberto pelo `<all_urls>` que já existia). Nunca de um fetch pelo service worker, que iria à rede ao vivo (fora do snapshot) e deixaria uma página ler imagens de outras origens. A origem dos bytes (`visionSource`) e o motivo de uma visão sem imagem (`visionError`) ficam no log.
+
+D7 na prática: as correções que o painel soma às da IA saíram do `popup.js` para `panel-fixes.js` (`AccessifyPanelFixes`), usado pelo painel e pelo gancho. Um teste roda o `combineOptimizations()` da tag `v1.1.0` e o novo sobre os mesmos problemas (sintéticos e da `test-page` real) e exige o mesmo payload.
+
+Teste (Playwright 1.64.1, extensão descompactada, gancho disparado pela página, sem cliques):
+
+| Verificação | Resultado |
+|---|---|
+| Sem o opt-in | o gancho não responde |
+| Gancho na `test-page` | `status: ok`, 52 alterações, runLog completo |
+| D7: DOM do gancho = DOM do painel real | igual (18 599 caracteres) |
+| DOM do build = DOM da tag `v1.1.0` (painel) | igual; payload do painel igual ao da tag (casos sintéticos e `test-page` real) |
+| Mesma aba de novo (marcas prévias) | `falha`, sem recarregar |
+| Campo fora da lista branca / JSON quebrado / config vazia | `falha` de config / `falha` de config / ignorado |
+| Dois disparos seguidos | o segundo é ignorado (`accepted: false`); um só resultado |
+| Três abas ao mesmo tempo | três resultados `ok`, `runId` e `tabId` distintos, 52 alterações em cada |
+| Modelo que não existe no Ollama | `falha` antes de qualquer chamada |
+| `timeoutMs: 10000` com chamada lenta | chamada abortada, `falha` de `tempo`, nada aplicado |
+| `v1.1.0` (`qwen3:8b`, raciocínio original), imagem sem contexto | alt = "Okay, the user wants an alt text for an image named IMG_2034.png, which is 64x64 pixels. They"; `reasoningAsAlt: true`; 153/64 tokens; 41 s |
+| `v1.1.0-fix` (`reasoning_effort: 'none'`) | alt = "Ícone de seta para cima preto em fundo branco."; 159/17 tokens; 6 s. Sem raciocínio, mas **inventado**: a imagem é metade vermelha, metade azul e o modelo não a vê |
+| `v1.1.0-vision`, `gemma3:4b`, imagem da mesma origem | bytes do canvas; alt = "Divisão de cores: vermelho e azul."; 423/10 tokens; 93 s |
+| `v1.1.0-vision`, `gemma3:4b`, imagem de outra origem (canvas bloqueado) | bytes recortados da captura da aba; alt = "Divisão de fundo vermelho e azul."; 59 s |
+| `v1.1.0-vision`, `qwen3-vl:8b` | o modelo recebeu a imagem (1182 tokens de entrada), mas **raciocina mesmo com `reasoning_effort: 'none'`**: o alt gravado foi o raciocínio ("Okay, let's see. The user wants an alt text for an image that's 64x64 pixels, split into red on the") |
+
+Consequência para o subestudo de visão: com `max_tokens: 64`, o `qwen3-vl:8b` não serve; o `gemma3:4b` (sem modo de raciocínio) funciona. O `gemma4:e4b` também raciocina por padrão e não foi testado com `reasoning_effort: 'none'`.
+
+Ambiente: nesta máquina o codificador de imagem cai no Vulkan da MX350 ("ggml_vulkan: device lost"); os testes de visão rodaram com o servidor só na CPU (`CUDA_VISIBLE_DEVICES=-1`, `OLLAMA_VULKAN=0`, nada persistente).
+
 ## Decisões
 
 | Id | Decisão | Situação |
@@ -186,7 +232,7 @@ Resultado de uma verificação adversarial: um pesquisador por grupo de premissa
 
 ## Próximos passos
 
-1. Fase 2 — C11, gancho de automação (com as correções do painel, `v1.1.0-fix` e `v1.1.0-vision`).
-2. Fase 3 — harness `eval/` com axe-core.
-3. Fase 4 — IBM Equal Access.
-4. Fase 5 — aceites.
+1. Fase 3 — harness `eval/` com axe-core.
+2. Fase 4 — IBM Equal Access.
+3. Fase 5 — aceites.
+4. Escolher o modelo da condição `v1.1.0-vision` (o `qwen3-vl:8b` grava o raciocínio; o `gemma3:4b` funciona).

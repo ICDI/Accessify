@@ -263,7 +263,7 @@ class AccessibilityAnalyzer {
         parentAriaLabel: this.getParentAccessibleName(img),
         width: img.naturalWidth || img.width || null,
         height: img.naturalHeight || img.height || null,
-        dataUrl: includeDataUrl ? this.tryGetImageDataUrl(img) : null
+        dataUrl: includeDataUrl ? this.tryGetImageDataUrl(img, options.opaqueBackground === true) : null
       });
     });
 
@@ -295,7 +295,7 @@ class AccessibilityAnalyzer {
     return parent.textContent.replace(/\s+/g, ' ').trim().slice(0, 160);
   }
 
-  tryGetImageDataUrl(img) {
+  tryGetImageDataUrl(img, opaqueBackground = false) {
     try {
       if (!img.complete || img.naturalWidth === 0) {
         return null;
@@ -307,11 +307,42 @@ class AccessibilityAnalyzer {
       canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
       canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
       const context = canvas.getContext('2d');
+      // JPEG não tem transparência: sem fundo, ícones com alpha chegam pretos ao modelo.
+      // Só o caminho de visão local do gancho de automação pede o fundo branco.
+      if (opaqueBackground) {
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      }
       context.drawImage(img, 0, 0, canvas.width, canvas.height);
       return canvas.toDataURL('image/jpeg', 0.7);
     } catch (error) {
       return null;
     }
+  }
+
+  /**
+   * Visão local do gancho de automação: quando o canvas fica bloqueado por CORS, o
+   * background recorta a imagem de uma captura da aba. Aqui só a trazemos para a área
+   * visível e devolvemos onde ela está, em pixels CSS.
+   */
+  async prepareImageCapture(index) {
+    const img = document.querySelectorAll('img')[index];
+    if (!img) {
+      return { success: false, error: 'Imagem não encontrada pelo índice.' };
+    }
+
+    img.scrollIntoView({ block: 'center', inline: 'center' });
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const rect = img.getBoundingClientRect();
+    return {
+      success: rect.width > 0 && rect.height > 0,
+      error: rect.width > 0 && rect.height > 0 ? null : 'Imagem sem área visível.',
+      x: rect.left,
+      y: rect.top,
+      width: rect.width,
+      height: rect.height,
+      devicePixelRatio: window.devicePixelRatio || 1
+    };
   }
 
   applyAiProvidedOptimizations(optimizations) {
@@ -1862,9 +1893,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'extractImages') {
     sendResponse(window.accessibilityAnalyzer.extractImages({
       includeDataUrl: request.includeDataUrl === true,
+      opaqueBackground: request.opaqueBackground === true,
       maxImages: request.maxImages
     }));
     return false;
+  }
+
+  if (request.action === 'prepareImageCapture') {
+    window.accessibilityAnalyzer.prepareImageCapture(request.index)
+      .then((result) => sendResponse(result))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
   }
 
   if (request.action === 'applyOptimizations') {
@@ -1889,5 +1928,153 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ success: true });
   }
 });
+
+/**
+ * Gancho de automação (C11). Só existe em extensão descompactada e com o opt-in
+ * `automationHookEnabled: true` no chrome.storage.local, que só o harness grava (pelo
+ * service worker). A página dispara
+ *   document.dispatchEvent(new CustomEvent('accessify:run', { detail: JSON.stringify(config) }))
+ * e o resultado aparece em <script type="application/json" id="accessify-result">, também
+ * em caso de falha. 'accessify:ping' responde 'accessify:ready' quando o listener já está
+ * registrado. Quem valida a configuração, confere o modo desenvolvedor e controla o prazo
+ * é o background; aqui fica só um teto de segurança para o caso de o background sumir.
+ */
+const ACCESSIFY_AUTOMATION_DEFAULT_TIMEOUT_MS = 170000;
+// Folga para a espera na fila do background além do prazo do próprio run
+const ACCESSIFY_AUTOMATION_QUEUE_MARGIN_MS = 60000;
+
+function readAutomationDetail(detail) {
+  if (detail === null || detail === undefined || detail === '') {
+    return { empty: true };
+  }
+
+  if (typeof detail === 'string') {
+    try {
+      const parsed = JSON.parse(detail);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? { config: parsed, empty: Object.keys(parsed).length === 0 }
+        : { error: 'A configuração precisa ser um objeto JSON.' };
+    } catch (error) {
+      return { error: `JSON inválido na configuração: ${error.message}` };
+    }
+  }
+
+  if (typeof detail === 'object' && !Array.isArray(detail)) {
+    // Cópia simples: o objeto vem de outro mundo (a página)
+    try {
+      const copy = JSON.parse(JSON.stringify(detail));
+      return { config: copy, empty: Object.keys(copy).length === 0 };
+    } catch (error) {
+      return { error: 'A configuração não pôde ser lida como JSON.' };
+    }
+  }
+
+  return { error: 'A configuração precisa ser um objeto JSON.' };
+}
+
+function writeAutomationResult(payload) {
+  let node = document.getElementById('accessify-result');
+  if (!node) {
+    node = document.createElement('script');
+    node.type = 'application/json';
+    node.id = 'accessify-result';
+    document.documentElement.appendChild(node);
+  }
+
+  node.textContent = JSON.stringify(payload);
+  document.dispatchEvent(new CustomEvent('accessify:result', {
+    detail: JSON.stringify({ runId: payload.runId || null, status: payload.status })
+  }));
+}
+
+function registerAutomationHook() {
+  let automationRunning = false;
+
+  document.addEventListener('accessify:ping', () => {
+    document.dispatchEvent(new CustomEvent('accessify:ready', { detail: JSON.stringify({ running: automationRunning }) }));
+  });
+
+  document.addEventListener('accessify:run', (event) => {
+    const { config, empty, error } = readAutomationDetail(event.detail);
+    const runId = typeof config?.runId === 'string' ? config.runId.slice(0, 200) : null;
+
+    if (empty && !error) {
+      return;
+    }
+
+    document.dispatchEvent(new CustomEvent('accessify:ack', {
+      detail: JSON.stringify({ runId, accepted: !automationRunning && !error })
+    }));
+
+    if (automationRunning) {
+      return;
+    }
+
+    if (error) {
+      writeAutomationResult({ status: 'falha', runId, errors: [{ stage: 'config', message: error }] });
+      return;
+    }
+
+    automationRunning = true;
+    // Um resultado anterior no DOM não pode ser confundido com o deste run
+    document.getElementById('accessify-result')?.remove();
+
+    const requestedTimeout = Number(config.timeoutMs);
+    const timeoutMs = Number.isFinite(requestedTimeout) && requestedTimeout >= 10000 && requestedTimeout <= 290000
+      ? requestedTimeout
+      : ACCESSIFY_AUTOMATION_DEFAULT_TIMEOUT_MS;
+    let settled = false;
+    const finish = (payload) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      writeAutomationResult(payload);
+    };
+
+    // O background responde sempre, inclusive com falha de prazo; este teto só cobre o
+    // service worker encerrado. Mesmo depois dele, a aba não aceita outro run até a
+    // resposta chegar: o run antigo ainda pode estar aplicando correções.
+    const timer = setTimeout(() => finish({
+      status: 'falha',
+      runId,
+      errors: [{ stage: 'tempo', message: `Sem resposta da extensão em ${timeoutMs + ACCESSIFY_AUTOMATION_QUEUE_MARGIN_MS} ms.` }]
+    }), timeoutMs + ACCESSIFY_AUTOMATION_QUEUE_MARGIN_MS);
+
+    const onResponse = (payload) => {
+      clearTimeout(timer);
+      automationRunning = false;
+      if (settled) {
+        document.dispatchEvent(new CustomEvent('accessify:late-result', { detail: JSON.stringify(payload) }));
+        return;
+      }
+      finish(payload);
+    };
+
+    try {
+      chrome.runtime.sendMessage({ action: 'automationRun', config }, (response) => {
+        if (chrome.runtime.lastError) {
+          onResponse({ status: 'falha', runId, errors: [{ stage: 'mensagem', message: chrome.runtime.lastError.message }] });
+          return;
+        }
+
+        onResponse(response && typeof response === 'object'
+          ? response
+          : { status: 'falha', runId, errors: [{ stage: 'mensagem', message: 'Resposta vazia do background.' }] });
+      });
+    } catch (sendError) {
+      onResponse({ status: 'falha', runId, errors: [{ stage: 'mensagem', message: sendError.message }] });
+    }
+  });
+}
+
+if (!chrome.runtime.getManifest().update_url && !window.__accessifyAutomationRegistered) {
+  window.__accessifyAutomationRegistered = true;
+  chrome.storage.local.get(['automationHookEnabled'], (settings) => {
+    if (!chrome.runtime.lastError && settings.automationHookEnabled === true) {
+      registerAutomationHook();
+    }
+  });
+}
 
 console.log('Accessify - Content Script Loaded');
