@@ -1,0 +1,398 @@
+{
+  "startedAt": "2026-10-23T21:35:36.817Z",
+  "cases": [
+    {
+      "name": "v110-local-body",
+      "request": {
+        "model": "qwen3:8b",
+        "messages": "[omitido]",
+        "max_tokens": 64,
+        "temperature": 0.3,
+        "think": false,
+        "chat_template_kwargs": {
+          "enable_thinking": false
+        },
+        "options": {
+          "temperature": 0.3,
+          "num_predict": 64,
+          "num_ctx": 2048
+        }
+      },
+      "response": {
+        "status": 200,
+        "ms": 25158,
+        "model": "qwen3:8b",
+        "system_fingerprint": "fp_ollama",
+        "usage": {
+          "prompt_tokens": 155,
+          "prompt_tokens_details": {
+            "cached_tokens": 128
+          },
+          "completion_tokens": 64,
+          "total_tokens": 219
+        },
+        "finish_reason": "length",
+        "contentChars": 0,
+        "content": "",
+        "reasoning": "Okay, the user wants an alt text for an image named IMG_2034.jpg with dimensions 800x600. They specified it should be between 10-100 characters, concise, and descriptive without inventing details. Let me check the filename again. The",
+        "reasoningField": [
+          "reasoning"
+        ],
+        "reasoningChars": 233,
+        "contentHasThinkTag": false
+      },
+      "loaded": [
+        {
+          "name": "qwen3:8b",
+          "context_length": 4096,
+          "size_vram": 779647713
+        }
+      ]
+    },
+    {
+      "name": "no-think-fields",
+      "request": {
+        "model": "qwen3:8b",
+        "messages": "[omitido]",
+        "max_tokens": 64,
+        "temperature": 0
+      },
+      "response": {
+        "status": 200,
+        "ms": 24116,
+        "model": "qwen3:8b",
+        "system_fingerprint": "fp_ollama",
+        "usage": {
+          "prompt_tokens": 155,
+          "prompt_tokens_details": {
+            "cached_tokens": 154
+          },
+          "completion_tokens": 64,
+          "total_tokens": 219
+        },
+        "finish_reason": "length",
+        "contentChars": 0,
+        "content": "",
+        "reasoning": "Okay, the user wants an alt text for an image named IMG_2034.jpg with dimensions 800x600. They specified it should be between 10-100 characters, concise, and descriptive without inventing details. Let me check the filename again. The",
+        "reasoningField": [
+          "reasoning"
+        ],
+        "reasoningChars": 233,
+        "contentHasThinkTag": false
+      },
+      "loaded": [
+        {
+          "name": "qwen3:8b",
+          "context_length": 4096,
+          "size_vram": 779647713
+        }
+      ]
+    },
+    {
+      "name": "reasoning-effort-none",
+      "request": {
+        "model": "qwen3:8b",
+        "messages": "[omitido]",
+        "max_tokens": 64,
+        "temperature": 0,
+        "reasoning_effort": "none"
+      },
+      "response": {
+        "status": 200,
+        "ms": 6561,
+        "model": "qwen3:8b",
+        "system_fingerprint": "fp_ollama",
+        "usage": {
+          "prompt_tokens": 161,
+          "prompt_tokens_details": {
+            "cached_tokens": 149
+          },
+          "completion_tokens": 13,
+          "total_tokens": 174
+        },
+        "finish_reason": "stop",
+        "contentChars": 37,
+        "content": "Uma pessoa segurando um copo de café.",
+        "reasoningField": [],
+        "reasoningChars": null,
+        "contentHasThinkTag": false
+      },
+      "loaded": [
+        {
+          "name": "qwen3:8b",
+          "context_length": 4096,
+          "size_vram": 779647713
+        }
+      ]
+    },
+    {
+      "name": "determinism-1",
+      "request": {
+        "model": "qwen3:8b",
+        "messages": "[omitido]",
+        "max_tokens": 64,
+        "temperature": 0,
+        "seed": 42,
+        "think": false
+      },
+      "response": {
+        "status": 200,
+        "ms": 29126,
+        "model": "qwen3:8b",
+        "system_fingerprint": "fp_ollama",
+        "usage": {
+          "prompt_tokens": 155,
+          "prompt_tokens_details": {
+            "cached_tokens": 149
+          },
+          "completion_tokens": 64,
+          "total_tokens": 219
+        },
+        "finish_reason": "length",
+        "contentChars": 0,
+        "content": "",
+        "reasoning": "Okay, the user wants an alt text for an image named IMG_2034.jpg with dimensions 800x600. They specified it should be between 10-100 characters, concise, and descriptive without inventing details. Let me check the filename again. The",
+        "reasoningField": [
+          "reasoning"
+        ],
+        "reasoningChars": 233,
+        "contentHasThinkTag": false
+      },
+      "loaded": [
+        {
+          "name": "qwen3:8b",
+          "context_length": 4096,
+          "size_vram": 779647713
+        }
+      ]
+    },
+    {
+      "name": "determinism-2",
+      "request": {
+        "model": "qwen3:8b",
+        "messages": "[omitido]",
+        "max_tokens": 64,
+        "temperature": 0,
+        "seed": 42,
+        "think": false
+      },
+      "response": {
+        "status": 200,
+        "ms": 27805,
+        "model": "qwen3:8b",
+        "system_fingerprint": "fp_ollama",
+        "usage": {
+          "prompt_tokens": 155,
+          "prompt_tokens_details": {
+            "cached_tokens": 154
+          },
+          "completion_tokens": 64,
+          "total_tokens": 219
+        },
+        "finish_reason": "length",
+        "contentChars": 0,
+        "content": "",
+        "reasoning": "Okay, the user wants an alt text for an image named IMG_2034.jpg with dimensions 800x600. The instructions are to keep it between 10-100 characters, be concise, descriptive, and only describe what's visible or indicated by the page",
+        "reasoningField": [
+          "reasoning"
+        ],
+        "reasoningChars": 231,
+        "contentHasThinkTag": false
+      },
+      "loaded": [
+        {
+          "name": "qwen3:8b",
+          "context_length": 4096,
+          "size_vram": 779647713
+        }
+      ]
+    },
+    {
+      "name": "options-num-ctx-8192",
+      "request": {
+        "model": "qwen3:8b",
+        "messages": "[omitido]",
+        "max_tokens": 16,
+        "temperature": 0,
+        "think": false,
+        "options": {
+          "num_ctx": 8192
+        }
+      },
+      "response": {
+        "status": 200,
+        "ms": 5630,
+        "model": "qwen3:8b",
+        "system_fingerprint": "fp_ollama",
+        "usage": {
+          "prompt_tokens": 155,
+          "prompt_tokens_details": {
+            "cached_tokens": 154
+          },
+          "completion_tokens": 16,
+          "total_tokens": 171
+        },
+        "finish_reason": "length",
+        "contentChars": 0,
+        "content": "",
+        "reasoning": "Okay, the user wants an alt text for an image named IMG_",
+        "reasoningField": [
+          "reasoning"
+        ],
+        "reasoningChars": 56,
+        "contentHasThinkTag": false
+      },
+      "loaded": [
+        {
+          "name": "qwen3:8b",
+          "context_length": 4096,
+          "size_vram": 779647713
+        }
+      ]
+    },
+    {
+      "name": "vision-base64-qwen3-vl:8b",
+      "request": {
+        "model": "qwen3-vl:8b",
+        "messages": "[omitido]",
+        "max_tokens": 64,
+        "temperature": 0,
+        "think": false
+      },
+      "response": {
+        "status": 200,
+        "ms": 139042,
+        "model": "qwen3-vl:8b",
+        "system_fingerprint": "fp_ollama",
+        "usage": {
+          "prompt_tokens": 1058,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens": 59,
+          "total_tokens": 1117
+        },
+        "finish_reason": "stop",
+        "contentChars": 52,
+        "content": "As cores que aparecem na imagem são vermelho e azul.",
+        "reasoning": "Got it, let's look at the image. It's split into two halves: left is red, right is blue. So the colors are red and blue. Need to answer in a short sentence.",
+        "reasoningField": [
+          "reasoning"
+        ],
+        "reasoningChars": 156,
+        "contentHasThinkTag": false
+      },
+      "loaded": [
+        {
+          "name": "qwen3-vl:8b",
+          "context_length": 4096,
+          "size_vram": 201326592
+        }
+      ]
+    },
+    {
+      "name": "vision-base64-gemma4:e4b",
+      "request": {
+        "model": "gemma4:e4b",
+        "messages": "[omitido]",
+        "max_tokens": 64,
+        "temperature": 0,
+        "think": false
+      },
+      "response": {
+        "status": 200,
+        "ms": 74534,
+        "model": "gemma4:e4b",
+        "system_fingerprint": "fp_ollama",
+        "usage": {
+          "prompt_tokens": 120,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          },
+          "completion_tokens": 64,
+          "total_tokens": 184
+        },
+        "finish_reason": "length",
+        "contentChars": 0,
+        "content": "",
+        "reasoning": "Thinking Process:\n\n1.  **Analyze the Request:** The user has provided an image (a red and blue rectangle) and asked: \"Quais cores aparecem nesta imagem? Responda em uma frase curta.\" (What colors appear in this image? Answer in a short sentence.)\n2",
+        "reasoningField": [
+          "reasoning"
+        ],
+        "reasoningChars": 248,
+        "contentHasThinkTag": false
+      },
+      "loaded": [
+        {
+          "name": "gemma4:e4b",
+          "context_length": 4096,
+          "size_vram": 225569668
+        }
+      ]
+    },
+    {
+      "name": "vision-base64-gemma3:4b",
+      "request": {
+        "model": "gemma3:4b",
+        "messages": "[omitido]",
+        "max_tokens": 64,
+        "temperature": 0,
+        "think": false
+      },
+      "response": {
+        "status": 500,
+        "ms": 43005,
+        "contentChars": null,
+        "reasoningField": [],
+        "reasoningChars": null,
+        "contentHasThinkTag": false,
+        "error": {
+          "message": "an error was encountered while running the model: read tcp 127.0.0.1:62606->127.0.0.1:54670: wsarecv: An existing connection was forcibly closed by the remote host.",
+          "type": "api_error",
+          "param": null,
+          "code": null
+        }
+      },
+      "loaded": [
+        {
+          "name": "gemma3:4b",
+          "context_length": 4096,
+          "size_vram": 257236664
+        }
+      ]
+    },
+    {
+      "name": "vision-remote-url-gemma3:4b",
+      "request": {
+        "model": "gemma3:4b",
+        "messages": "[omitido]",
+        "max_tokens": 64,
+        "temperature": 0
+      },
+      "response": {
+        "status": 400,
+        "ms": 21,
+        "contentChars": null,
+        "reasoningField": [],
+        "reasoningChars": null,
+        "contentHasThinkTag": false,
+        "error": {
+          "message": "image URLs are not currently supported, please use base64 encoded data instead",
+          "type": "invalid_request_error",
+          "param": null,
+          "code": null
+        }
+      },
+      "loaded": [
+        {
+          "name": "gemma3:4b",
+          "context_length": 4096,
+          "size_vram": 257236664
+        }
+      ]
+    }
+  ],
+  "determinismSameOutput": false,
+  "remoteUrlFetchedByOllama": false,
+  "finishedAt": "2026-10-23T21:41:52.042Z"
+}
