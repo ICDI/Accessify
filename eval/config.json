@@ -1,0 +1,43 @@
+{
+  "study": "jis2026",
+  "viewport": { "width": 1366, "height": 768 },
+  "locale": "pt-BR",
+  "headless": true,
+  "ollama": {
+    "baseUrl": "http://127.0.0.1:11434",
+    "expectedContextLength": 4096
+  },
+  "axe": {
+    "tags": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
+  },
+  "timeouts": {
+    "navigationMs": 45000,
+    "settleMs": 8000,
+    "quietMs": 1000,
+    "minAfterLoadMs": 6000,
+    "domQuietMs": 2000,
+    "domQuietCapMs": 15000,
+    "runWatchdogMs": 660000,
+    "hookMs": 290000,
+    "panelMs": 290000,
+    "llmCallMs": 280000
+  },
+  "retries": 1,
+  "paths": {
+    "accessifyV1": "../../accessify-v1",
+    "accessifyV11": "..",
+    "snapshots": "snapshots",
+    "results": "results"
+  },
+  "conditions": [
+    { "id": "baseline", "extension": null, "driver": "none" },
+    { "id": "v1.0.0", "extension": "accessifyV1", "driver": "panel-v1", "model": "qwen3:8b", "temperature": 0, "reasoning": "original" },
+    { "id": "v1.1.0", "extension": "accessifyV11", "driver": "hook", "model": "qwen3:8b", "temperature": 0, "reasoning": "original", "vision": false },
+    { "id": "v1.1.0-fix", "extension": "accessifyV11", "driver": "hook", "model": "qwen3:8b", "temperature": 0, "reasoning": "none", "vision": false },
+    { "id": "v1.1.0-vision", "extension": "accessifyV11", "driver": "hook", "model": "gemma3:4b", "temperature": 0, "reasoning": "none", "vision": true, "estratos": ["visao"] }
+  ],
+  "smoke": {
+    "conditions": ["baseline", "v1.0.0", "v1.1.0"],
+    "estrato": "smoke"
+  }
+}
