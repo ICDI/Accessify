@@ -24,7 +24,11 @@ export async function launchCondition(condition, config, extension) {
       headless: config.headless,
       viewport: config.viewport,
       locale: config.locale,
-      args: extension ? [`--disable-extensions-except=${extension.dir}`, `--load-extension=${extension.dir}`] : []
+      // EVAL_CHROMIUM_ARGS: argumentos extras (separados por espaço) para diagnóstico, ex.: --disable-gpu
+      args: [
+        ...(extension ? [`--disable-extensions-except=${extension.dir}`, `--load-extension=${extension.dir}`] : []),
+        ...(process.env.EVAL_CHROMIUM_ARGS ? process.env.EVAL_CHROMIUM_ARGS.split(/\s+/).filter(Boolean) : [])
+      ]
     });
   } catch (error) {
     try {

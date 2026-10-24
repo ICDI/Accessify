@@ -273,6 +273,24 @@ Os critérios do plano e onde cada um está:
 
 Revisão dos aceites: os dois verificadores da segunda rodada acharam verificações que passavam sem testar nada (o 3 passava com o Ollama fora do ar e com o IBM falhando em todas as linhas; o 2 passava com o content script ausente), falsos negativos (`--validar` no `runs.csv` do lote, `novos_erros_ibm` vazio justificado, `--condicao` sem runLog), a normalização de IDs que escondia um rótulo ligado ao campo errado, caminhos com acento fora da busca por chaves, evidência perdida quando um erro escapava das verificações e perfis do Chromium deixados no diretório temporário. Todos corrigidos.
 
+## Sessão de 24/10/2026 — Máquina do lote (Linux) e resets sob carga CUDA
+
+Máquina do lote preparada: Ubuntu (kernel 7.0), RTX 2070 SUPER 8 GB, driver NVIDIA 595.99.02, 60 GB de RAM, Node 22.22.1, Ollama 0.40.10 (serviço do systemd com `OLLAMA_ORIGINS=chrome-extension://*`, `OLLAMA_CONTEXT_LENGTH=4096`, `OLLAMA_KEEP_ALIVE=30m` em `/etc/systemd/system/ollama.service.d/override.conf`), `qwen3:8b` e `gemma3:4b` com os mesmos digests da tabela de Ambiente. Worktree `../accessify-v1` em `v1.0.0-semish`. Snapshots do estrato `smoke` capturados nesta máquina (linhas novas em `eval/snapshots/index.csv`; as pastas não estavam no disco).
+
+Problema: a máquina reiniciou três vezes durante o smoke, sempre na condição `v1.0.0`, sem nenhum registro no kernel, no driver (Xid), em memória (EDAC/MCE), térmico ou de OOM, e sem kdump (não houve panic). O journal perde os últimos ~25 s antes do corte, então as "últimas linhas" não localizam o instante da queda; o monitor `nvidia-smi` gravado em disco localiza.
+
+| Execução | Ollama | Chromium do harness | Resultado |
+|---|---|---|---|
+| 1 | CUDA, gerando (38 min) | GPU | reset |
+| 2 | CUDA, modelo carregando; limite 160 W | GPU | reset |
+| 3 | CPU (`CUDA_VISIBLE_DEVICES=-1`) | software | 9/9 em 1h30 (2 falhas da v1.0.0 por timeout de 290 s) |
+| 4 | CUDA, modelo carregando | software | reset (GPU a 24 W até a última amostra) |
+| 5 | CUDA, clock travado 300–1200 MHz, 140 W | software | 9/9 em 6 min; pico 111 W, 73 °C |
+
+Conclusão: o gatilho é a transição da GPU de ociosa para carga CUDA com clock livre (pico 215 W a 2145 MHz); limite de potência sozinho não contém o pico transitório. Sintoma de alimentação (cabos PCIe, fonte ou VRM da placa), não do harness nem das extensões. Contorno adotado (D10): serviço `nvidia-clock-lock.service` (`nvidia-smi -lgc 300,1200` e `-pl 140` no boot) e Chromium do harness em renderização por software (`eval/tools/run-chromium-software.sh`, que define `EVAL_CHROMIUM_ARGS=--disable-gpu` e as variáveis Mesa/lavapipe; `src/lib/browser.js` passou a aceitar `EVAL_CHROMIUM_ARGS`). O Chromium em modo software não muda o que axe-core e IBM medem (DOM e CSS computado). Sessões de diagnóstico apagadas de `eval/results`; o lote começa limpo.
+
+Pendente: conferir cabos PCIe e fonte para rodar com a placa em velocidade plena; medir se o clock travado altera a taxa de timeouts (D8) em páginas maiores.
+
 ## Decisões
 
 | Id | Decisão | Situação |
@@ -286,6 +304,7 @@ Revisão dos aceites: os dois verificadores da segunda rodada acharam verificaç
 | D7 | O estudo mede o "Aplicar" do painel: o harness opera o `popup.html` real (v1.0.0) e o gancho C11 da v1.1.0 aplica as mesmas correções do painel | tomada em 23/10/2026 |
 | D8 | `temperature: 0` em todas as chamadas das duas versões, `OLLAMA_CONTEXT_LENGTH=4096`, `max_tokens` originais; run lento demais vira falha por timeout | tomada em 23/10/2026 |
 | D9 | Modelo da condição `v1.1.0-vision` = `gemma3:4b` com `reasoning: 'none'`, em todas as chamadas do run (texto e visão): o `qwen3-vl:8b` raciocina mesmo com `reasoning_effort: 'none'` e grava o raciocínio como alt | provisória (24/10/2026); confirmar antes do lote |
+| D10 | Máquina do lote: GPU com clock travado (300–1200 MHz, 140 W) via `nvidia-clock-lock.service` e Chromium do harness em renderização por software (`eval/tools/run-chromium-software.sh`); contorno para resets sob carga CUDA | tomada em 24/10/2026 |
 
 ## Desvios em relação às instruções e à v1.1.0 (entram no artigo)
 
@@ -308,6 +327,7 @@ Revisão dos aceites: os dois verificadores da segunda rodada acharam verificaç
 | Item | Valor |
 |---|---|
 | Máquina | Windows 11, GeForce MX350 (2 GB) — só desenvolvimento; o lote roda na máquina de 8 GB |
+| Máquina do lote | Ubuntu (kernel 7.0), RTX 2070 SUPER 8 GB, driver 595.99.02, 60 GB RAM, Node 22.22.1, Ollama 0.40.10 como serviço (ver sessão de 24/10, resets sob carga CUDA) |
 | Driver NVIDIA | 560.76 (CUDA 12.6) — incompatível com o CUDA do Ollama 0.40.9; usar `CUDA_VISIBLE_DEVICES=-1` |
 | Node | 22.14.0 |
 | Ollama | 0.40.9 (winget, instalado em `D:\Ollama`) |
