@@ -79,10 +79,15 @@ export function serializeDocumentInPage() {
   }
 
   // Estado de formulário definido por script não vai para o HTML: vira atributo
+  // Só os tipos em que o valor digitado pode diferir do atributo. Em submit, reset,
+  // button, image e hidden o .value é o próprio atributo ('' quando não há): gravar
+  // value="" num <input type=submit> sem value apagaria o rótulo padrão do navegador
+  // ("Enviar") e criaria uma violação crítica (input-button-name) que a página não tem
+  const VALUE_FROM_ATTRIBUTE = ['submit', 'reset', 'button', 'image', 'hidden', 'password', 'file'];
   document.querySelectorAll('input').forEach((input) => {
     if (input.type === 'checkbox' || input.type === 'radio') {
       input.toggleAttribute('checked', input.checked);
-    } else if (input.type !== 'password' && input.type !== 'file') {
+    } else if (!VALUE_FROM_ATTRIBUTE.includes(input.type)) {
       input.setAttribute('value', input.value);
     }
   });
@@ -301,12 +306,42 @@ export function serializeDocumentInPage() {
  * Sem isso, uma entrada abortada fica pendurada no replay e a página nunca termina de
  * carregar, e uma sem corpo vira folha de estilo ou imagem vazia sem aviso.
  *
- * Numa página fora de UTF-8, um CSS sem charset declarado herda a codificação do
- * documento que o pediu; no replay o documento é UTF-8, então o CSS ganha o charset que
- * tinha de fato na captura (documentCharset).
+ * Numa página fora de UTF-8, um CSS sem charset declarado (nem no cabeçalho, nem com BOM
+ * ou @charset no arquivo) herda a codificação do documento que o pediu; no replay o
+ * documento é UTF-8, então o CSS ganha o charset que tinha de fato na captura
+ * (documentCharset). O HAR não diz qual documento pediu cada CSS: um CSS sem declaração
+ * pedido por um iframe em UTF-8 também ganha o charset da página.
  */
 export function cleanHar(harFile, { documentCharset = null } = {}) {
   const har = JSON.parse(fs.readFileSync(harFile, 'utf8'));
+  // Início do corpo de uma resposta do HAR (attach: arquivo ao lado do HAR; senão, texto)
+  const bodyStart = (content) => {
+    try {
+      if (content?._file) {
+        const fd = fs.openSync(path.join(path.dirname(harFile), content._file), 'r');
+        try {
+          const buffer = Buffer.alloc(64);
+          const read = fs.readSync(fd, buffer, 0, 64, 0);
+          return buffer.subarray(0, read);
+        } finally {
+          fs.closeSync(fd);
+        }
+      }
+      if (typeof content?.text === 'string') {
+        return Buffer.from(content.encoding === 'base64' ? Buffer.from(content.text, 'base64') : content.text).subarray(0, 64);
+      }
+    } catch (error) {
+      // corpo ilegível: trata como sem declaração
+    }
+    return Buffer.alloc(0);
+  };
+  // Um CSS com BOM ou @charset já declara a codificação; o charset no cabeçalho passaria
+  // por cima dela e decodificaria errado um CSS em UTF-8
+  const declaresEncoding = (content) => {
+    const start = bodyStart(content);
+    const bom = (start[0] === 0xef && start[1] === 0xbb && start[2] === 0xbf) || (start[0] === 0xfe && start[1] === 0xff) || (start[0] === 0xff && start[1] === 0xfe);
+    return bom || start.toString('latin1').startsWith('@charset "');
+  };
   const seen = new Set();
   const before = har.log.entries.length;
   let withoutBody = 0;
@@ -315,7 +350,7 @@ export function cleanHar(harFile, { documentCharset = null } = {}) {
   har.log.entries.forEach((entry) => {
     const response = entry.response;
     const header = response?.headers?.find((item) => item.name.toLowerCase() === 'content-type');
-    if (legacyCharset && header && /^text\/css\b/i.test(header.value) && !/charset=/i.test(header.value)) {
+    if (legacyCharset && header && /^text\/css\b/i.test(header.value) && !/charset=/i.test(header.value) && !declaresEncoding(response.content)) {
       header.value = `${header.value}; charset=${documentCharset}`;
       if (response.content?.mimeType) {
         response.content.mimeType = header.value;
@@ -475,7 +510,9 @@ export async function freezeAnimations(page) {
 /**
  * Aplica a rolagem gravada na captura (atributos data-accessify-scroll e, no <html>,
  * data-accessify-window-scroll) e remove os atributos, em todos os frames, antes de
- * qualquer medição ou driver.
+ * qualquer medição ou driver. As rolagens do harness são instantâneas: com
+ * scroll-behavior: smooth (Bootstrap 5 no :root, carrosséis com scroll-snap), a posição
+ * seria lida e medida no meio da animação, em momentos diferentes em cada condição.
  */
 async function restoreCapturedScroll(page) {
   const { results } = await inEachFrame(page, () => {
@@ -484,8 +521,7 @@ async function restoreCapturedScroll(page) {
       const value = element.getAttribute('data-accessify-scroll');
       if (value !== null) {
         const [top, left] = value.split(',').map(Number);
-        element.scrollTop = top;
-        element.scrollLeft = left;
+        element.scrollTo({ top, left, behavior: 'instant' });
         element.removeAttribute('data-accessify-scroll');
         restored++;
       }
@@ -498,7 +534,7 @@ async function restoreCapturedScroll(page) {
     if (windowScroll !== null) {
       const [y, x] = windowScroll.split(',').map(Number);
       document.documentElement.removeAttribute('data-accessify-window-scroll');
-      window.scrollTo(x, y);
+      window.scrollTo({ left: x, top: y, behavior: 'instant' });
     }
     return { restored };
   });
@@ -603,8 +639,8 @@ export async function openSnapshot(context, snapshot, config) {
     if (counters.mainServed !== 1) {
       throw new Error('O documento principal não veio do snapshot congelado.');
     }
-    const scrollRestored = await restoreCapturedScroll(page);
     const animations = await freezeAnimations(page);
+    const scrollRestored = await restoreCapturedScroll(page);
     await settle(page, config.timeouts.settleMs);
     const state = await page.evaluate(() => ({ compatMode: document.compatMode, bodyText: document.body?.innerText || '' }));
 
@@ -671,8 +707,7 @@ export async function resetScroll(page, timeoutMs) {
     const walk = (root) => root.querySelectorAll('*').forEach((element) => {
       const [top, left] = saved.get(element) || [0, 0];
       if (element.scrollTop !== top || element.scrollLeft !== left) {
-        element.scrollTop = top;
-        element.scrollLeft = left;
+        element.scrollTo({ top, left, behavior: 'instant' });
         elementsRestored++;
       }
       if (element.shadowRoot) {
@@ -681,7 +716,7 @@ export async function resetScroll(page, timeoutMs) {
     });
     const windowScroll = { x: window.scrollX, y: window.scrollY };
     walk(document);
-    window.scrollTo(0, 0);
+    window.scrollTo({ left: 0, top: 0, behavior: 'instant' });
     return { ...windowScroll, elementsRestored };
   }, SCROLL_KEY);
   const animations = await freezeAnimations(page);
