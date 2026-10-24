@@ -1,0 +1,179 @@
+{
+  "sessionId": "20261024-201444676-9c57",
+  "startedAt": "2026-10-24T20:14:44.676Z",
+  "study": "jis2026",
+  "args": {
+    "conditions": "baseline"
+  },
+  "conditions": [
+    "baseline"
+  ],
+  "urls": 100,
+  "executions": 1,
+  "versions": {
+    "node": "v22.22.1",
+    "playwright": "1.64.1",
+    "axeCore": "4.14.0",
+    "axeCorePlaywright": "4.14.0",
+    "ibmEngine": "4.0.34",
+    "harness": {
+      "commit": "f0eeef1d8470c99f790bde56dc5b325ac7bc3fba",
+      "describe": "v1.1.0-23-gf0eeef1",
+      "dirty": false,
+      "sha256": "bbe0c740b0ff8cc554bae827facedf32cdcfa1d8b1abc9f65730a136b1a96578"
+    }
+  },
+  "ollama": {
+    "version": "0.40.10",
+    "error": null,
+    "digests": {
+      "gemma3:4b": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+      "qwen3:8b": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41"
+    },
+    "models": [
+      {
+        "name": "gemma3:4b",
+        "model": "gemma3:4b",
+        "modified_at": "2026-10-24T12:50:48.25756733-03:00",
+        "size": 3350272403,
+        "digest": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+        "details": {
+          "parent_model": "dhiltgen/gemma3:4b-it-q4_K_M-llamacpp",
+          "format": "gguf",
+          "family": "gemma3",
+          "families": [
+            "gemma3",
+            "clip"
+          ],
+          "parameter_size": "3.9B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 131072,
+          "embedding_length": 2560,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "vision"
+        ]
+      },
+      {
+        "name": "qwen3:8b",
+        "model": "qwen3:8b",
+        "modified_at": "2026-10-24T12:45:52.14760461-03:00",
+        "size": 5225388164,
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 40960,
+          "embedding_length": 4096,
+          "runner": "ggml"
+        },
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ]
+      }
+    ],
+    "loaded": []
+  },
+  "expectedContextLength": 4096,
+  "extensions": {},
+  "contexts": {
+    "baseline": {
+      "extension": null,
+      "browser": {
+        "product": "Chrome/156.0.8078.4",
+        "revision": "@f842f52ef39fd97b449eb27cff414bf05a98ddce",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+      },
+      "launches": [
+        {
+          "at": "2026-10-24T20:14:44.945Z",
+          "browser": "Chrome/156.0.8078.4",
+          "copySha256": null
+        }
+      ],
+      "relaunches": 0,
+      "ollama": null,
+      "strayLlmCalls": []
+    }
+  },
+  "warnings": [
+    "URL em mais de uma linha de urls.csv (estrato smoke), mesclada numa entrada: https://www.gov.br/pt-br",
+    "URL em mais de uma linha de urls.csv (estrato smoke), mesclada numa entrada: https://www.utfpr.edu.br/",
+    "URL em mais de uma linha de urls.csv (estrato controle), mesclada numa entrada: https://www.w3.org/WAI/demos/bad/before/home.html",
+    "URL em mais de uma linha de urls.csv (estrato smoke), mesclada numa entrada: https://www.w3.org/WAI/demos/bad/before/home.html",
+    "URL em mais de uma linha de urls.csv (estrato controle), mesclada numa entrada: https://www.w3.org/WAI/demos/bad/after/home.html"
+  ],
+  "harnessErrors": [],
+  "finishedAt": "2026-10-24T20:23:52.391Z",
+  "ollamaAfter": {
+    "version": "0.40.10",
+    "error": null,
+    "digests": {
+      "gemma3:4b": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+      "qwen3:8b": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41"
+    },
+    "models": [
+      {
+        "name": "gemma3:4b",
+        "model": "gemma3:4b",
+        "modified_at": "2026-10-24T12:50:48.25756733-03:00",
+        "size": 3350272403,
+        "digest": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+        "details": {
+          "parent_model": "dhiltgen/gemma3:4b-it-q4_K_M-llamacpp",
+          "format": "gguf",
+          "family": "gemma3",
+          "families": [
+            "gemma3",
+            "clip"
+          ],
+          "parameter_size": "3.9B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 131072,
+          "embedding_length": 2560,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "vision"
+        ]
+      },
+      {
+        "name": "qwen3:8b",
+        "model": "qwen3:8b",
+        "modified_at": "2026-10-24T12:45:52.14760461-03:00",
+        "size": 5225388164,
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 40960,
+          "embedding_length": 4096,
+          "runner": "ggml"
+        },
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ]
+      }
+    ],
+    "loaded": []
+  }
+}
