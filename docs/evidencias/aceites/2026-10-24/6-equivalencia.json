@@ -1,8 +1,8 @@
 {
   "aceite": "6-equivalencia",
-  "iniciadoEm": "2026-10-24T07:53:07.641Z",
+  "iniciadoEm": "2026-10-24T18:38:55.765Z",
   "args": {
-    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+    "saida": "/home/marlon-marcon/workspace/Accessify/docs/evidencias/aceites/2026-10-24"
   },
   "checks": [
     {
@@ -72,9 +72,9 @@
     }
   ],
   "build": {
-    "gitDescribe": "v1.1.0-12-ga28ba68",
-    "gitCommit": "a28ba689316051b6d7239a30d6e947b50780bdf8",
-    "copySha256": "512fd4b842d003abae778685fa2ac69c399d8f2f4d6d9d30e27ee78c4e7abb9d"
+    "gitDescribe": "v1.1.0-21-g9e272f5",
+    "gitCommit": "9e272f52525dc1ca1a521b03248380b17c554fac",
+    "copySha256": "9c14122dc2669bac0458f868b23f7a318586644e11a88406da10270b28beba4d"
   },
   "tag": {
     "ref": "v1.1.0",
@@ -119,6 +119,6 @@
       "errors": []
     }
   },
-  "terminadoEm": "2026-10-24T07:53:34.607Z",
+  "terminadoEm": "2026-10-24T18:39:06.662Z",
   "ok": true
 }

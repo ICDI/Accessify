@@ -1,5 +1,5 @@
 {
-  "iniciadoEm": "2026-10-24T07:52:50.469Z",
+  "iniciadoEm": "2026-10-24T18:38:46.764Z",
   "rapido": false,
   "aceites": [
     {
@@ -12,33 +12,33 @@
       "script": "2-painel.js",
       "args": [],
       "status": "ok",
-      "duracaoS": 13
+      "duracaoS": 6
     },
     {
       "script": "6-equivalencia.js",
       "args": [],
       "status": "ok",
-      "duracaoS": 28
+      "duracaoS": 11
     },
     {
       "script": "5-falha-injetada.js",
       "args": [],
       "status": "ok",
-      "duracaoS": 21
+      "duracaoS": 12
     },
     {
       "script": "4-determinismo.js",
       "args": [],
       "status": "ok",
-      "duracaoS": 42
+      "duracaoS": 13
     },
     {
       "script": "3-smoke-harness.js",
       "args": [],
       "status": "ok",
-      "duracaoS": 1982
+      "duracaoS": 364
     }
   ],
-  "terminadoEm": "2026-10-24T08:27:39.440Z",
+  "terminadoEm": "2026-10-24T18:45:35.942Z",
   "ok": true
 }

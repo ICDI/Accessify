@@ -1,8 +1,8 @@
 {
   "aceite": "5-falha-injetada",
-  "iniciadoEm": "2026-10-24T07:53:36.556Z",
+  "iniciadoEm": "2026-10-24T18:39:07.116Z",
   "args": {
-    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+    "saida": "/home/marlon-marcon/workspace/Accessify/docs/evidencias/aceites/2026-10-24"
   },
   "checks": [
     {
@@ -61,7 +61,7 @@
       "detail": "snapshot no disco diferente do índice (sha256)"
     }
   ],
-  "work": "C:\\Users\\marlo\\AppData\\Local\\Temp\\accessify-aceite-falha-7ZQXDo",
+  "work": "/tmp/accessify-aceite-falha-NT4Bg7",
   "capture": {
     "exit": 0,
     "index": [
@@ -122,6 +122,6 @@
       }
     ]
   },
-  "terminadoEm": "2026-10-24T07:53:55.943Z",
+  "terminadoEm": "2026-10-24T18:39:18.771Z",
   "ok": true
 }

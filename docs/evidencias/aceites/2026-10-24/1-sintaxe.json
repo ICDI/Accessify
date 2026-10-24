@@ -1,8 +1,8 @@
 {
   "aceite": "1-sintaxe",
-  "iniciadoEm": "2026-10-24T07:52:51.045Z",
+  "iniciadoEm": "2026-10-24T18:38:47.184Z",
   "args": {
-    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+    "saida": "/home/marlon-marcon/workspace/Accessify/docs/evidencias/aceites/2026-10-24"
   },
   "checks": [
     {
@@ -41,6 +41,6 @@
       "detail": ""
     }
   ],
-  "terminadoEm": "2026-10-24T07:52:53.771Z",
+  "terminadoEm": "2026-10-24T18:38:49.554Z",
   "ok": true
 }

@@ -1,0 +1,133 @@
+estrato,sigla,papel,url,status_http,url_final,texto_sem_scripts_chars,html_bytes,decisao
+A,CSBC 2026,inicial,https://csbc.sbc.org.br/2026/,200,https://csbc.sbc.org.br/2026/,6334,204039,incluída
+A,CSBC 2026,tarefa,https://csbc.sbc.org.br/2026/inscricoes/,200,https://csbc.sbc.org.br/2026/inscricoes/,9287,191074,incluída
+A,CAPES,inicial,https://www.gov.br/capes/pt-br,200,https://www.gov.br/capes/pt-br,4742,552290,incluída
+A,CAPES,tarefa,https://www.gov.br/capes/pt-br/acesso-a-informacao/acoes-e-programas/bolsas,200,https://www.gov.br/capes/pt-br/acesso-a-informacao/acoes-e-programas/bolsas,1768,340971,incluída
+A,IHC 2025,inicial,https://ihc.sbc.org.br/2025/,200,https://ihc.sbc.org.br/2025/,6024,152067,incluída
+A,IHC 2025,tarefa,https://ihc.sbc.org.br/2025/index.php/inscricoes/,200,https://ihc.sbc.org.br/2025/index.php/inscricoes/,16985,262168,incluída
+A,CBIE 2025,inicial,https://cbie.sbc.org.br/2025/,200,https://cbie.sbc.org.br/2025/,5134,273495,incluída
+A,CBIE 2025,tarefa,https://cbie.sbc.org.br/2025/inscricoes/,200,https://cbie.sbc.org.br/2025/inscricoes/,8763,279271,incluída
+A,BRACIS 2026,inicial,https://bracis.sbc.org.br/2026/,200,https://bracis.sbc.org.br/2026/,1811,103749,incluída
+A,BRACIS 2026,tarefa,https://bracis.sbc.org.br/2026/bracis/,200,https://bracis.sbc.org.br/2026/bracis/,11330,104120,incluída
+A,SOL,inicial,https://sol.sbc.org.br/,200,https://sol.sbc.org.br/index.php/indice,1678,9994,incluída
+A,SOL,tarefa,https://sol.sbc.org.br/index.php/semish,200,https://sol.sbc.org.br/index.php/semish,24755,86586,incluída
+A,IBC,inicial,https://www.gov.br/ibc/pt-br,200,https://www.gov.br/ibc/pt-br,4219,480909,incluída
+A,IBC,tarefa,https://www.gov.br/ibc/pt-br/acesso-a-informacao/institucional,200,https://www.gov.br/ibc/pt-br/acesso-a-informacao/institucional,2917,337711,incluída
+A,CBSoft 2026,inicial,https://cbsoft.sbc.org.br/2026/,200,https://cbsoft.sbc.org.br/2026/,5636,215526,incluída
+A,CBSoft 2026,tarefa,https://cbsoft.sbc.org.br/2026/pt/registration,200,https://cbsoft.sbc.org.br/2026/pt/registration/,9799,180968,incluída
+A,EduComp 2026,inicial,https://educomp.sbc.org.br/2026/,200,https://educomp.sbc.org.br/2026/,5661,32858,incluída
+A,EduComp 2026,tarefa,https://educomp.sbc.org.br/2026/educomp/inscricoes/index.html,200,https://educomp.sbc.org.br/2026/educomp/inscricoes/index.html,15342,58074,incluída
+B,gov.br,inicial,https://www.gov.br/pt-br,200,https://www.gov.br/pt-br,8442,132225,incluída
+B,gov.br,tarefa,https://www.gov.br/pt-br/servicos,200,https://www.gov.br/pt-br/servicos,5342,85208,incluída
+B,MEC,inicial,https://www.gov.br/mec/pt-br/,200,https://www.gov.br/mec/pt-br/,0,7440,incluída
+B,MEC,tarefa,https://www.gov.br/mec/pt-br/assuntos,200,https://www.gov.br/mec/pt-br/assuntos,17746,184500,incluída
+B,INEP,inicial,https://www.gov.br/inep/pt-br,200,https://www.gov.br/inep/pt-br,23095,434961,incluída
+B,INEP,tarefa,https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem,200,https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem,22147,252878,incluída
+B,CNPq,inicial,https://www.gov.br/cnpq/pt-br,200,https://www.gov.br/cnpq/pt-br,17865,257297,incluída
+B,CNPq,tarefa,https://www.gov.br/cnpq/pt-br/chamadas/abertas-para-submissao,200,https://www.gov.br/cnpq/pt-br/chamadas/abertas-para-submissao,13412,146319,incluída
+B,FNDE,inicial,https://www.gov.br/fnde/pt-br,200,https://www.gov.br/fnde/pt-br,4394,753450,incluída
+B,FNDE,tarefa,https://www.gov.br/fnde/pt-br/acesso-a-informacao/acoes-e-programas/programas,200,https://www.gov.br/fnde/pt-br/acesso-a-informacao/acoes-e-programas/programas,1726,368275,incluída
+B,INSS,inicial,https://www.gov.br/inss/pt-br,200,https://www.gov.br/inss/pt-br,38014,379224,incluída
+B,INSS,tarefa,https://www.gov.br/inss/pt-br/direitos-e-deveres/beneficios-assistenciais,200,https://www.gov.br/inss/pt-br/direitos-e-deveres/beneficios-assistenciais,34542,279633,incluída
+B,MDHC,inicial,https://www.gov.br/mdh/pt-br,200,https://www.gov.br/mdh/pt-br,27972,272833,incluída
+B,MDHC,tarefa,https://www.gov.br/mdh/pt-br/navegue-por-temas/pessoa-com-deficiencia,200,https://www.gov.br/mdh/pt-br/navegue-por-temas/pessoa-com-deficiencia,25074,225703,incluída
+B,Planalto,inicial,https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13146.htm,200,https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13146.htm,113638,252618,incluída
+B,Planalto,tarefa,https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm,200,https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm,884861,1882711,incluída
+B,Câmara,inicial,https://www.camara.leg.br/,200,https://www.camara.leg.br/,4513,88553,incluída
+B,Câmara,tarefa,https://www.camara.leg.br/busca-portal/proposicoes/pesquisa-simplificada,200,https://www.camara.leg.br/busca-portal/proposicoes/pesquisa-simplificada,1977,35120,incluída
+B,ProUni,inicial,https://prouniportal.mec.gov.br/,200,https://prouniportal.mec.gov.br/,2525,45528,incluída
+B,ProUni,tarefa,https://prouniportal.mec.gov.br/tire-suas-duvidas-pesquisa/processo-seletivo,200,https://prouniportal.mec.gov.br/tire-suas-duvidas-pesquisa/processo-seletivo,20126,80402,incluída
+B,Transparência,inicial,https://portaldatransparencia.gov.br/,200,https://portaldatransparencia.gov.br/,10128,746532,incluída
+B,Transparência,tarefa,https://portaldatransparencia.gov.br/transferencias,200,https://portaldatransparencia.gov.br/transferencias,10002,153864,incluída
+B,Senado,inicial,https://www12.senado.leg.br/hpsenado,200,https://www12.senado.leg.br/hpsenado,6972,113916,incluída
+B,Senado,tarefa,https://www12.senado.leg.br/institucional/biblioteca,200,https://www12.senado.leg.br/institucional/biblioteca,6304,95099,incluída
+B,BN,inicial,https://www.gov.br/bn/pt-br,200,https://www.gov.br/bn/pt-br,14222,217111,incluída
+B,BN,tarefa,https://www.gov.br/bn/pt-br/servicos,200,https://www.gov.br/bn/pt-br/servicos,9716,120115,incluída
+C,UNIFAP,inicial,https://www.unifap.br/,200,https://www.unifap.br/,5090,279358,incluída
+C,UNIFAP,tarefa,https://www.unifap.br/graduacao/,200,https://www.unifap.br/graduacao/,1861,70231,incluída
+C,UFOPA,inicial,https://www.ufopa.edu.br/,200,https://www.ufopa.edu.br/,15079,124286,incluída
+C,UFOPA,tarefa,https://www.ufopa.edu.br/ufopa/institucional/pro-reitorias/proen/,200,https://proen.ufopa.edu.br/proen/,3952,45841,incluída
+C,UFSB,inicial,https://www.ufsb.edu.br/,200,https://www.ufsb.edu.br/,9641,75779,incluída
+C,UFSB,tarefa,https://www.ufsb.edu.br/ensino/graduacao,200,https://www.ufsb.edu.br/ensino/graduacao,8543,53277,incluída
+C,UFRB,inicial,https://ufrb.edu.br/portal/,200,https://ufrb.edu.br/portal/,5372,165624,incluída
+C,UFRB,tarefa,https://ufrb.edu.br/portal/curso-de-graduacao,200,https://ufrb.edu.br/portal/curso-de-graduacao/,10377,256585,incluída
+C,UnB,inicial,https://unb.br/,200,https://unb.br/,6561,106299,incluída
+C,UnB,tarefa,https://unb.br/vida-academica/graduacao,200,https://unb.br/vida-academica/graduacao,4801,68222,incluída
+C,UFG,inicial,https://www.ufg.br/,200,https://ufg.br/,20330,130112,incluída
+C,UFG,tarefa,https://sistemas.institutoverbena.ufg.br/2026/vestibular-ufg/,200,https://sistemas.institutoverbena.ufg.br/2026/vestibular-ufg/,5896,36221,incluída
+C,UFES,inicial,https://www.ufes.br/,200,https://www.ufes.br/,5088,163451,incluída
+C,UFES,tarefa,https://www.ufes.br/cursos-de-graduacao,200,https://www.ufes.br/cursos-de-graduacao,4613,89236,incluída
+C,UFJF,inicial,https://www2.ufjf.br/,200,https://www2.ufjf.br/ufjf/,8411,153608,incluída
+C,UFJF,tarefa,https://www2.ufjf.br/ufjf/ensino/graduacao/,200,https://www2.ufjf.br/ufjf/ensino/graduacao/,8106,128369,incluída
+C,UFSM,inicial,https://www.ufsm.br/,200,https://www.ufsm.br/,10702,181061,incluída
+C,UFSM,tarefa,https://www.ufsm.br/graduacao,200,https://www.ufsm.br/graduacao,7891,116865,incluída
+C,UNILA,inicial,https://portal.unila.edu.br/,200,https://portal.unila.edu.br/,5581,118472,incluída
+C,UNILA,tarefa,https://portal.unila.edu.br/graduacao,200,https://portal.unila.edu.br/graduacao,5576,98084,incluída
+C,UTFPR,inicial,https://www.utfpr.edu.br/,200,https://www.utfpr.edu.br/,3866,463644,incluída
+C,UTFPR,tarefa,https://www.utfpr.edu.br/cursos/graduacao,200,https://www.utfpr.edu.br/cursos/graduacao,3406,370163,incluída
+D,SBC,inicial,https://www.sbc.org.br/,200,https://www.sbc.org.br/,11912,494758,incluída
+D,SBC,tarefa,https://www.sbc.org.br/eventos/,200,https://www.sbc.org.br/eventos/,11577,341810,incluída
+D,JIS,inicial,https://journals-sol.sbc.org.br/index.php/jis,200,https://journals-sol.sbc.org.br/index.php/jis,16762,72459,incluída
+D,JIS,tarefa,https://journals-sol.sbc.org.br/index.php/jis/about/submissions,200,https://journals-sol.sbc.org.br/index.php/jis/about/submissions,4511,19098,incluída
+D,SciELO,inicial,https://www.scielo.br/,200,https://www.scielo.br/,4930,65983,incluída
+D,SciELO,tarefa,https://www.scielo.br/journals/alpha,200,https://www.scielo.br/journals/alpha,69076,1023746,incluída
+D,Periódicos CAPES,inicial,https://www.periodicos.capes.gov.br/,200,https://www.periodicos.capes.gov.br/,2670,41319,incluída
+D,Periódicos CAPES,tarefa,https://www.periodicos.capes.gov.br/index.php/acervo/lista-a-z-periodicos.html,200,https://www.periodicos.capes.gov.br/index.php/acervo/lista-a-z-periodicos.html,13245,602951,incluída
+D,BDTD,inicial,https://bdtd.ibict.br/vufind/,200,https://bdtd.ibict.br/vufind/,1845,24600,incluída
+D,BDTD,tarefa,https://bdtd.ibict.br/vufind/about/home,200,https://bdtd.ibict.br/vufind/about/home,3717,21354,incluída
+D,SBRC 2026,inicial,https://sbrc.sbc.org.br/2026/,200,https://sbrc.sbc.org.br/2026/,8465,394874,incluída
+D,SBRC 2026,tarefa,https://sbrc.sbc.org.br/2026/inscricoes/,200,https://sbrc.sbc.org.br/2026/inscricoes/,10767,414489,incluída
+D,SBPO,inicial,https://www.sobrapo.org.br/,200,https://www.sobrapo.org.br/,9358,47362,incluída
+D,SBPO,tarefa,https://www.sobrapo.org.br/modalidades-e-beneficios,200,https://www.sobrapo.org.br/modalidades-e-beneficios,6470,39474,incluída
+D,SBSI 2026,inicial,https://sbsi.sbc.org.br/2026/,200,https://sbsi.sbc.org.br/2026/,80525,249327,incluída
+D,SBSI 2026,tarefa,https://sbsi.sbc.org.br/2026/chamada-pesquisa.php,200,https://sbsi.sbc.org.br/2026/chamada-pesquisa.php,47121,99869,incluída
+E,Toda Matéria,inicial,https://www.todamateria.com.br/,200,https://www.todamateria.com.br/,9539,669780,incluída
+E,Toda Matéria,tarefa,https://www.todamateria.com.br/matematica/,200,https://www.todamateria.com.br/matematica/,15826,481995,incluída
+E,Nova Escola,inicial,https://novaescola.org.br/,200,https://novaescola.org.br/,5498,76702,incluída
+E,Nova Escola,tarefa,https://novaescola.org.br/planos-de-aula/recursoseducacionaisdigitais,200,https://novaescola.org.br/planos-de-aula/recursoseducacionaisdigitais,2325,49413,incluída
+E,Mundo Educação,inicial,https://mundoeducacao.uol.com.br/,200,https://mundoeducacao.uol.com.br/,4962,340530,incluída
+E,Mundo Educação,tarefa,https://vestibular.mundoeducacao.uol.com.br,200,https://vestibular.mundoeducacao.uol.com.br/,5810,153548,incluída
+E,Brasil Escola,inicial,https://brasilescola.uol.com.br/,200,https://brasilescola.uol.com.br/,10829,159609,incluída
+E,Brasil Escola,tarefa,https://vestibular.brasilescola.uol.com.br,200,https://vestibular.brasilescola.uol.com.br/,6444,115484,incluída
+F,Dorina,inicial,https://fundacaodorina.org.br/,200,https://fundacaodorina.org.br/,15148,529564,incluída
+F,Dorina,tarefa,https://fundacaodorina.org.br/servicos-de-apoio-a-inclusao/,200,https://fundacaodorina.org.br/servicos-de-apoio-a-inclusao/,15100,461073,incluída
+F,Laramara,inicial,https://laramara.org.br/,200,https://laramara.org.br/,6182,144879,incluída
+F,Laramara,tarefa,https://laramara.org.br/e-books/,200,https://laramara.org.br/e-books/,4749,95166,incluída
+F,Web para Todos,inicial,https://mwpt.com.br/,200,https://mwpt.com.br/,3679,109532,incluída
+F,Web para Todos,tarefa,https://mwpt.com.br/biblioteca/,200,https://mwpt.com.br/biblioteca/,8500,77810,incluída
+F,eMAG,inicial,https://emag.governoeletronico.gov.br/,200,https://emag.governoeletronico.gov.br/,131169,245459,incluída
+F,eMAG,tarefa,https://emag.governoeletronico.gov.br/recomendacao-002.php,200,https://emag.governoeletronico.gov.br/recomendacao-002.php,784,5546,incluída
+controle,W3C BAD before,controle,https://www.w3.org/WAI/demos/bad/before/home.html,200,https://www.w3.org/WAI/demos/bad/before/home.html,2577,24068,incluída
+controle,W3C BAD after,controle,https://www.w3.org/WAI/demos/bad/after/home.html,200,https://www.w3.org/WAI/demos/bad/after/home.html,2809,11613,incluída
+A,Escola Virtual Gov,candidata,https://www.escolavirtual.gov.br/,,,,,excluída: conteúdo só por JavaScript (20 caracteres de texto sem scripts); o replay roda sem scripts
+B,Acesso Único MEC (Sisu/ProUni/Fies),candidata,https://acessounico.mec.gov.br/,,,,,excluída: aplicação de página única (41 caracteres sem scripts)
+B,Sisu,candidata,https://sisu.mec.gov.br/,,,,,excluída: aplicação de página única (96 caracteres)
+B,FIES,candidata,https://fies.mec.gov.br/,,,,,excluída: sem resposta (DNS/TLS)
+B,Lattes,candidata,https://lattes.cnpq.br/,,,,,excluída: conteúdo só por JavaScript (97 caracteres)
+B,Sucupira,candidata,https://sucupira.capes.gov.br/,,,,,excluída: aplicação de página única (19 caracteres)
+B,ENEM (enem.inep.gov.br),candidata,https://enem.inep.gov.br/,,,,,"excluída: redireciona para a página do ENEM no INEP, já na amostra"
+B,IBGE,candidata,https://www.ibge.gov.br/,,,,,excluída: 403 (bloqueio anti-bot)
+C,"UFRA (N, 1º)",candidata,https://www.ufra.edu.br/,,,,,excluída: página inicial sem texto fora de scripts
+C,"UFPA (N, 4º, reserva)",candidata,https://www.ufpa.br/,,,,,excluída: sem resposta no domínio principal; portal.ufpa.br responde (reserva)
+C,"UFCAT (CO, 1º)",candidata,https://www.ufcat.edu.br/,,,,,excluída: conteúdo só por JavaScript (472 caracteres)
+C,"UFJ (CO, 4º)",candidata,https://www.ufj.edu.br/,,,,,excluída: conteúdo só por JavaScript (118 caracteres)
+D,SBSeg 2026 (1º),candidata,https://sbseg.sbc.org.br/2026/,,,,,excluída: 404
+D,SIBGRAPI 2026 (2º),candidata,https://sibgrapi.sbc.org.br/2026/,,,,,excluída: página inicial sem conteúdo (13 caracteres)
+D,ERAD 2026 (4º),candidata,https://erad.sbc.org.br/2026/,,,,,excluída: sem resposta
+D,WebMedia 2026 (5º),candidata,https://webmedia.sbc.org.br/2026/,,,,,excluída: 403
+D,SBGames (6º),candidata,https://www.sbgames.org/,,,,,excluída: sem página de tarefa identificável pela regra (único link interno candidato devolve 404)
+E,Educa Mais Brasil (3º),candidata,https://www.educamaisbrasil.com.br/,,,,,excluída: conteúdo só por JavaScript (60 caracteres)
+E,Domínio Público (4º),candidata,http://www.dominiopublico.gov.br/,,,,,excluída: 403 (bloqueio anti-bot)
+E,AVAMEC (5º),candidata,https://avamec.mec.gov.br/,,,,,excluída: aplicação de página única (40 caracteres)
+E,BN Digital (7º),candidata,https://bndigital.bn.gov.br/,,,,,excluída: 403 (bloqueio anti-bot)
+B,Receita Federal,reserva,https://www.gov.br/receitafederal/pt-br,,,,,reserva
+C,UFPA (N) portal,reserva,https://portal.ufpa.br/,,,,,reserva
+C,"UFOB (NE, 3º)",reserva,https://ufob.edu.br/,,,,,reserva
+C,"UFMS (CO, 5º)",reserva,https://www.ufms.br/,,,,,reserva
+C,"UNIFEI (SE, 3º)",reserva,https://unifei.edu.br/,,,,,reserva
+C,"UFPel (S, 3º)",reserva,https://portal.ufpel.edu.br/,,,,,reserva
+D,SBBD 2026 (9º),reserva,https://sbbd.org.br/2026/,,,,,reserva
+E,InfoEscola (11º),reserva,https://www.infoescola.com/,,,,,reserva
+E,Wikipédia pt (10º),reserva,https://pt.wikipedia.org/,,,,,reserva
+F,Acessibilidade Brasil (5º),reserva,http://www.acessibilidadebrasil.org.br/,,,,,reserva
+F,W3C Brasil / Ceweb (6º),reserva,https://www.w3c.br/,,,,,reserva

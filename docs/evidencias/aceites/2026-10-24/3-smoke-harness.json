@@ -1,8 +1,8 @@
 {
   "aceite": "3-smoke-harness",
-  "iniciadoEm": "2026-10-24T07:54:38.751Z",
+  "iniciadoEm": "2026-10-24T18:39:32.072Z",
   "args": {
-    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+    "saida": "/home/marlon-marcon/workspace/Accessify/docs/evidencias/aceites/2026-10-24"
   },
   "checks": [
     {
@@ -81,8 +81,8 @@
       "detail": ""
     }
   ],
-  "results": "C:\\Users\\marlo\\AppData\\Local\\Temp\\accessify-aceite-smoke-C9eyUV",
-  "sessao": "20261024-075439422-0ac5",
+  "results": "/tmp/accessify-aceite-smoke-phfFqL",
+  "sessao": "20261024-183932574-afad",
   "rows": [
     {
       "condicao": "baseline",
@@ -108,23 +108,23 @@
     {
       "condicao": "v1.0.0",
       "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
-      "status": "falha",
-      "tentativas": "2",
-      "observacoes": "tempo: A análise não terminou em 290000 ms. | tentativa 1: tempo: A análise não terminou em 290000 ms."
+      "status": "ok",
+      "tentativas": "1",
+      "observacoes": ""
     },
     {
       "condicao": "v1.0.0",
       "url": "https://www.utfpr.edu.br/",
-      "status": "falha",
-      "tentativas": "2",
-      "observacoes": "tempo: A análise não terminou em 290000 ms. | tentativa 1: tempo: A análise não terminou em 290000 ms."
+      "status": "ok",
+      "tentativas": "1",
+      "observacoes": ""
     },
     {
       "condicao": "v1.0.0",
       "url": "https://www.gov.br/pt-br",
-      "status": "falha",
-      "tentativas": "2",
-      "observacoes": "analise: Erro da API (502): {\"error\":{\"message\":\"Adaptador: sem resposta em 280000 ms\"}} | tentativa 1: analise: Erro da API (502): {\"error\":{\"message\":\"Adaptador: sem resposta em 280000 ms\"}}"
+      "status": "ok",
+      "tentativas": "1",
+      "observacoes": ""
     },
     {
       "condicao": "v1.1.0",
@@ -155,9 +155,9 @@
       "ok"
     ],
     "v1.0.0": [
-      "falha",
-      "falha",
-      "falha"
+      "ok",
+      "ok",
+      "ok"
     ],
     "v1.1.0": [
       "ok",
@@ -166,21 +166,21 @@
     ]
   },
   "session": {
-    "sessionId": "20261024-075439422-0ac5",
+    "sessionId": "20261024-183932574-afad",
     "versions": {
-      "node": "v22.14.0",
+      "node": "v22.22.1",
       "playwright": "1.64.1",
       "axeCore": "4.14.0",
       "axeCorePlaywright": "4.14.0",
       "ibmEngine": "4.0.34",
       "harness": {
-        "commit": "a28ba689316051b6d7239a30d6e947b50780bdf8",
-        "describe": "v1.1.0-12-ga28ba68",
+        "commit": "9e272f52525dc1ca1a521b03248380b17c554fac",
+        "describe": "v1.1.0-21-g9e272f5",
         "dirty": false,
-        "sha256": "6ff6e79582ed05ee4b1f5581f6db30ee96cebe10ebb0515fb4ba147234365fb8"
+        "sha256": "5b7067a9ed113e68f18f8639d35a00c422242fb974607a3ae0497f6951a63a10"
       }
     },
-    "ollama": "0.40.9",
+    "ollama": "0.40.10",
     "contexts": {
       "baseline": {
         "browser": "Chrome/156.0.8078.4",
@@ -193,22 +193,22 @@
         "extension": "v1.0.0-semish",
         "ollama": {
           "ok": true,
-          "version": "0.40.9",
+          "version": "0.40.10",
           "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
-          "warmupMs": 34,
+          "warmupMs": 6,
           "contextLength": 4096
         },
         "relaunches": 0,
-        "strayLlmCalls": 40
+        "strayLlmCalls": 0
       },
       "v1.1.0": {
         "browser": "Chrome/156.0.8078.4",
-        "extension": "v1.1.0-12-ga28ba68",
+        "extension": "v1.1.0-21-g9e272f5",
         "ollama": {
           "ok": true,
-          "version": "0.40.9",
+          "version": "0.40.10",
           "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
-          "warmupMs": 13,
+          "warmupMs": 2,
           "contextLength": 4096
         },
         "relaunches": 0,
@@ -219,6 +219,6 @@
     "harnessErrors": [],
     "aborted": null
   },
-  "terminadoEm": "2026-10-24T08:27:39.411Z",
+  "terminadoEm": "2026-10-24T18:45:35.930Z",
   "ok": true
 }

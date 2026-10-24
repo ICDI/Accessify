@@ -305,6 +305,7 @@ Pendente: conferir cabos PCIe e fonte para rodar com a placa em velocidade plena
 | D8 | `temperature: 0` em todas as chamadas das duas versões, `OLLAMA_CONTEXT_LENGTH=4096`, `max_tokens` originais; run lento demais vira falha por timeout | tomada em 23/10/2026 |
 | D9 | Modelo da condição `v1.1.0-vision` = `gemma3:4b` com `reasoning: 'none'`, em todas as chamadas do run (texto e visão): o `qwen3-vl:8b` raciocina mesmo com `reasoning_effort: 'none'` e grava o raciocínio como alt | provisória (24/10/2026); confirmar antes do lote |
 | D10 | Máquina do lote: GPU com clock travado (300–1200 MHz, 140 W) via `nvidia-clock-lock.service` e Chromium do harness em renderização por software (`eval/tools/run-chromium-software.sh`); contorno para resets sob carga CUDA | tomada em 24/10/2026 |
+| D11 | Amostra do Estudo 1: 100 páginas (49 sites × inicial + tarefa, + 2 controles W3C) por amostragem estratificada com semente `accessify-jis-2026`; critério, exclusões e reservas em `docs/pesquisa/criterio_amostragem.md`; `visao` e `variancia` definidos após a baseline e a captura | tomada em 24/10/2026 |
 
 ## Desvios em relação às instruções e à v1.1.0 (entram no artigo)
 
@@ -425,5 +426,5 @@ Resultado de uma verificação adversarial: um pesquisador por grupo de premissa
 
 1. Revisar e mergear na `main`, nesta ordem e com merge commit: a #7 (`semish2026` → `main`) e depois as PRs das Fases 1 a 5 (#2 a #6, cada uma encadeada na anterior).
 2. Na máquina do lote: medir o tempo da v1.0.0 com GPU contra os prazos do D8, confirmar a D9 e recapturar os snapshots (a captura e o lote rodam na mesma máquina).
-3. Montar a lista de URLs do estudo em `eval/urls.csv`, com os estratos (`visao`, `variancia`), e rodar `npm run aceites` na máquina do lote antes do lote.
+3. ~~Montar a lista de URLs~~ feito em 24/10 (D11, 100 páginas em `eval/urls.csv`); ~~`npm run aceites` na máquina do lote~~ feito em 24/10 (6/6, 61 verificações OK). Falta: capturar os 100 snapshots, rodar a baseline, definir `visao` (≥ 5 `image-alt` na baseline) e `variancia` (10 páginas por terços de `html_bytes`) e acrescentar as linhas ao `urls.csv`.
 4. Criar a tag do build usado no lote.

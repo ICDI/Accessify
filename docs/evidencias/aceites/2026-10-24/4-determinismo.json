@@ -1,8 +1,8 @@
 {
   "aceite": "4-determinismo",
-  "iniciadoEm": "2026-10-24T07:53:56.551Z",
+  "iniciadoEm": "2026-10-24T18:39:19.210Z",
   "args": {
-    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+    "saida": "/home/marlon-marcon/workspace/Accessify/docs/evidencias/aceites/2026-10-24"
   },
   "checks": [
     {
@@ -295,7 +295,7 @@
   "comLlm": {
     "condition": "v1.1.0-fix",
     "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
-    "results": "C:\\Users\\marlo\\AppData\\Local\\Temp\\accessify-aceite-determinismo-QLcLBw",
+    "results": "/tmp/accessify-aceite-determinismo-AQtOKZ",
     "exit": 0,
     "rows": [
       {
@@ -446,6 +446,6 @@
       ]
     ]
   },
-  "terminadoEm": "2026-10-24T07:54:37.888Z",
+  "terminadoEm": "2026-10-24T18:39:31.643Z",
   "ok": true
 }

@@ -1,14 +1,14 @@
 {
   "aceite": "2-painel",
-  "iniciadoEm": "2026-10-24T07:52:54.478Z",
+  "iniciadoEm": "2026-10-24T18:38:49.982Z",
   "args": {
-    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+    "saida": "/home/marlon-marcon/workspace/Accessify/docs/evidencias/aceites/2026-10-24"
   },
   "checks": [
     {
       "label": "painel: Analisar → Aplicar com sucesso, sem LLM",
       "ok": true,
-      "detail": "52 alterações aplicadas em 3 rodada(s) automáticas | Problemas restantes: 21 | Tempo total do processo: 366 ms"
+      "detail": "52 alterações aplicadas em 3 rodada(s) automáticas | Problemas restantes: 21 | Tempo total do processo: 127 ms"
     },
     {
       "label": "painel: alterações aplicadas",
@@ -52,15 +52,15 @@
     }
   ],
   "extension": {
-    "gitDescribe": "v1.1.0-12-ga28ba68",
-    "copySha256": "512fd4b842d003abae778685fa2ac69c399d8f2f4d6d9d30e27ee78c4e7abb9d"
+    "gitDescribe": "v1.1.0-21-g9e272f5",
+    "copySha256": "9c14122dc2669bac0458f868b23f7a318586644e11a88406da10270b28beba4d"
   },
   "panel": {
     "status": "ok",
     "appliedChanges": 52,
     "report": {
       "status": "report-status success",
-      "summary": "52 alterações aplicadas em 3 rodada(s) automáticas\nProblemas restantes: 21\nTempo total do processo: 366 ms"
+      "summary": "52 alterações aplicadas em 3 rodada(s) automáticas\nProblemas restantes: 21\nTempo total do processo: 127 ms"
     },
     "errors": []
   },
@@ -119,7 +119,7 @@
         "appliedCount": 52,
         "error": null,
         "partial": false,
-        "recordedAt": "2026-10-24T07:53:02.889Z",
+        "recordedAt": "2026-10-24T18:38:52.316Z",
         "status": "aplicado"
       }
     ],
@@ -128,7 +128,7 @@
       "error": null,
       "overrodeDeterministicAlt": 1,
       "partial": false,
-      "recordedAt": "2026-10-24T07:53:02.889Z",
+      "recordedAt": "2026-10-24T18:38:52.316Z",
       "status": "aplicado"
     },
     "automation": null,
@@ -616,18 +616,18 @@
       }
     ],
     "roundsRun": 3,
-    "runId": "1792828381627-1paapyxq",
-    "tabId": 249796199,
+    "runId": "1792867131235-i5t11ews",
+    "tabId": 1068461549,
     "temperature": null,
-    "timestamp": "2026-10-24T07:53:01.627Z",
+    "timestamp": "2026-10-24T18:38:51.235Z",
     "totals": {
       "tokensIn": 0,
       "tokensOut": 0,
       "latencyMs": 0
     },
-    "url": "http://127.0.0.1:64431/test-page.html",
+    "url": "http://127.0.0.1:35977/test-page.html",
     "version": "1.1.0"
   },
-  "terminadoEm": "2026-10-24T07:53:06.831Z",
+  "terminadoEm": "2026-10-24T18:38:55.303Z",
   "ok": true
 }
