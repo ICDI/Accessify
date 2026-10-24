@@ -386,12 +386,39 @@ export function cleanHar(harFile, { documentCharset = null } = {}) {
  */
 export function latestSnapshots(snapshotsDir) {
   const latest = new Map();
+  const accepted = acceptedSnapshots(snapshotsDir);
   readCsv(path.join(snapshotsDir, 'index.csv')).forEach((row) => {
+    const acceptance = row.status === 'suspeito' ? accepted.get(`${row.url}|${row.pasta_sha256}`) : null;
+    if (acceptance) {
+      // Aceite manual (D12): a captura ficou 'suspeito' só por divergência visual, revisada e
+      // justificada em aceitos.csv; o motivo original fica junto para o registro do run
+      row.status = 'ok';
+      row.aceite_manual = acceptance.justificativa;
+      row.observacoes = `aceite manual (${acceptance.revisado_por}, ${acceptance.data}): ${acceptance.justificativa} | captura: ${row.observacoes}`;
+    }
     if (row.status === 'ok' || latest.get(row.url)?.status !== 'ok') {
       latest.set(row.url, row);
     }
   });
   return latest;
+}
+
+/**
+ * snapshots/aceitos.csv (versionado): capturas 'suspeito' aceitas após revisão manual, por
+ * URL e sha256 da pasta, com justificativa. Sem o arquivo, nenhum suspeito é usado.
+ */
+function acceptedSnapshots(snapshotsDir) {
+  const file = path.join(snapshotsDir, 'aceitos.csv');
+  const map = new Map();
+  if (!fs.existsSync(file)) {
+    return map;
+  }
+  readCsv(file).forEach((row) => {
+    if (row.url && row.pasta_sha256 && row.justificativa) {
+      map.set(`${row.url}|${row.pasta_sha256}`, row);
+    }
+  });
+  return map;
 }
 
 const verifiedSnapshots = new Map();

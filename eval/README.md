@@ -79,6 +79,7 @@ Prazos dos drivers: o gancho tem `hookMs`; o harness espera `hookMs + hookGraceM
 |---|---|---|
 | `urls.csv` | sim | `url,estrato` |
 | `snapshots/index.csv` | sim | uma linha por captura (append-only; vale a `ok` mais recente de cada URL): URL final, status HTTP, hashes, HAR, iframes, shadow roots, CSSOM, `<noscript>`, rolagem, codificação, compatMode, espera, verificação do replay, suspeita de desafio anti-bot |
+| `snapshots/aceitos.csv` | sim | capturas `suspeito` aceitas após revisão manual (URL, sha256 da pasta, justificativa, revisor, data); só essas entram no run, com o aceite em `observacoes` (D12) |
 | `snapshots/<slug>/<data>/` | não | `page.html`, `page.har` e os arquivos de recurso dele, `frames/` + `frames.json` (iframes congelados), `page.png` (captura) e `replay.png` (replay de verificação). Conteúdo de terceiros: arquivar à parte |
 | `results/runs.csv` | sim | uma linha por URL × condição × execução (append-only) |
 | `results/runs.pendentes.csv` | sim, se existir | linhas que não entraram no `runs.csv` depois das tentativas de escrita |

@@ -62,8 +62,9 @@ Uma candidata é excluída quando falha no filtro 3 (sem resposta, 403/404, cont
 | B | Portal do ProUni | https://prouniportal.mec.gov.br/ | https://prouniportal.mec.gov.br/tire-suas-duvidas-pesquisa/processo-seletivo |  |
 | B | Portal da Transparência | https://portaldatransparencia.gov.br/ | https://portaldatransparencia.gov.br/transferencias |  |
 | B | Senado Federal | https://www12.senado.leg.br/hpsenado | https://www12.senado.leg.br/institucional/biblioteca |  |
+| B | Receita Federal (2ª reserva de B) | https://www.gov.br/receitafederal/pt-br | https://www.gov.br/receitafederal/pt-br/assuntos/meu-cpf | entrou na reposição pós-captura (seção 11) |
 | B | Biblioteca Nacional | https://www.gov.br/bn/pt-br | https://www.gov.br/bn/pt-br/servicos | 1ª reserva do estrato B, incluída para fechar 100 páginas |
-| C | Universidade Federal do Amapá (N, 2º no sorteio) | https://www.unifap.br/ | https://www.unifap.br/graduacao/ |  |
+| C | Universidade Federal do Pará, portal (N, 4º; reserva) | https://portal.ufpa.br/ | https://portal.ufpa.br/index.php/editais-e-bolsas | entrou no lugar da UNIFAP (seção 11) |
 | C | Universidade Federal do Oeste do Pará (N, 3º) | https://www.ufopa.edu.br/ | https://www.ufopa.edu.br/ufopa/institucional/pro-reitorias/proen/ |  |
 | C | Universidade Federal do Sul da Bahia (NE, 1º) | https://www.ufsb.edu.br/ | https://www.ufsb.edu.br/ensino/graduacao |  |
 | C | Universidade Federal do Recôncavo da Bahia (NE, 2º) | https://ufrb.edu.br/portal/ | https://ufrb.edu.br/portal/curso-de-graduacao |  |
@@ -81,11 +82,10 @@ Uma candidata é excluída quando falha no filtro 3 (sem resposta, 403/404, cont
 | D | Biblioteca Digital Brasileira de Teses e Dissertações | https://bdtd.ibict.br/vufind/ | https://bdtd.ibict.br/vufind/about/home | bdtd.ibict.br redireciona por script; a inicial real é /vufind/ |
 | D | Simpósio Brasileiro de Redes de Computadores 2026 (evento, 3º no sorteio) | https://sbrc.sbc.org.br/2026/ | https://sbrc.sbc.org.br/2026/inscricoes/ |  |
 | D | Sociedade Brasileira de Pesquisa Operacional (evento, 7º) | https://www.sobrapo.org.br/ | https://www.sobrapo.org.br/modalidades-e-beneficios |  |
+| D | Simpósio Brasileiro de Banco de Dados 2026 (evento, 9º; reserva) | https://sbbd.org.br/2026/ | https://sbbd.org.br/2026/inscricoes/ | entrou na reposição pós-captura (seção 11) |
 | D | Simpósio Brasileiro de Sistemas de Informação 2026 (evento, 8º) | https://sbsi.sbc.org.br/2026/ | https://sbsi.sbc.org.br/2026/chamada-pesquisa.php |  |
+| E | Wikipédia em português (10º; reserva) | https://pt.wikipedia.org/ | https://pt.wikipedia.org/wiki/Acessibilidade | página de tarefa manual: a regra casou "Recursos livres" por "cursos" |
 | E | Toda Matéria (1º no sorteio) | https://www.todamateria.com.br/ | https://www.todamateria.com.br/matematica/ |  |
-| E | Nova Escola (2º) | https://novaescola.org.br/ | https://novaescola.org.br/planos-de-aula/recursoseducacionaisdigitais |  |
-| E | Mundo Educação (6º) | https://mundoeducacao.uol.com.br/ | https://vestibular.mundoeducacao.uol.com.br | página de tarefa em subdomínio do próprio site |
-| E | Brasil Escola (8º) | https://brasilescola.uol.com.br/ | https://vestibular.brasilescola.uol.com.br | página de tarefa em subdomínio do próprio site |
 | F | Fundação Dorina Nowill para Cegos | https://fundacaodorina.org.br/ | https://fundacaodorina.org.br/servicos-de-apoio-a-inclusao/ |  |
 | F | Laramara | https://laramara.org.br/ | https://laramara.org.br/e-books/ |  |
 | F | Movimento Web para Todos | https://mwpt.com.br/ | https://mwpt.com.br/biblioteca/ |  |
@@ -153,3 +153,17 @@ Uma candidata é excluída quando falha no filtro 3 (sem resposta, 403/404, cont
 python3 -I eval/tools/amostra/verificar_candidatas.py eval/tools/amostra /tmp/relatorio.json   # pré-filtro e sorteio
 python3 -I eval/tools/amostra/montar_amostra.py                                                # verificação final, urls.csv e CSV de evidência
 ```
+
+## 11. Resultado da captura (24/10/2026) e aceite manual
+
+Captura dos 100 snapshots na máquina do lote, com uma retentativa para cada página que falhou ou ficou `suspeito`. Evidência: `docs/evidencias/amostra/2026-10-24-captura.csv`.
+
+| Resultado | Páginas | Decisão |
+|---|---|---|
+| `ok` na 1ª ou 2ª tentativa | 93 | mantidas |
+| timeout de carregamento (45 s) nas duas tentativas: Nova Escola (2), Mundo Educação (2), Brasil Escola (inicial), InfoEscola (tarefa, 1ª reserva de E) | 5 sites | sites excluídos; o estrato E ficou só com a Wikipédia. Os portais comerciais de estudo, carregados de anúncios, não atingem o estado "carregado" no prazo do harness: limitação a declarar |
+| `suspeito` por divergência visual com texto idêntico: CSBC 2026 inicial (78% dos pixels: vídeo/imagem de fundo ausente no replay), UNIFAP graduação (28%: cabeçalho não encolhe sem o script), UFOB inicial (41%, reserva) | 3 | CSBC: **aceite manual** (abaixo). UNIFAP: site excluído, entra o portal da UFPA (4º do Norte). UFOB: não usada |
+
+Reposição aplicada, na ordem do protocolo: Wikipédia (E, 10º), Receita Federal (B, reserva), portal da UFPA (C, Norte), SBBD 2026 (D, 9º). Composição final: 49 sites × 2 + 2 controles = 100.
+
+**Aceite manual (decisão D12).** O harness só usa capturas `ok`. Para a página inicial do CSBC 2026, site original do SEMISH, a divergência de 78% dos pixels vem só do fundo do bloco inicial (vídeo ou imagem carregada por script), com 0% de diferença de texto e DOM idêntico. Como axe-core e IBM medem DOM e CSS computado, a captura foi aceita por revisão manual, registrada em `eval/snapshots/aceitos.csv` (URL, sha256 da pasta, justificativa, revisor, data); o run grava o aceite em `observacoes`. Limitação declarada: o contraste calculado pela v1.1.0 sobre imagem de fundo pode diferir nessa página. Nenhum outro suspeito foi aceito.

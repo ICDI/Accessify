@@ -1,0 +1,2 @@
+url,pasta_sha256,dir,justificativa,revisado_por,data
+https://csbc.sbc.org.br/2026/,7ddc67fc2f9db816168aa14307a5c471bcf97e029e67a712db9668fa6a54201c,csbc-sbc-org-br-2026-fcb6e41f/2026-10-24T19-57-57-809Z,"Divergência só visual: o vídeo/imagem de fundo do bloco inicial não aparece no replay (fundo preto); texto 0% diferente e DOM idêntico. Site original do SEMISH, mantido por comparabilidade. Limitação: o contraste calculado pela v1.1.0 sobre imagem de fundo pode diferir nessa página.",Marlon Marcon,2026-10-24

@@ -14,6 +14,7 @@ eval/.pw-profile*/
 # do git e são arquivados à parte. O índice com o sha256 de cada arquivo é versionado.
 eval/snapshots/*
 !eval/snapshots/index.csv
+!eval/snapshots/aceitos.csv
 
 # Extensão WAVE (só se a decisão D6 for permissão escrita da WebAIM): não redistribuir.
 # Versão e hash ficam registrados em docs/ESTADO_ATUAL.md.
