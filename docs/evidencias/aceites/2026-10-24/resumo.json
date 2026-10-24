@@ -1,0 +1,44 @@
+{
+  "iniciadoEm": "2026-10-24T07:52:50.469Z",
+  "rapido": false,
+  "aceites": [
+    {
+      "script": "1-sintaxe.js",
+      "args": [],
+      "status": "ok",
+      "duracaoS": 3
+    },
+    {
+      "script": "2-painel.js",
+      "args": [],
+      "status": "ok",
+      "duracaoS": 13
+    },
+    {
+      "script": "6-equivalencia.js",
+      "args": [],
+      "status": "ok",
+      "duracaoS": 28
+    },
+    {
+      "script": "5-falha-injetada.js",
+      "args": [],
+      "status": "ok",
+      "duracaoS": 21
+    },
+    {
+      "script": "4-determinismo.js",
+      "args": [],
+      "status": "ok",
+      "duracaoS": 42
+    },
+    {
+      "script": "3-smoke-harness.js",
+      "args": [],
+      "status": "ok",
+      "duracaoS": 1982
+    }
+  ],
+  "terminadoEm": "2026-10-24T08:27:39.440Z",
+  "ok": true
+}

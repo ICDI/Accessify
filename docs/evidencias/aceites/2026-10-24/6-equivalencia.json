@@ -1,0 +1,124 @@
+{
+  "aceite": "6-equivalencia",
+  "iniciadoEm": "2026-10-24T07:53:07.641Z",
+  "args": {
+    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+  },
+  "checks": [
+    {
+      "label": "a) runAutoOptimization concluiu e mudou o DOM nas duas versões",
+      "ok": true,
+      "detail": "completed / completed, DOM mudou: true / true"
+    },
+    {
+      "label": "a) DOM final da tag v1.1.0 = DOM do build (SW)",
+      "ok": true,
+      "detail": "17771 x 17771 caracteres"
+    },
+    {
+      "label": "b) painel aplicou nas duas versões",
+      "ok": true,
+      "detail": "52 / 52 alterações"
+    },
+    {
+      "label": "b) DOM final da tag v1.1.0 = DOM do build (painel)",
+      "ok": true,
+      "detail": "18599 x 18599 caracteres"
+    },
+    {
+      "label": "c) gancho e painel aplicaram",
+      "ok": true,
+      "detail": "[] []"
+    },
+    {
+      "label": "c) nenhuma chamada ao LLM na test-page (comparação sem texto gerado)",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "label": "c) D7: DOM do gancho = DOM do painel",
+      "ok": true,
+      "detail": "18599 x 18599 caracteres"
+    },
+    {
+      "label": "c) D7: mesmo número de alterações",
+      "ok": true,
+      "detail": "52 x 52"
+    },
+    {
+      "label": "d) payload igual: problemas sintéticos, sem LLM",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "d) payload igual: problemas sintéticos, com sugestões do LLM",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "d) payload igual: sem problemas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "d) payload igual: análise nula",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "d) payload igual: análise real da test-page",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "build": {
+    "gitDescribe": "v1.1.0-12-ga28ba68",
+    "gitCommit": "a28ba689316051b6d7239a30d6e947b50780bdf8",
+    "copySha256": "512fd4b842d003abae778685fa2ac69c399d8f2f4d6d9d30e27ee78c4e7abb9d"
+  },
+  "tag": {
+    "ref": "v1.1.0",
+    "gitCommit": "36381da0eb7aec6b1c8c5c9ddf296f35db1f8e2e"
+  },
+  "autoOptimization": {
+    "tag": {
+      "status": "completed",
+      "appliedChanges": 40
+    },
+    "build": {
+      "status": "completed",
+      "appliedChanges": 40
+    },
+    "domChars": [
+      17771,
+      17771
+    ]
+  },
+  "panel": {
+    "tag": {
+      "status": "ok",
+      "appliedChanges": 52,
+      "errors": []
+    },
+    "build": {
+      "status": "ok",
+      "appliedChanges": 52,
+      "errors": []
+    }
+  },
+  "d7": {
+    "hook": {
+      "status": "ok",
+      "appliedChanges": 52,
+      "errors": [],
+      "llmCalls": 0
+    },
+    "panel": {
+      "status": "ok",
+      "appliedChanges": 52,
+      "errors": []
+    }
+  },
+  "terminadoEm": "2026-10-24T07:53:34.607Z",
+  "ok": true
+}

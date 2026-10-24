@@ -1,13 +1,15 @@
 {
   "name": "accessify-eval",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "Harness de avaliação do estudo JIS (Accessify): snapshots congelados, condições baseline/v1.0.0/v1.1.0 e métricas em CSV",
   "type": "module",
   "scripts": {
     "capture": "node src/capture.js",
     "run": "node src/run.js",
-    "smoke": "node src/run.js --smoke"
+    "smoke": "node src/run.js --smoke",
+    "aceites": "node aceites/todos.js",
+    "aceites:rapido": "node aceites/todos.js --rapido"
   },
   "dependencies": {
     "@axe-core/playwright": "4.14.0",
