@@ -1,6 +1,6 @@
 {
   "name": "accessify-eval",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Harness de avaliação do estudo JIS (Accessify): snapshots congelados, condições baseline/v1.0.0/v1.1.0 e métricas em CSV",
   "type": "module",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@axe-core/playwright": "4.14.0",
+    "accessibility-checker-engine": "4.0.34",
     "axe-core": "4.14.0",
     "playwright": "1.64.1"
   }

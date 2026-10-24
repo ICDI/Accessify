@@ -16,6 +16,7 @@ import { appendCsvRow } from './lib/csv.js';
 import { countGenericLabels, diffGenericLabels, serializeDom } from './lib/dom-metrics.js';
 import { prepareExtension, removeExtensionCopy } from './lib/extensions.js';
 import { sha256, slugForUrl } from './lib/hash.js';
+import { IBM_KEY_FORMAT, newIbmViolations, runIbm } from './lib/ibm.js';
 import { withIoRetries } from './lib/io.js';
 import { harnessVersion, loadedContext, ollamaInfo, packageVersions, prepareModel, writeSession } from './lib/session.js';
 import { countRenderingAborts, latestSnapshots, openSnapshot, recordScroll, resetScroll, verifySnapshot } from './lib/snapshot.js';
@@ -25,6 +26,8 @@ export const RUN_COLUMNS = [
   'execucao', 'tentativas', 'status', 'snapshot_sha256', 'raw_sha256', 'har_abortados',
   'axe_violations_critical', 'axe_violations_serious', 'axe_violations_moderate',
   'axe_violations_minor', 'axe_elementos', 'axe_incomplete', 'novos_erros_axe', 'novos_erros_axe_regra',
+  'ibm_violations', 'ibm_potential_violations', 'ibm_recommendations', 'ibm_potential_recommendations',
+  'ibm_manual', 'novos_erros_ibm', 'novos_erros_ibm_regra', 'ibm_status',
   'rotulos_genericos', 'tokens_in', 'tokens_out', 'latencia_ms', 'observacoes'
 ];
 
@@ -150,10 +153,12 @@ function saveRaw(raw, attempt) {
   }
 }
 
-// Baseline por hash do snapshot: só vale a do mesmo snapshot (HTML, HAR e pasta), do mesmo
-// axe (versão e tags) e do mesmo ambiente de medição (Chromium, viewport, locale e o hash do
-// código do harness, que inclui o replay e a medição). Entre sessões, vale a mais recente
-// pelo início do run; na sessão, a da própria sessão.
+// Baseline por hash do snapshot: só vale a do mesmo snapshot (HTML, HAR e pasta) e do mesmo
+// ambiente de medição (Chromium, viewport, locale e o hash do código do harness, que inclui
+// o replay e a medição). Cada avaliador tem a sua: a do axe exige a mesma versão e tags do
+// axe; a do IBM, a mesma versão do motor, conjunto de regras e formato dos resultados (pode
+// vir de outro run da baseline do mesmo snapshot). Entre sessões, vale a mais recente pelo
+// início do run; na sessão, a da própria sessão.
 const baselines = new Map();
 const baselineKey = (snapshot) => [snapshot.html_sha256, snapshot.har_sha256, snapshot.pasta_sha256 || ''].join('|');
 const measurementEnvironment = (launched) => ({ browser: launched.browser.product, viewport: config.viewport, locale: config.locale, harness: versions.harness.sha256 });
@@ -175,31 +180,46 @@ function baselineCandidates(snapshot, environment) {
       && raw.snapshot?.html_sha256 === snapshot.html_sha256
       && raw.snapshot?.har_sha256 === snapshot.har_sha256
       && (raw.snapshot?.pasta_sha256 || '') === (snapshot.pasta_sha256 || '')
-      && raw.axe?.post?.engine?.version === versions.axeCore
-      && sameJson(raw.axe?.tags, config.axe.tags)
       && sameJson(raw.environment, environment))
     .sort((a, b) => String(b.startedAt).localeCompare(String(a.startedAt)));
 }
 
+const usableAxe = (raw) => raw.axe?.post?.engine?.version === versions.axeCore && sameJson(raw.axe?.tags, config.axe.tags);
+const usableIbm = (ibm) => !!ibm && ibm.engine?.version === versions.ibmEngine && ibm.ruleset === config.ibm.ruleset
+  && ibm.keyFormat === IBM_KEY_FORMAT && ibm.numExecuted > 0 && Array.isArray(ibm.violations) && !!ibm.rules;
+
 function findBaseline(snapshot, environment) {
   const key = baselineKey(snapshot);
-  if (baselines.has(key)) {
-    return baselines.get(key);
+  const entry = baselines.get(key) || { axe: null, ibm: null, searched: false };
+  baselines.set(key, entry);
+  // A baseline desta sessão sem IBM utilizável (o IBM deu erro) ainda procura o IBM nos
+  // brutos de outras sessões; cada snapshot é procurado uma vez
+  if (!entry.searched && (!entry.axe || !entry.ibm)) {
+    const candidates = baselineCandidates(snapshot, environment);
+    if (!entry.axe) {
+      const best = candidates.find(usableAxe);
+      entry.axe = best ? { post: best.axe.post, from: runRef(best) } : null;
+    }
+    if (!entry.ibm) {
+      const best = candidates.find((raw) => usableIbm(raw.ibm?.post));
+      entry.ibm = best ? { post: best.ibm.post, from: runRef(best) } : null;
+    }
+    entry.searched = true;
   }
-  const [best] = baselineCandidates(snapshot, environment);
-  if (!best) {
-    return null;
-  }
-  const baseline = { axe: best.axe.post, from: runRef(best) };
-  baselines.set(key, baseline);
-  return baseline;
+  return entry.axe || entry.ibm ? entry : null;
 }
 
-function rememberBaseline(snapshot, raw, post) {
+function rememberBaseline(snapshot, raw, post, ibm) {
   const key = baselineKey(snapshot);
-  if (!baselines.get(key)?.thisSession) {
-    baselines.set(key, { axe: post, from: runRef(raw), thisSession: true });
+  const entry = baselines.get(key) || { axe: null, ibm: null, searched: false };
+  if (!entry.axe?.thisSession) {
+    entry.axe = { post, from: runRef(raw), thisSession: true };
   }
+  // Uma execução da baseline com IBM válido substitui outra em que o IBM deu erro
+  if (usableIbm(ibm) && !entry.ibm?.thisSession) {
+    entry.ibm = { post: ibm, from: runRef(raw), thisSession: true };
+  }
+  baselines.set(key, entry);
 }
 
 function llmFailures(calls, aborted) {
@@ -325,6 +345,16 @@ async function runOnce(state, condition, entry, snapshot, execution, attempt, ho
         }
       };
     }
+    // IBM por último (decisão D6): o motor fica no escopo global da página. Um erro ou
+    // estouro de prazo do avaliador não muda o status do run; vai para ibm_status e
+    // observacoes
+    let ibm = null;
+    try {
+      ibm = await withTimeout(runIbm(page, config.ibm.ruleset), config.timeouts.evaluatorMs, 'ibm');
+      raw.ibm = { ruleset: config.ibm.ruleset, post: ibm };
+    } catch (error) {
+      raw.ibm = { ruleset: config.ibm.ruleset, error: firstLine(error) };
+    }
     raw.replay = {
       abortedMain: opened.aborted.main,
       abortedFrames: opened.aborted.frames,
@@ -337,8 +367,15 @@ async function runOnce(state, condition, entry, snapshot, execution, attempt, ho
     };
 
     const baseline = condition.id === 'baseline' ? null : findBaseline(snapshot, raw.environment);
-    raw.axe.newViolations = baseline ? newViolations(baseline.axe, post) : null;
-    raw.axe.baselineFrom = baseline?.from || null;
+    raw.axe.newViolations = baseline?.axe ? newViolations(baseline.axe.post, post) : null;
+    raw.axe.baselineFrom = baseline?.axe?.from || null;
+    try {
+      raw.ibm.newViolations = baseline?.ibm && ibm ? newIbmViolations(baseline.ibm.post, ibm) : null;
+    } catch (error) {
+      raw.ibm.newViolations = null;
+      raw.ibm.compareError = firstLine(error);
+    }
+    raw.ibm.baselineFrom = baseline?.ibm?.from || null;
 
     let status = driver.status === 'ok' ? 'ok' : (driver.status === 'parcial' ? 'parcial' : 'falha');
     // Mesmo critério de 'parcial' do gancho da v1.1.0: aplicou, mas alguma chamada falhou
@@ -353,7 +390,11 @@ async function runOnce(state, condition, entry, snapshot, execution, attempt, ho
 
     const notes = [
       ...(driver.errors || []).map((error) => `${error.stage}: ${error.message}`),
-      condition.id !== 'baseline' && !baseline ? 'sem baseline válido (mesmo snapshot, mesmo axe, mesmo ambiente e código do harness) para novos_erros_axe' : null,
+      condition.id !== 'baseline' && !baseline?.axe ? 'sem baseline válido (mesmo snapshot, mesmo axe, mesmo ambiente e código do harness) para novos_erros_axe' : null,
+      condition.id !== 'baseline' && ibm && !baseline?.ibm ? 'sem baseline do IBM (mesmo snapshot e ambiente, mesma versão do motor, conjunto de regras e formato) para novos_erros_ibm' : null,
+      raw.ibm.error ? `ibm: ${raw.ibm.error}` : null,
+      raw.ibm.compareError ? `ibm: comparação com a baseline falhou (${raw.ibm.compareError})` : null,
+      ibm?.ruleExceptions?.length ? `ibm: ${ibm.ruleExceptions.length} exceção(ões) de regra no motor (resultados daquela regra perdidos)` : null,
       ranPlugin && !usageKnown ? 'tokens e latência desconhecidos: o run da extensão não terminou (runLog parcial ou ausente)' : null,
       driver.lateResult ? `resultado tardio da extensão: ${driver.lateResult.status}` : null,
       driver.measurementUnsettled ? 'medição com o run da extensão possivelmente ainda aplicando (sem resposta tardia)' : null,
@@ -366,7 +407,7 @@ async function runOnce(state, condition, entry, snapshot, execution, attempt, ho
     ].filter(Boolean);
 
     if (condition.id === 'baseline' && status === 'ok' && !holder.cancelled) {
-      rememberBaseline(snapshot, raw, post);
+      rememberBaseline(snapshot, raw, post, ibm);
     }
 
     return {
@@ -383,6 +424,14 @@ async function runOnce(state, condition, entry, snapshot, execution, attempt, ho
         axe_incomplete: post.incomplete,
         novos_erros_axe: raw.axe.newViolations ? raw.axe.newViolations.byTarget : '',
         novos_erros_axe_regra: raw.axe.newViolations ? sumValues(raw.axe.newViolations.byRule) : '',
+        ibm_violations: ibm ? ibm.byLevel.violation : '',
+        ibm_potential_violations: ibm ? ibm.byLevel.potentialviolation : '',
+        ibm_recommendations: ibm ? ibm.byLevel.recommendation : '',
+        ibm_potential_recommendations: ibm ? ibm.byLevel.potentialrecommendation : '',
+        ibm_manual: ibm ? ibm.byLevel.manual : '',
+        novos_erros_ibm: raw.ibm.newViolations ? raw.ibm.newViolations.byTarget : '',
+        novos_erros_ibm_regra: raw.ibm.newViolations ? sumValues(raw.ibm.newViolations.byRule) : '',
+        ibm_status: ibm ? 'ok' : 'erro',
         rotulos_genericos: raw.genericLabels.total,
         tokens_in: usage(totals.tokensIn),
         tokens_out: usage(totals.tokensOut),
