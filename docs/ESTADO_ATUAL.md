@@ -10,6 +10,16 @@ Atualizado em 24/10/2026. O plano detalhado (`docs/PLANO_AVALIACAO.md`) e as ins
 | tag anotada `v1.1.0` | `36381da0eb7aec6b1c8c5c9ddf296f35db1f8e2e` (objeto da tag `c124605`) | no `origin` desde 23/10/2026 |
 | branch `eval-harness` | a partir de `v1.1.0` | no `origin`, rastreando `origin/eval-harness` |
 | worktree `../accessify-v1` | `v1.0.0-semish` (HEAD destacado) | só leitura |
+| branch `semish2026` | `3ea481180fdf40ddf716404acbb316e65b046bd1` (merge da PR #1) | no `origin`; registro do estado do SEMISH 2026, não recebe mais PRs |
+| branch `main` | `b9f6556` (`v1.0.0-semish`) em 24/10/2026 | branch do estudo JIS; recebe as PRs #7 e #2 a #6 |
+
+### Política de branches (24/10/2026)
+
+O estudo JIS (Journal of Interactive Systems) estende o trabalho publicado no SEMISH 2026, e a `main` passa a ser a branch dele: todas as alterações entram na `main`. A `semish2026` fica como está.
+
+- PR #7 (`semish2026` → `main`): leva para a `main` a v1.1.0 e a Fase 0, que só existiam na `semish2026`. A `main` é ancestral da `semish2026`, então não há conflito.
+- PRs #2 a #6 (Fases 1 a 5): base trocada para a `main`. Continuam encadeadas, cada uma inclui os commits das anteriores até elas entrarem.
+- Ordem de merge: #7, #2, #3, #4, #5, #6, sempre com "Create a merge commit". Squash ou rebase reescreveriam os commits: a `main` deixaria de conter o commit da tag `v1.1.0` e cada PR seguinte passaria a mostrar de novo os commits das anteriores.
 
 ## Sessão de 23/10/2026 — Fase 0
 
@@ -29,7 +39,7 @@ Pendências da Fase 0:
 
 ## Sessão de 23/10/2026 — Fase 1 (C10, log estruturado)
 
-Branch `eval/fase-1-c10` (PR para a `semish2026`). As fases 1 a 5 vão em branches encadeadas, cada uma com uma PR própria para a `semish2026`, para que nenhum merge fora de ordem deixe trabalho para trás.
+Branch `eval/fase-1-c10`. As fases 1 a 5 vão em branches encadeadas, cada uma com uma PR própria para a `main` (até 24/10/2026 a base era a `semish2026`; ver Política de branches), para que nenhum merge fora de ordem deixe trabalho para trás.
 
 O que mudou:
 
@@ -393,7 +403,7 @@ Resultado de uma verificação adversarial: um pesquisador por grupo de premissa
 
 ## Próximos passos
 
-1. Revisar e mergear as PRs das Fases 1 a 5 na `semish2026`, na ordem (cada uma está encadeada na anterior).
+1. Revisar e mergear na `main`, nesta ordem e com merge commit: a #7 (`semish2026` → `main`) e depois as PRs das Fases 1 a 5 (#2 a #6, cada uma encadeada na anterior).
 2. Na máquina do lote: medir o tempo da v1.0.0 com GPU contra os prazos do D8, confirmar a D9 e recapturar os snapshots (a captura e o lote rodam na mesma máquina).
 3. Montar a lista de URLs do estudo em `eval/urls.csv`, com os estratos (`visao`, `variancia`), e rodar `npm run aceites` na máquina do lote antes do lote.
 4. Criar a tag do build usado no lote.
