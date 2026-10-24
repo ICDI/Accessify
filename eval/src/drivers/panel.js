@@ -152,8 +152,13 @@ async function getJob(serviceWorker, tabId) {
  * "ativo" apontando para a aba do snapshot, e clica Analisar → Aplicar como um usuário.
  * O resultado da análise é decidido pelo job do service worker (runId novo, mesma aba),
  * não pela interface, que pode estar mostrando o estado de um run anterior.
+ *
+ * onReady abre o portão do adaptador só depois que o job anterior parou e foi zerado: a
+ * v1.0.0 só confere o runId entre as etapas, então um laço de imagens de uma tentativa
+ * anterior continua chamando o LLM. Com o portão fechado essas chamadas falham na hora e
+ * o job antigo termina sozinho, sem somar tokens no run novo.
  */
-export async function runPanelDriver(context, extensionId, serviceWorker, page, config) {
+export async function runPanelDriver(context, extensionId, serviceWorker, page, config, onReady = () => {}) {
   const tab = await findTabByUrl(serviceWorker, page.url());
   if (!tab) {
     return { status: 'falha', errors: [{ stage: 'harness', message: 'Aba do snapshot não encontrada pelo service worker.' }] };
@@ -161,11 +166,14 @@ export async function runPanelDriver(context, extensionId, serviceWorker, page, 
 
   // Job anterior ainda rodando (a v1.0.0 guarda um só) termina antes de zerar
   const waitStartedAt = Date.now();
-  while ((await getJob(serviceWorker, tab.id))?.status === 'running' && Date.now() - waitStartedAt < 60000) {
+  let staleJobRunning = false;
+  while ((staleJobRunning = (await getJob(serviceWorker, tab.id))?.status === 'running') && Date.now() - waitStartedAt < 60000) {
     await page.waitForTimeout(500);
   }
   await serviceWorker.evaluate(async (id) => optimizer.resetAnalysisJob(id), tab.id);
   const previousRunId = (await getJob(serviceWorker, tab.id))?.runId || null;
+  const staleJob = { waitMs: Date.now() - waitStartedAt, stillRunningAtReset: staleJobRunning };
+  onReady();
 
   const panel = await context.newPage();
   try {
@@ -196,10 +204,10 @@ export async function runPanelDriver(context, extensionId, serviceWorker, page, 
     }
 
     if (!job || job.runId === previousRunId || !['completed', 'error'].includes(job.status)) {
-      return { status: 'falha', tabId: tab.id, job, errors: [{ stage: 'tempo', message: `A análise não terminou em ${config.timeouts.panelMs} ms.` }] };
+      return { status: 'falha', tabId: tab.id, staleJob, job, errors: [{ stage: 'tempo', message: `A análise não terminou em ${config.timeouts.panelMs} ms.` }] };
     }
     if (job.status === 'error') {
-      return { status: 'falha', tabId: tab.id, job, errors: [{ stage: 'analise', message: job.error || 'erro sem mensagem' }] };
+      return { status: 'falha', tabId: tab.id, staleJob, job, errors: [{ stage: 'analise', message: job.error || 'erro sem mensagem' }] };
     }
 
     // O painel consulta o job a cada 1 s e então mostra os resultados com o botão Aplicar
@@ -217,14 +225,14 @@ export async function runPanelDriver(context, extensionId, serviceWorker, page, 
     const success = /\bsuccess\b/.test(report.status);
     return {
       status: success ? 'ok' : 'falha',
-      tabId: tab.id,
+      tabId: tab.id, staleJob,
       appliedChanges: Number(report.summary.match(/(\d+) alterações/)?.[1] ?? 0),
       report,
       job,
       errors: success ? [] : [{ stage: 'aplicacao', message: report.summary }]
     };
   } catch (error) {
-    return { status: 'falha', tabId: tab.id, errors: [{ stage: 'painel', message: error.message.split('\n')[0] }] };
+    return { status: 'falha', tabId: tab.id, staleJob, errors: [{ stage: 'painel', message: error.message.split('\n')[0] }] };
   } finally {
     await panel.close().catch(() => {});
   }

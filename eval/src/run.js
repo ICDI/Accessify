@@ -157,9 +157,8 @@ async function runOnce(launched, condition, entry, snapshot, execution, adapter,
       driver = await runHookDriver(page, condition, config, runId);
       llmCalls = driver.runLog?.llmCalls || [];
     } else if (condition.driver === 'panel-v1') {
-      adapter.begin(runId);
       try {
-        driver = await runPanelDriver(launched.context, launched.extensionId, launched.serviceWorker, page, config);
+        driver = await runPanelDriver(launched.context, launched.extensionId, launched.serviceWorker, page, config, () => adapter.begin(runId));
       } finally {
         const ended = await adapter.end();
         llmCalls = ended.calls;
@@ -205,6 +204,7 @@ async function runOnce(launched, condition, entry, snapshot, execution, adapter,
     const notes = [
       ...(driver.errors || []).map((error) => `${error.stage}: ${error.message}`),
       condition.id !== 'baseline' && !baseline ? 'sem baseline válido (mesmo snapshot e mesmo axe) para novos_erros_axe' : null,
+      driver.staleJob?.stillRunningAtReset ? 'job anterior da v1.0.0 ainda rodando ao zerar (60 s)' : null,
       opened.loadTimedOut ? 'load do snapshot não terminou no prazo' : null,
       opened.compatModeMismatch ? `compatMode no replay: ${opened.compatModeMismatch}` : null,
       opened.counters.blockedNavigations ? `navegações bloqueadas no replay: ${opened.counters.blockedNavigations}` : null
