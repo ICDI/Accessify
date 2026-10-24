@@ -5,7 +5,8 @@
   "headless": true,
   "ollama": {
     "baseUrl": "http://127.0.0.1:11434",
-    "expectedContextLength": 4096
+    "expectedContextLength": 4096,
+    "keepAlive": "30m"
   },
   "axe": {
     "tags": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
@@ -17,12 +18,23 @@
     "minAfterLoadMs": 6000,
     "domQuietMs": 2000,
     "domQuietCapMs": 15000,
-    "runWatchdogMs": 660000,
+    "captureMs": 180000,
+    "runWatchdogMs": 900000,
     "hookMs": 290000,
+    "hookGraceMs": 75000,
+    "hookLateMs": 60000,
     "panelMs": 290000,
-    "llmCallMs": 280000
+    "applyMs": 120000,
+    "llmCallMs": 280000,
+    "evaluatorMs": 120000,
+    "warmupMs": 600000
+  },
+  "replay": {
+    "maxDiffPixels": 0.1,
+    "maxDiffTexto": 0.05
   },
   "retries": 1,
+  "launchRetries": 3,
   "paths": {
     "accessifyV1": "../../accessify-v1",
     "accessifyV11": "..",

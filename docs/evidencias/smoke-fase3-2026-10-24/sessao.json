@@ -1,0 +1,546 @@
+{
+  "sessionId": "20261024-044942665-c2ac",
+  "startedAt": "2026-10-24T04:49:42.665Z",
+  "study": "jis2026",
+  "args": {
+    "smoke": true,
+    "resultados": "C:\\Users\\marlo\\AppData\\Local\\Temp\\claude\\D--workspace-globald-agents-v2\\55367d16-1412-46d7-a8a8-4ae8f85d5a5f\\scratchpad\\fase3-rev-smoke"
+  },
+  "conditions": [
+    "baseline",
+    "v1.0.0",
+    "v1.1.0"
+  ],
+  "urls": 3,
+  "executions": 1,
+  "versions": {
+    "node": "v22.14.0",
+    "playwright": "1.64.1",
+    "axeCore": "4.14.0",
+    "axeCorePlaywright": "4.14.0"
+  },
+  "ollama": {
+    "version": "0.40.9",
+    "error": null,
+    "digests": {
+      "gemma4:e4b": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+      "qwen3-vl:8b": "9cf69da2b16d097f7def535917c4b55a95d6c7ee5700eb69ab86b01b3cfca487",
+      "qwen3:8b": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "gemma3:4b": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7"
+    },
+    "models": [
+      {
+        "name": "gemma4:e4b",
+        "model": "gemma4:e4b",
+        "modified_at": "2026-10-23T18:04:51.9656749-03:00",
+        "size": 6583656505,
+        "digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "details": {
+          "parent_model": "gemma4-validation-20260929:e4b-imatrix-attention-q6-q8-draft2",
+          "format": "gguf",
+          "family": "gemma4",
+          "families": [
+            "gemma4"
+          ],
+          "parameter_size": "7.5B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 131072,
+          "embedding_length": 2560,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "vision",
+          "audio",
+          "tools",
+          "thinking"
+        ]
+      },
+      {
+        "name": "qwen3-vl:8b",
+        "model": "qwen3-vl:8b",
+        "modified_at": "2026-10-23T17:54:19.2219506-03:00",
+        "size": 6190971699,
+        "digest": "9cf69da2b16d097f7def535917c4b55a95d6c7ee5700eb69ab86b01b3cfca487",
+        "details": {
+          "parent_model": "dhiltgen/qwen3-vl:8b-thinking-q4_K_M-llamacpp",
+          "format": "gguf",
+          "family": "qwen3vl",
+          "families": [
+            "qwen3vl",
+            "clip"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 262144,
+          "embedding_length": 4096,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "vision",
+          "tools",
+          "thinking"
+        ]
+      },
+      {
+        "name": "qwen3:8b",
+        "model": "qwen3:8b",
+        "modified_at": "2026-10-23T17:44:25.3156926-03:00",
+        "size": 5225388164,
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 40960,
+          "embedding_length": 4096,
+          "runner": "ggml"
+        },
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ]
+      },
+      {
+        "name": "gemma3:4b",
+        "model": "gemma3:4b",
+        "modified_at": "2026-10-23T17:36:14.184529-03:00",
+        "size": 3350272403,
+        "digest": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+        "details": {
+          "parent_model": "dhiltgen/gemma3:4b-it-q4_K_M-llamacpp",
+          "format": "gguf",
+          "family": "gemma3",
+          "families": [
+            "gemma3",
+            "clip"
+          ],
+          "parameter_size": "3.9B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 131072,
+          "embedding_length": 2560,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "vision"
+        ]
+      }
+    ],
+    "loaded": []
+  },
+  "expectedContextLength": 4096,
+  "extensions": {
+    "accessifyV1": {
+      "label": "accessifyV1",
+      "sourceDir": "D:\\workspace\\accessify-v1",
+      "version": "1.0.0",
+      "gitCommit": "b9f6556e798949c81ad9a16328d65023de9554e0",
+      "gitDescribe": "v1.0.0-semish",
+      "gitDirty": false,
+      "copySha256": "8e4816637733f2eb503ace860055f31a1fb9c6bc64eb4c4f0e01c38f59c77d04"
+    },
+    "accessifyV11": {
+      "label": "accessifyV11",
+      "sourceDir": "D:\\workspace\\Accessify",
+      "version": "1.1.0",
+      "gitCommit": "10468d7e20c43ec645cb22ce7db754ebdd2c2b6b",
+      "gitDescribe": "v1.1.0-6-g10468d7",
+      "gitDirty": false,
+      "copySha256": "512fd4b842d003abae778685fa2ac69c399d8f2f4d6d9d30e27ee78c4e7abb9d"
+    }
+  },
+  "contexts": {
+    "baseline": {
+      "extension": null,
+      "browser": {
+        "product": "Chrome/156.0.8078.4",
+        "revision": "@f842f52ef39fd97b449eb27cff414bf05a98ddce",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+      },
+      "launches": [
+        {
+          "at": "2026-10-24T04:49:43.910Z",
+          "browser": "Chrome/156.0.8078.4",
+          "copySha256": null
+        }
+      ],
+      "relaunches": 0,
+      "ollama": null,
+      "strayLlmCalls": []
+    },
+    "v1.0.0": {
+      "extension": {
+        "label": "accessifyV1",
+        "sourceDir": "D:\\workspace\\accessify-v1",
+        "version": "1.0.0",
+        "gitCommit": "b9f6556e798949c81ad9a16328d65023de9554e0",
+        "gitDescribe": "v1.0.0-semish",
+        "gitDirty": false,
+        "copySha256": "8e4816637733f2eb503ace860055f31a1fb9c6bc64eb4c4f0e01c38f59c77d04"
+      },
+      "browser": {
+        "product": "Chrome/156.0.8078.4",
+        "revision": "@f842f52ef39fd97b449eb27cff414bf05a98ddce",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+      },
+      "launches": [
+        {
+          "at": "2026-10-24T04:50:28.098Z",
+          "browser": "Chrome/156.0.8078.4",
+          "copySha256": "8e4816637733f2eb503ace860055f31a1fb9c6bc64eb4c4f0e01c38f59c77d04"
+        }
+      ],
+      "relaunches": 0,
+      "ollama": {
+        "ok": true,
+        "version": "0.40.9",
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "warmupMs": 21781,
+        "contextLength": 4096
+      },
+      "strayLlmCalls": [
+        {
+          "at": "2026-10-24T04:55:21.848Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:21.866Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:21.878Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:21.887Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:21.915Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:21.949Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:21.961Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:21.970Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:21.981Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:21.986Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:21.995Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:22.002Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:22.010Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:22.016Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:22.022Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:22.033Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:22.039Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:22.046Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:22.053Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T04:55:22.211Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:14.901Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:14.980Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.014Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.027Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.039Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.052Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.066Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.078Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.120Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.131Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.142Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.153Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.163Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.175Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.184Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.194Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.207Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.216Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.226Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        },
+        {
+          "at": "2026-10-24T05:00:15.291Z",
+          "url": "https://openrouter.ai/api/v1/chat/completions"
+        }
+      ]
+    },
+    "v1.1.0": {
+      "extension": {
+        "label": "accessifyV11",
+        "sourceDir": "D:\\workspace\\Accessify",
+        "version": "1.1.0",
+        "gitCommit": "10468d7e20c43ec645cb22ce7db754ebdd2c2b6b",
+        "gitDescribe": "v1.1.0-6-g10468d7",
+        "gitDirty": false,
+        "copySha256": "512fd4b842d003abae778685fa2ac69c399d8f2f4d6d9d30e27ee78c4e7abb9d"
+      },
+      "browser": {
+        "product": "Chrome/156.0.8078.4",
+        "revision": "@f842f52ef39fd97b449eb27cff414bf05a98ddce",
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+      },
+      "launches": [
+        {
+          "at": "2026-10-24T05:20:09.969Z",
+          "browser": "Chrome/156.0.8078.4",
+          "copySha256": "512fd4b842d003abae778685fa2ac69c399d8f2f4d6d9d30e27ee78c4e7abb9d"
+        }
+      ],
+      "relaunches": 0,
+      "ollama": {
+        "ok": true,
+        "version": "0.40.9",
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "warmupMs": 17,
+        "contextLength": 4096
+      },
+      "strayLlmCalls": []
+    }
+  },
+  "warnings": [],
+  "harnessErrors": [],
+  "finishedAt": "2026-10-24T05:21:55.178Z",
+  "ollamaAfter": {
+    "version": "0.40.9",
+    "error": null,
+    "digests": {
+      "gemma4:e4b": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+      "qwen3-vl:8b": "9cf69da2b16d097f7def535917c4b55a95d6c7ee5700eb69ab86b01b3cfca487",
+      "qwen3:8b": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "gemma3:4b": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7"
+    },
+    "models": [
+      {
+        "name": "gemma4:e4b",
+        "model": "gemma4:e4b",
+        "modified_at": "2026-10-23T18:04:51.9656749-03:00",
+        "size": 6583656505,
+        "digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "details": {
+          "parent_model": "gemma4-validation-20260929:e4b-imatrix-attention-q6-q8-draft2",
+          "format": "gguf",
+          "family": "gemma4",
+          "families": [
+            "gemma4"
+          ],
+          "parameter_size": "7.5B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 131072,
+          "embedding_length": 2560,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "vision",
+          "audio",
+          "tools",
+          "thinking"
+        ]
+      },
+      {
+        "name": "qwen3-vl:8b",
+        "model": "qwen3-vl:8b",
+        "modified_at": "2026-10-23T17:54:19.2219506-03:00",
+        "size": 6190971699,
+        "digest": "9cf69da2b16d097f7def535917c4b55a95d6c7ee5700eb69ab86b01b3cfca487",
+        "details": {
+          "parent_model": "dhiltgen/qwen3-vl:8b-thinking-q4_K_M-llamacpp",
+          "format": "gguf",
+          "family": "qwen3vl",
+          "families": [
+            "qwen3vl",
+            "clip"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 262144,
+          "embedding_length": 4096,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "vision",
+          "tools",
+          "thinking"
+        ]
+      },
+      {
+        "name": "qwen3:8b",
+        "model": "qwen3:8b",
+        "modified_at": "2026-10-23T17:44:25.3156926-03:00",
+        "size": 5225388164,
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 40960,
+          "embedding_length": 4096,
+          "runner": "ggml"
+        },
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ]
+      },
+      {
+        "name": "gemma3:4b",
+        "model": "gemma3:4b",
+        "modified_at": "2026-10-23T17:36:14.184529-03:00",
+        "size": 3350272403,
+        "digest": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+        "details": {
+          "parent_model": "dhiltgen/gemma3:4b-it-q4_K_M-llamacpp",
+          "format": "gguf",
+          "family": "gemma3",
+          "families": [
+            "gemma3",
+            "clip"
+          ],
+          "parameter_size": "3.9B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 131072,
+          "embedding_length": 2560,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "vision"
+        ]
+      }
+    ],
+    "loaded": [
+      {
+        "name": "qwen3:8b",
+        "model": "qwen3:8b",
+        "size": 5945667091,
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M"
+        },
+        "expires_at": "2026-10-24T02:51:32.4599524-03:00",
+        "size_vram": 0,
+        "context_length": 4096,
+        "runner": "llamacpp"
+      }
+    ]
+  }
+}

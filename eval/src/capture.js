@@ -1,23 +1,33 @@
 // Captura os snapshots congelados (decisão D4): para cada URL, o DOM renderizado sem
 // scripts (com shadow DOM, CSSOM e estado de formulário), os iframes congelados do mesmo
 // jeito e um HAR dos subrecursos, com uma linha no eval/snapshots/index.csv. Cada captura
-// vai para uma pasta própria e só entra no índice como 'ok' depois de um replay offline.
+// vai para uma pasta própria e só entra no índice como 'ok' depois de um replay offline
+// que reproduz a página (comparação de tela e de texto com a captura).
 // Uso: node src/capture.js [--estrato smoke] [--limit 3] [--url https://...]
+//                          [--urls lista.csv] [--snapshots pasta]
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { loadConfig, loadUrls, parseArgs } from './lib/config.js';
 import { appendCsvRow } from './lib/csv.js';
-import { sha256, sha256File, slugForUrl } from './lib/hash.js';
-import { SNAPSHOT_INDEX_COLUMNS, cleanHar, countRenderingAborts, openSnapshot, serializeDocumentInPage, settle, stripHash } from './lib/snapshot.js';
+import { sha256, sha256Dir, sha256File, slugForUrl } from './lib/hash.js';
+import {
+  SNAPSHOT_EVIDENCE, SNAPSHOT_INDEX_COLUMNS, cleanHar, countRenderingAborts, openSnapshot, screenshotDiff,
+  serializeDocumentInPage, settle, stripHash
+} from './lib/snapshot.js';
 
 const args = parseArgs();
-const config = loadConfig();
+const config = loadConfig(args);
 const indexFile = path.join(config.dirs.snapshots, 'index.csv');
+// EVAL_DEBUG=1 mostra no stderr quanto cada etapa da captura levou
+const debug = process.env.EVAL_DEBUG ? (url, label, since) => console.error(`  [${Math.round((Date.now() - since) / 1000)} s] ${label} — ${url}`) : () => {};
 const CHALLENGE_PATTERN = /just a moment|attention required|you have been blocked|access denied|verify you are human|are you a robot|captcha|verifique se você é humano|acesso negado/i;
 
-let urls = loadUrls();
+let urls = loadUrls(args.urls);
+if (urls.duplicates.length) {
+  console.warn(`URLs repetidas ignoradas (vale a primeira linha): ${urls.duplicates.map((entry) => entry.url).join(', ')}`);
+}
 if (args.estrato) {
   urls = urls.filter((entry) => entry.estrato === args.estrato);
 }
@@ -72,145 +82,260 @@ async function waitForDomQuiet(page, quietMs, capMs) {
   }), { quiet: quietMs, cap: capMs });
 }
 
-async function captureOne(browser, entry, userAgent) {
-  const slug = slugForUrl(entry.url);
+function baseRow(entry, browserVersion, userAgent) {
   const capturedAt = new Date().toISOString();
-  const relativeDir = path.join(slug, capturedAt.replace(/[:.]/g, '-'));
-  const finalDir = path.join(config.dirs.snapshots, relativeDir);
-  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), `accessify-captura-${slug}-`));
-  const row = { slug, url: entry.url, dir: relativeDir.replace(/\\/g, '/'), capturado_em: capturedAt, navegador: browser.version(), user_agent: userAgent };
-  const notes = [];
+  const slug = slugForUrl(entry.url);
+  return {
+    slug,
+    url: entry.url,
+    dir: path.join(slug, capturedAt.replace(/[:.]/g, '-')).replace(/\\/g, '/'),
+    capturado_em: capturedAt,
+    navegador: browserVersion,
+    user_agent: userAgent
+  };
+}
 
-  const context = await browser.newContext({
-    viewport: config.viewport,
-    locale: config.locale,
-    userAgent,
-    recordHar: { path: path.join(workDir, 'page.har'), content: 'attach', mode: 'full' }
-  });
+/**
+ * Por que um replay não reproduz a captura. Vazio = reproduz.
+ */
+function replayProblems(row, replay) {
+  const problems = [];
+  if (replay.loadTimedOut) {
+    problems.push('o load do replay não terminou');
+  }
+  if (replay.compatModeMismatch) {
+    problems.push(`compatMode no replay: ${replay.compatModeMismatch}`);
+  }
+  if (row.replay_diff_pixels > config.replay.maxDiffPixels) {
+    problems.push(`tela do replay difere da captura em ${(row.replay_diff_pixels * 100).toFixed(1)}% dos pixels`);
+  }
+  if (row.replay_diff_texto > config.replay.maxDiffTexto) {
+    problems.push(`texto do replay difere da captura em ${(row.replay_diff_texto * 100).toFixed(1)}%`);
+  }
+  if (row.suspeita_desafio === 'sim') {
+    problems.push('a página capturada parece um desafio anti-bot');
+  }
+  return problems;
+}
+
+/**
+ * Captura uma URL e devolve a linha do índice (quem grava é o laço, uma vez por URL).
+ * holder.context aponta para o contexto aberto, para o watchdog poder fechá-lo; depois de
+ * holder.cancelled, nada mais é copiado para a pasta de snapshots.
+ */
+async function captureOne(browser, entry, userAgent, holder) {
+  const row = baseRow(entry, browser.version(), userAgent);
+  const finalDir = path.join(config.dirs.snapshots, row.dir);
+  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), `accessify-captura-${row.slug}-`));
+  const notes = [];
+  let liveTextLength = 0;
+  const since = Date.now();
 
   try {
-    const network = trackNetwork(context);
-    const page = await context.newPage();
-    const loadStartedAt = Date.now();
-    const response = await page.goto(entry.url, { waitUntil: 'load', timeout: config.timeouts.navigationMs });
-    row.status_http = response?.status() ?? '';
-    row.final_url = stripHash(page.url());
-
-    await waitForQuiet(page, network, { quietMs: config.timeouts.quietMs, capMs: config.timeouts.settleMs });
-    const minimum = config.timeouts.minAfterLoadMs - (Date.now() - loadStartedAt);
-    if (minimum > 0) {
-      await page.waitForTimeout(minimum);
-    }
-    const dom = await waitForDomQuiet(page, config.timeouts.domQuietMs, config.timeouts.domQuietCapMs);
-    await settle(page, config.timeouts.settleMs);
-    row.espera_ms = Date.now() - loadStartedAt;
-    row.ultima_mutacao_ms = dom.lastMutationAgoMs;
-
-    const title = await page.title();
-    const bodyText = await page.evaluate(() => (document.body?.innerText || '').slice(0, 2000));
-    row.suspeita_desafio = CHALLENGE_PATTERN.test(`${title} ${bodyText}`) ? 'sim' : '';
-    await page.screenshot({ path: path.join(workDir, 'page.png'), fullPage: false });
-
-    // Iframes congelados com a mesma rotina do documento principal
-    const frames = {};
-    let framesWithoutUrl = 0;
-    fs.mkdirSync(path.join(workDir, 'frames'));
-    for (const frame of page.frames()) {
-      if (frame === page.mainFrame()) {
-        continue;
-      }
-      const frameUrl = stripHash(frame.url());
-      if (!/^https?:/.test(frameUrl)) {
-        framesWithoutUrl++;
-        continue;
-      }
-      try {
-        const serialized = await frame.evaluate(serializeDocumentInPage);
-        const file = `${sha256(frameUrl).slice(0, 16)}.html`;
-        fs.writeFileSync(path.join(workDir, 'frames', file), serialized.html);
-        frames[frameUrl] = file;
-      } catch (error) {
-        notes.push(`iframe não congelado (${frameUrl}): ${error.message.split('\n')[0]}`);
-      }
-    }
-    fs.writeFileSync(path.join(workDir, 'frames.json'), JSON.stringify(frames, null, 2));
-    row.frames_congelados = Object.keys(frames).length;
-    row.frames_sem_url = framesWithoutUrl;
-
-    const serialized = await page.evaluate(serializeDocumentInPage);
-    fs.writeFileSync(path.join(workDir, 'page.html'), serialized.html);
-    Object.assign(row, {
-      compat_mode: serialized.compatMode,
-      doctype: serialized.doctype ? 'sim' : 'nenhum',
-      meta_refresh: serialized.metaRefresh,
-      shadow_roots: serialized.shadowRoots,
-      cssom_sincronizados: serialized.cssomSynced,
-      folhas_adotadas: serialized.adopted,
-      marcas_carregamento: JSON.stringify(serialized.loadingMarkers)
+    const context = await browser.newContext({
+      viewport: config.viewport,
+      locale: config.locale,
+      userAgent,
+      recordHar: { path: path.join(workDir, 'page.har'), content: 'attach', mode: 'full' }
     });
+    holder.context = context;
+    try {
+      const network = trackNetwork(context);
+      const page = await context.newPage();
+      const loadStartedAt = Date.now();
+      const response = await page.goto(entry.url, { waitUntil: 'load', timeout: config.timeouts.navigationMs });
+      row.status_http = response?.status() ?? '';
+      row.final_url = stripHash(page.url());
 
-    if (!response || !response.ok()) {
-      throw new Error(`HTTP ${row.status_http}`);
+      await waitForQuiet(page, network, { quietMs: config.timeouts.quietMs, capMs: config.timeouts.settleMs });
+      const minimum = config.timeouts.minAfterLoadMs - (Date.now() - loadStartedAt);
+      if (minimum > 0) {
+        await page.waitForTimeout(minimum);
+      }
+      const dom = await waitForDomQuiet(page, config.timeouts.domQuietMs, config.timeouts.domQuietCapMs);
+      await settle(page, config.timeouts.settleMs);
+      row.espera_ms = Date.now() - loadStartedAt;
+      row.ultima_mutacao_ms = dom.lastMutationAgoMs;
+      debug(entry.url, 'página assentou', since);
+
+      const title = await page.title();
+      const bodyText = await page.evaluate(() => (document.body?.innerText || '').slice(0, 2000));
+      row.suspeita_desafio = CHALLENGE_PATTERN.test(`${title} ${bodyText}`) ? 'sim' : '';
+
+      // Documento principal primeiro e a tela logo depois: um carrossel que gira entre as
+      // duas coisas deixaria a tela da captura diferente do DOM congelado
+      const serialized = await page.evaluate(serializeDocumentInPage);
+      await page.screenshot({ path: path.join(workDir, 'page.png'), fullPage: false });
+      fs.writeFileSync(path.join(workDir, 'page.html'), serialized.html);
+      liveTextLength = serialized.bodyTextLength;
+      debug(entry.url, 'documento principal serializado', since);
+      Object.assign(row, {
+        compat_mode: serialized.compatMode,
+        doctype: serialized.doctype ? 'sim' : 'nenhum',
+        meta_refresh: serialized.metaRefresh,
+        shadow_roots: serialized.shadowRoots,
+        shadow_roots_perdidos: serialized.shadowRootsLost,
+        cssom_sincronizados: serialized.cssomSynced,
+        folhas_adotadas: serialized.adopted,
+        noscript_esvaziados: serialized.noscriptEmptied,
+        charset: serialized.charset,
+        urls_reescritas: serialized.urlsRewritten,
+        marcas_carregamento: JSON.stringify(serialized.loadingMarkers)
+      });
+      if (serialized.trustedTypesFallback) {
+        notes.push(`Trusted Types: documento principal clonado, ${serialized.shadowRootsLost} shadow roots perdidos`);
+      }
+
+      // Iframes congelados com a mesma rotina do documento principal. Cada um fica sob a
+      // URL final do frame e sob o src do <iframe>: o replay pede o src, que difere da
+      // URL final quando o embed redireciona ou troca a própria URL
+      const frames = {};
+      let framesWithoutUrl = 0;
+      let framesLost = 0;
+      fs.mkdirSync(path.join(workDir, 'frames'));
+      for (const frame of page.frames()) {
+        if (frame === page.mainFrame()) {
+          continue;
+        }
+        const frameUrl = stripHash(frame.url());
+        if (!/^https?:/.test(frameUrl)) {
+          framesWithoutUrl++;
+          continue;
+        }
+        try {
+          const frameSerialized = await frame.evaluate(serializeDocumentInPage);
+          const file = `${sha256(frameUrl).slice(0, 16)}.html`;
+          fs.writeFileSync(path.join(workDir, 'frames', file), frameSerialized.html);
+          frames[frameUrl] = file;
+          const element = await frame.frameElement().catch(() => null);
+          const src = element ? await element.evaluate((iframe) => iframe.src).catch(() => '') : '';
+          if (/^https?:/.test(src) && stripHash(src) !== frameUrl) {
+            frames[stripHash(src)] = file;
+          }
+          if (frameSerialized.trustedTypesFallback) {
+            framesLost += frameSerialized.shadowRootsLost;
+            notes.push(`Trusted Types: iframe clonado (${frameUrl}), ${frameSerialized.shadowRootsLost} shadow roots perdidos`);
+          }
+        } catch (error) {
+          notes.push(`iframe não congelado (${frameUrl}): ${error.message.split('\n')[0]}`);
+        }
+      }
+      fs.writeFileSync(path.join(workDir, 'frames.json'), JSON.stringify(frames, null, 2));
+      debug(entry.url, `iframes congelados (${Object.keys(frames).length})`, since);
+      row.frames_congelados = new Set(Object.values(frames)).size;
+      row.frames_sem_url = framesWithoutUrl;
+      row.shadow_roots_perdidos += framesLost;
+
+      if (!response || !response.ok()) {
+        throw new Error(`HTTP ${row.status_http}`);
+      }
+    } finally {
+      // O HAR só é gravado quando o contexto fecha
+      await context.close().catch(() => {});
     }
+
+    if (holder.cancelled) {
+      throw new Error('captura cancelada pelo watchdog');
+    }
+    debug(entry.url, 'HAR exportado', since);
+    const har = cleanHar(path.join(workDir, 'page.har'));
+    row.har_entradas = har.entries;
+    row.har_descartadas = har.dropped;
+    row.har_sem_corpo = har.withoutBody;
+
+    // Replay offline de verificação, igual ao do run (sem extensão)
+    const replayContext = await browser.newContext({ viewport: config.viewport, locale: config.locale });
+    holder.context = replayContext;
+    let problems = [];
+    try {
+      const replay = await openSnapshot(replayContext, { ...row, absDir: workDir }, config);
+      debug(entry.url, 'replay aberto', since);
+      await replay.page.screenshot({ path: path.join(workDir, 'replay.png'), fullPage: false });
+      row.replay_ok = replay.loadTimedOut ? 'load-sem-terminar' : 'sim';
+      row.replay_abortados = countRenderingAborts(replay.aborted);
+      row.frames_servidos = replay.counters.frozenFramesServed;
+      row.frames_bloqueados = replay.counters.blockedFrames;
+      row.replay_diff_pixels = Number((await screenshotDiff(replayContext, fs.readFileSync(path.join(workDir, 'page.png')), fs.readFileSync(path.join(workDir, 'replay.png')))).toFixed(4));
+      row.replay_diff_texto = Number((Math.abs(liveTextLength - replay.bodyTextLength) / Math.max(liveTextLength, 1)).toFixed(4));
+      problems = replayProblems(row, replay);
+      debug(entry.url, 'replay comparado', since);
+    } finally {
+      await replayContext.close().catch(() => {});
+    }
+
+    if (holder.cancelled) {
+      throw new Error('captura cancelada pelo watchdog');
+    }
+    fs.mkdirSync(path.dirname(finalDir), { recursive: true });
+    fs.cpSync(workDir, finalDir, { recursive: true });
+    row.html_sha256 = sha256File(path.join(finalDir, 'page.html'));
+    row.har_sha256 = sha256File(path.join(finalDir, 'page.har'));
+    row.pasta_sha256 = sha256Dir(finalDir, SNAPSHOT_EVIDENCE);
+    row.html_bytes = fs.statSync(path.join(finalDir, 'page.html')).size;
+    row.har_bytes = fs.statSync(path.join(finalDir, 'page.har')).size;
+    // 'suspeito' fica no índice com a pasta, para revisão: o run não usa e diz por quê
+    row.status = problems.length ? 'suspeito' : 'ok';
+    notes.push(...problems);
   } catch (error) {
     row.status = 'falha';
     notes.push(error.message.split('\n')[0]);
   } finally {
-    // O HAR só é gravado quando o contexto fecha
-    await context.close().catch(() => {});
+    fs.rmSync(workDir, { recursive: true, force: true });
   }
 
-  if (row.status !== 'falha') {
-    try {
-      const har = cleanHar(path.join(workDir, 'page.har'));
-      row.har_entradas = har.entries;
-      row.har_descartadas = har.dropped;
-
-      // Replay offline de verificação, igual ao do run (sem extensão)
-      const replayContext = await browser.newContext({ viewport: config.viewport, locale: config.locale });
-      try {
-        const replay = await openSnapshot(replayContext, { ...row, absDir: workDir }, config);
-        await replay.page.screenshot({ path: path.join(workDir, 'replay.png'), fullPage: false });
-        row.replay_ok = replay.loadTimedOut ? 'load-sem-terminar' : 'sim';
-        row.replay_abortados = countRenderingAborts(replay.aborted);
-        if (replay.compatModeMismatch) {
-          notes.push(`compatMode no replay: ${replay.compatModeMismatch}`);
-        }
-      } finally {
-        await replayContext.close().catch(() => {});
-      }
-
-      fs.mkdirSync(path.dirname(finalDir), { recursive: true });
-      fs.cpSync(workDir, finalDir, { recursive: true });
-      row.html_sha256 = sha256File(path.join(finalDir, 'page.html'));
-      row.har_sha256 = sha256File(path.join(finalDir, 'page.har'));
-      row.html_bytes = fs.statSync(path.join(finalDir, 'page.html')).size;
-      row.har_bytes = fs.statSync(path.join(finalDir, 'page.har')).size;
-      row.status = 'ok';
-    } catch (error) {
-      row.status = 'falha';
-      notes.push(`replay de verificação: ${error.message.split('\n')[0]}`);
-    }
-  }
-
-  fs.rmSync(workDir, { recursive: true, force: true });
   row.observacoes = notes.join(' | ');
-  appendCsvRow(indexFile, SNAPSHOT_INDEX_COLUMNS, row);
   return row;
 }
 
-const browser = await chromium.launch({ channel: 'chromium', headless: config.headless });
-// User agent de Chrome comum: sites podem servir outra coisa a "HeadlessChrome"
-const userAgent = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${browser.version().split('.')[0]}.0.0.0 Safari/537.36`;
+/**
+ * Uma captura com prazo total: um frame preso num laço de JavaScript ou um evaluate sem
+ * fim não pode parar a lista. O watchdog fecha o contexto aberto e a URL vira 'falha'.
+ */
+async function captureWithWatchdog(browser, entry, userAgent) {
+  const holder = { context: null, cancelled: false };
+  let timer;
+  const watchdog = new Promise((resolve) => {
+    timer = setTimeout(() => {
+      holder.cancelled = true;
+      holder.context?.close().catch(() => {});
+      resolve(null);
+    }, config.timeouts.captureMs);
+  });
+  try {
+    const row = await Promise.race([captureOne(browser, entry, userAgent, holder), watchdog]);
+    return row || { ...baseRow(entry, browser.version(), userAgent), status: 'falha', observacoes: `captura sem resposta em ${config.timeouts.captureMs} ms` };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function launchBrowser() {
+  const browser = await chromium.launch({ channel: 'chromium', headless: config.headless });
+  // User agent de Chrome comum: sites podem servir outra coisa a "HeadlessChrome"
+  const userAgent = `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${browser.version().split('.')[0]}.0.0.0 Safari/537.36`;
+  return { browser, userAgent };
+}
+
+let launched = null;
 try {
   for (const entry of urls) {
-    try {
-      const row = await captureOne(browser, entry, userAgent);
-      console.log(`${row.status === 'ok' ? 'ok   ' : 'falha'} ${entry.url}${row.observacoes ? ` — ${row.observacoes}` : ''}`);
-    } catch (error) {
-      console.error(`falha ${entry.url} — ${error.message.split('\n')[0]}`);
+    let row;
+    if (entry.invalid) {
+      row = { ...baseRow(entry, '', ''), status: 'falha', observacoes: `URL inválida: "${entry.url}"` };
+    } else {
+      try {
+        // Navegador que caiu na URL anterior é relançado; se não abrir, a URL vira 'falha'
+        if (!launched || !launched.browser.isConnected()) {
+          launched = await launchBrowser();
+        }
+        row = await captureWithWatchdog(launched.browser, entry, launched.userAgent);
+      } catch (error) {
+        row = { ...baseRow(entry, '', ''), status: 'falha', observacoes: `navegador: ${error.message.split('\n')[0]}` };
+      }
     }
+    appendCsvRow(indexFile, SNAPSHOT_INDEX_COLUMNS, row);
+    console.log(`${row.status.padEnd(8)} ${entry.url}${row.observacoes ? ` — ${row.observacoes}` : ''}`);
   }
 } finally {
-  await browser.close();
+  await launched?.browser.close().catch(() => {});
 }

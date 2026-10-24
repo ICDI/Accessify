@@ -2,23 +2,34 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { chromium } from 'playwright';
-import { prepareExtension } from './extensions.js';
+import { sha256Dir } from './hash.js';
 
 /**
- * Um contexto de navegador por condição (decisão D3), com perfil novo a cada lote e só
- * a extensão daquela condição carregada (a baseline não carrega nenhuma).
+ * Um contexto de navegador por condição (decisão D3), com perfil novo e só a extensão
+ * daquela condição carregada (a baseline não carrega nenhuma). `extension` é a cópia
+ * preparada uma vez por sessão (prepareExtension): um relançamento usa a mesma cópia, e
+ * o hash dela é conferido para nada mudar no meio da condição.
  */
-export async function launchCondition(condition, config) {
+export async function launchCondition(condition, config, extension) {
+  if (extension && sha256Dir(extension.dir) !== extension.copySha256) {
+    throw new Error(`A cópia da extensão da condição ${condition.id} mudou no disco desde o início da sessão.`);
+  }
   const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), `.pw-profile-${condition.id}-`));
-  const extension = condition.extension ? prepareExtension(config.dirs[condition.extension], condition.id) : null;
+  const removeProfile = () => fs.rmSync(profileDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
 
-  const context = await chromium.launchPersistentContext(profileDir, {
-    channel: 'chromium',
-    headless: config.headless,
-    viewport: config.viewport,
-    locale: config.locale,
-    args: extension ? [`--disable-extensions-except=${extension.dir}`, `--load-extension=${extension.dir}`] : []
-  });
+  let context;
+  try {
+    context = await chromium.launchPersistentContext(profileDir, {
+      channel: 'chromium',
+      headless: config.headless,
+      viewport: config.viewport,
+      locale: config.locale,
+      args: extension ? [`--disable-extensions-except=${extension.dir}`, `--load-extension=${extension.dir}`] : []
+    });
+  } catch (error) {
+    removeProfile();
+    throw error;
+  }
 
   try {
     let serviceWorker = null;
@@ -39,11 +50,25 @@ export async function launchCondition(condition, config) {
     const browser = await browserVersion(context);
     const state = { closed: false };
     context.on('close', () => { state.closed = true; });
+    // Fecha o contexto e apaga o perfil temporário (a cópia da extensão é da sessão)
+    const dispose = async () => {
+      await context.close().catch(() => {});
+      try {
+        removeProfile();
+      } catch (error) {
+        // perfil ainda preso pelo Chromium: fica no diretório temporário
+      }
+    };
 
-    return { context, serviceWorker, extensionId, extension, profileDir, browser, state };
+    return { context, serviceWorker, extensionId, extension, profileDir, browser, state, dispose, launchedAt: new Date().toISOString() };
   } catch (error) {
     // Um navegador aberto pela metade não pode ficar disputando memória com o Ollama
     await context.close().catch(() => {});
+    try {
+      removeProfile();
+    } catch (removeError) {
+      // segue: o erro que importa é o da abertura
+    }
     throw error;
   }
 }

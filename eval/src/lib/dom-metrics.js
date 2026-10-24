@@ -43,6 +43,27 @@ export function diffGenericLabels(before, after) {
   return { total, byKind };
 }
 
+/**
+ * DOM pós para o JSON bruto, com o doctype real (uma página BackCompat continua
+ * BackCompat se for reaberta) e os shadow roots, que o axe também avalia.
+ */
 export async function serializeDom(page) {
-  return page.evaluate(() => `<!DOCTYPE html>\n${document.documentElement.outerHTML}`);
+  return page.evaluate(() => {
+    const shadowRoots = [];
+    const collect = (root) => root.querySelectorAll('*').forEach((element) => {
+      if (element.shadowRoot) {
+        shadowRoots.push(element.shadowRoot);
+        collect(element.shadowRoot);
+      }
+    });
+    collect(document);
+    const doctype = document.doctype ? new XMLSerializer().serializeToString(document.doctype) : '';
+    const attributes = Array.from(document.documentElement.attributes)
+      .map((attribute) => ` ${attribute.name}="${attribute.value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}"`)
+      .join('');
+    const inner = typeof document.documentElement.getHTML === 'function'
+      ? document.documentElement.getHTML({ serializableShadowRoots: true, shadowRoots })
+      : document.documentElement.innerHTML;
+    return `${doctype}${doctype ? '\n' : ''}<html${attributes}>${inner}</html>`;
+  });
 }

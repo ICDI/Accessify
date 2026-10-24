@@ -36,9 +36,13 @@ export function prepareExtension(sourceDir, label) {
   }
 
   const manifest = JSON.parse(fs.readFileSync(path.join(copy, 'manifest.json'), 'utf8'));
-  // Só os arquivos que a extensão carrega: o harness (eval/) e os docs não contam
+  // Só os arquivos que a extensão carrega: o harness (eval/) e os docs não contam. O
+  // describe também não usa --dirty, que olharia o repositório inteiro (um index.csv ou
+  // runs.csv alterado marcaria uma extensão intacta como -dirty)
   const copied = fs.readdirSync(copy);
   const status = git(sourceDir, ['status', '--porcelain', '--', ...copied]);
+  const gitDirty = status === null ? null : status.length > 0;
+  const describe = git(sourceDir, ['describe', '--tags', '--always']);
 
   return {
     label,
@@ -46,8 +50,14 @@ export function prepareExtension(sourceDir, label) {
     dir: copy,
     version: manifest.version,
     gitCommit: git(sourceDir, ['rev-parse', 'HEAD']),
-    gitDescribe: git(sourceDir, ['describe', '--tags', '--always', '--dirty']),
-    gitDirty: status === null ? null : status.length > 0,
+    gitDescribe: describe ? `${describe}${gitDirty ? '-dirty' : ''}` : null,
+    gitDirty,
     copySha256: sha256Dir(copy)
   };
+}
+
+export function removeExtensionCopy(extension) {
+  if (extension?.dir) {
+    fs.rmSync(extension.dir, { recursive: true, force: true });
+  }
 }

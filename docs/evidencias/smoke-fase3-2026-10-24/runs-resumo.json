@@ -1,0 +1,1260 @@
+[
+  {
+    "arquivo": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1__20261024-044942665-c2ac__a1.json",
+    "runId": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1",
+    "tentativa": 1,
+    "status": "ok",
+    "erros": [],
+    "llmCalls": [],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 3,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 4,
+      "incomplete": 14,
+      "rules": {
+        "button-name": 3,
+        "label-content-name-mismatch": 1
+      },
+      "newViolations": null,
+      "baselineFrom": null
+    },
+    "genericLabels": {
+      "total": 0,
+      "byKind": {
+        "link": 0,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": null,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 2
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 1,
+        "paused": 0,
+        "framesSkipped": 2
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 0,
+          "framesSkipped": 2
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1__20261024-044942665-c2ac__a1.json",
+    "runId": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1",
+    "tentativa": 1,
+    "status": "ok",
+    "erros": [],
+    "llmCalls": [],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 6,
+        "serious": 6,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 12,
+      "incomplete": 48,
+      "rules": {
+        "button-name": 2,
+        "color-contrast": 1,
+        "frame-title": 1,
+        "image-alt": 1,
+        "link-name": 1,
+        "list": 3,
+        "select-name": 3
+      },
+      "newViolations": null,
+      "baselineFrom": null
+    },
+    "genericLabels": {
+      "total": 0,
+      "byKind": {
+        "link": 0,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": null,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 5
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 0,
+        "paused": 2,
+        "framesSkipped": 0
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 2,
+          "framesSkipped": 0
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-044942665-c2ac__a1.json",
+    "runId": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+    "tentativa": 1,
+    "status": "ok",
+    "erros": [],
+    "llmCalls": [],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 34,
+        "serious": 10,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 44,
+      "incomplete": 2,
+      "rules": {
+        "color-contrast": 2,
+        "html-has-lang": 1,
+        "image-alt": 33,
+        "link-name": 7,
+        "select-name": 1
+      },
+      "newViolations": null,
+      "baselineFrom": null
+    },
+    "genericLabels": {
+      "total": 0,
+      "byKind": {
+        "link": 0,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": null,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 0
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 0,
+        "paused": 0,
+        "framesSkipped": 0
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 0,
+          "framesSkipped": 0
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1__20261024-044942665-c2ac__a1.json",
+    "runId": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1",
+    "tentativa": 1,
+    "status": "falha",
+    "erros": [
+      {
+        "stage": "analise",
+        "message": "Erro da API (502): {\"error\":{\"message\":\"Adaptador: sem resposta em 280000 ms\"}}"
+      }
+    ],
+    "staleJob": {
+      "waitMs": 681,
+      "stillRunningAtReset": false
+    },
+    "llmCalls": [
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 32000,
+        "reasoning": "original",
+        "latencyMs": 280018,
+        "networkError": "sem resposta em 280000 ms"
+      }
+    ],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 3,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 4,
+      "incomplete": 14,
+      "rules": {
+        "button-name": 3,
+        "label-content-name-mismatch": 1
+      },
+      "newViolations": {
+        "byTarget": 0,
+        "byRule": {}
+      },
+      "baselineFrom": {
+        "runId": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1",
+        "session": "20261024-044942665-c2ac",
+        "attempt": null
+      }
+    },
+    "genericLabels": {
+      "total": 0,
+      "byKind": {
+        "link": 0,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": 4096,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 2
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 1,
+        "paused": 0,
+        "framesSkipped": 2
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 0,
+          "framesSkipped": 2
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1__20261024-044942665-c2ac__a2.json",
+    "runId": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1",
+    "tentativa": 2,
+    "status": "falha",
+    "erros": [
+      {
+        "stage": "analise",
+        "message": "Erro da API (502): {\"error\":{\"message\":\"Adaptador: sem resposta em 280000 ms\"}}"
+      }
+    ],
+    "staleJob": {
+      "waitMs": 226,
+      "stillRunningAtReset": false
+    },
+    "llmCalls": [
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 32000,
+        "reasoning": "original",
+        "latencyMs": 280013,
+        "networkError": "sem resposta em 280000 ms"
+      }
+    ],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 3,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 4,
+      "incomplete": 14,
+      "rules": {
+        "button-name": 3,
+        "label-content-name-mismatch": 1
+      },
+      "newViolations": {
+        "byTarget": 0,
+        "byRule": {}
+      },
+      "baselineFrom": {
+        "runId": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1",
+        "session": "20261024-044942665-c2ac",
+        "attempt": null
+      }
+    },
+    "genericLabels": {
+      "total": 0,
+      "byKind": {
+        "link": 0,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": 4096,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 2
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 1,
+        "paused": 0,
+        "framesSkipped": 2
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 0,
+          "framesSkipped": 2
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1__20261024-044942665-c2ac__a1.json",
+    "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+    "tentativa": 1,
+    "status": "falha",
+    "erros": [
+      {
+        "stage": "tempo",
+        "message": "A análise não terminou em 290000 ms."
+      }
+    ],
+    "staleJob": {
+      "waitMs": 86,
+      "stillRunningAtReset": false
+    },
+    "llmCalls": [
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 126214,
+        "httpStatus": 200,
+        "tokensIn": 127,
+        "tokensOut": 440,
+        "finishReason": "stop",
+        "contentChars": 26,
+        "reasoningChars": 1764
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 152207,
+        "httpStatus": 200,
+        "tokensIn": 127,
+        "tokensOut": 573,
+        "finishReason": "stop",
+        "contentChars": 22,
+        "reasoningChars": 2266
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 32000,
+        "reasoning": "original",
+        "latencyMs": 10595,
+        "networkError": "abortada no fim do run"
+      }
+    ],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 6,
+        "serious": 6,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 12,
+      "incomplete": 48,
+      "rules": {
+        "button-name": 2,
+        "color-contrast": 1,
+        "frame-title": 1,
+        "image-alt": 1,
+        "link-name": 1,
+        "list": 3,
+        "select-name": 3
+      },
+      "newViolations": {
+        "byTarget": 0,
+        "byRule": {}
+      },
+      "baselineFrom": {
+        "runId": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1",
+        "session": "20261024-044942665-c2ac",
+        "attempt": null
+      }
+    },
+    "genericLabels": {
+      "total": 0,
+      "byKind": {
+        "link": 0,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": 4096,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 5
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 0,
+        "paused": 2,
+        "framesSkipped": 0
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 2,
+          "framesSkipped": 0
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1__20261024-044942665-c2ac__a2.json",
+    "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+    "tentativa": 2,
+    "status": "falha",
+    "erros": [
+      {
+        "stage": "tempo",
+        "message": "A análise não terminou em 290000 ms."
+      }
+    ],
+    "staleJob": {
+      "waitMs": 292,
+      "stillRunningAtReset": false
+    },
+    "llmCalls": [
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 126536,
+        "httpStatus": 200,
+        "tokensIn": 127,
+        "tokensOut": 440,
+        "finishReason": "stop",
+        "contentChars": 26,
+        "reasoningChars": 1764
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 152164,
+        "httpStatus": 200,
+        "tokensIn": 127,
+        "tokensOut": 573,
+        "finishReason": "stop",
+        "contentChars": 22,
+        "reasoningChars": 2266
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 32000,
+        "reasoning": "original",
+        "latencyMs": 10427,
+        "networkError": "abortada no fim do run"
+      }
+    ],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 6,
+        "serious": 6,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 12,
+      "incomplete": 48,
+      "rules": {
+        "button-name": 2,
+        "color-contrast": 1,
+        "frame-title": 1,
+        "image-alt": 1,
+        "link-name": 1,
+        "list": 3,
+        "select-name": 3
+      },
+      "newViolations": {
+        "byTarget": 0,
+        "byRule": {}
+      },
+      "baselineFrom": {
+        "runId": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1",
+        "session": "20261024-044942665-c2ac",
+        "attempt": null
+      }
+    },
+    "genericLabels": {
+      "total": 0,
+      "byKind": {
+        "link": 0,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": 4096,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 5
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 0,
+        "paused": 2,
+        "framesSkipped": 0
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 2,
+          "framesSkipped": 0
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-044942665-c2ac__a1.json",
+    "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+    "tentativa": 1,
+    "status": "falha",
+    "erros": [
+      {
+        "stage": "tempo",
+        "message": "A análise não terminou em 290000 ms."
+      }
+    ],
+    "staleJob": {
+      "waitMs": 20,
+      "stillRunningAtReset": false
+    },
+    "llmCalls": [
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 86528,
+        "httpStatus": 200,
+        "tokensIn": 125,
+        "tokensOut": 279,
+        "finishReason": "stop",
+        "contentChars": 19,
+        "reasoningChars": 1155
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 80889,
+        "httpStatus": 200,
+        "tokensIn": 124,
+        "tokensOut": 272,
+        "finishReason": "stop",
+        "contentChars": 10,
+        "reasoningChars": 1145
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 107053,
+        "httpStatus": 200,
+        "tokensIn": 125,
+        "tokensOut": 355,
+        "finishReason": "stop",
+        "contentChars": 21,
+        "reasoningChars": 1489
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 14472,
+        "networkError": "abortada no fim do run"
+      }
+    ],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 34,
+        "serious": 10,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 44,
+      "incomplete": 2,
+      "rules": {
+        "color-contrast": 2,
+        "html-has-lang": 1,
+        "image-alt": 33,
+        "link-name": 7,
+        "select-name": 1
+      },
+      "newViolations": {
+        "byTarget": 0,
+        "byRule": {}
+      },
+      "baselineFrom": {
+        "runId": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "session": "20261024-044942665-c2ac",
+        "attempt": null
+      }
+    },
+    "genericLabels": {
+      "total": 0,
+      "byKind": {
+        "link": 0,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": 4096,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 0
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 0,
+        "paused": 0,
+        "framesSkipped": 0
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 0,
+          "framesSkipped": 0
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-044942665-c2ac__a2.json",
+    "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+    "tentativa": 2,
+    "status": "falha",
+    "erros": [
+      {
+        "stage": "tempo",
+        "message": "A análise não terminou em 290000 ms."
+      }
+    ],
+    "staleJob": {
+      "waitMs": 103,
+      "stillRunningAtReset": false
+    },
+    "llmCalls": [
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 95712,
+        "httpStatus": 200,
+        "tokensIn": 125,
+        "tokensOut": 345,
+        "finishReason": "stop",
+        "contentChars": 13,
+        "reasoningChars": 1453
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 78726,
+        "httpStatus": 200,
+        "tokensIn": 124,
+        "tokensOut": 307,
+        "finishReason": "stop",
+        "contentChars": 15,
+        "reasoningChars": 1337
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 91679,
+        "httpStatus": 200,
+        "tokensIn": 125,
+        "tokensOut": 355,
+        "finishReason": "stop",
+        "contentChars": 21,
+        "reasoningChars": 1489
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 23299,
+        "networkError": "abortada no fim do run"
+      }
+    ],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 34,
+        "serious": 10,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 44,
+      "incomplete": 2,
+      "rules": {
+        "color-contrast": 2,
+        "html-has-lang": 1,
+        "image-alt": 33,
+        "link-name": 7,
+        "select-name": 1
+      },
+      "newViolations": {
+        "byTarget": 0,
+        "byRule": {}
+      },
+      "baselineFrom": {
+        "runId": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "session": "20261024-044942665-c2ac",
+        "attempt": null
+      }
+    },
+    "genericLabels": {
+      "total": 0,
+      "byKind": {
+        "link": 0,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": 4096,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 0
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 0,
+        "paused": 0,
+        "framesSkipped": 0
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 0,
+          "framesSkipped": 0
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_v1.1.0_qwen3-8b_gov-br-pt-br-270759d9_run1__20261024-044942665-c2ac__a1.json",
+    "runId": "jis2026_v1.1.0_qwen3-8b_gov-br-pt-br-270759d9_run1",
+    "tentativa": 1,
+    "status": "ok",
+    "erros": [],
+    "appliedChanges": 642,
+    "llmCalls": [],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 1,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 2,
+      "incomplete": 12,
+      "rules": {
+        "button-name": 1,
+        "label-content-name-mismatch": 1
+      },
+      "newViolations": {
+        "byTarget": 0,
+        "byRule": {}
+      },
+      "baselineFrom": {
+        "runId": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1",
+        "session": "20261024-044942665-c2ac",
+        "attempt": null
+      }
+    },
+    "genericLabels": {
+      "total": 15,
+      "byKind": {
+        "link": 7,
+        "button": 7,
+        "field": 0,
+        "image": 0,
+        "graphic": 1,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": 4096,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 2
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 1,
+        "paused": 0,
+        "framesSkipped": 2
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 0,
+          "framesSkipped": 2
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_v1.1.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1__20261024-044942665-c2ac__a1.json",
+    "runId": "jis2026_v1.1.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+    "tentativa": 1,
+    "status": "ok",
+    "erros": [],
+    "appliedChanges": 474,
+    "llmCalls": [
+      {
+        "contentChars": 0,
+        "error": null,
+        "finishReason": "length",
+        "httpStatus": 200,
+        "latencyMs": 18672,
+        "maxTokens": 64,
+        "model": "qwen3:8b",
+        "modelId": "qwen3:8b",
+        "networkError": null,
+        "reasoningChars": 196,
+        "reasoningEffort": null,
+        "selector": "#main-footer > div > div:nth-of-type(2) > div:nth-of-type(4) > div > a > img",
+        "stage": "alt-text",
+        "temperature": 0,
+        "tokensIn": 160,
+        "tokensOut": 64,
+        "vision": false,
+        "visionError": null,
+        "visionSource": null
+      },
+      {
+        "contentChars": 0,
+        "error": null,
+        "finishReason": "length",
+        "httpStatus": 200,
+        "latencyMs": 16247,
+        "maxTokens": 64,
+        "model": "qwen3:8b",
+        "modelId": "qwen3:8b",
+        "networkError": null,
+        "reasoningChars": 196,
+        "reasoningEffort": null,
+        "selector": "#main-footer > div > div:nth-of-type(3) > div > a > img",
+        "stage": "alt-text",
+        "temperature": 0,
+        "tokensIn": 160,
+        "tokensOut": 64,
+        "vision": false,
+        "visionError": null,
+        "visionSource": null
+      }
+    ],
+    "altTexts": [
+      {
+        "source": "llm",
+        "finalAlt": "Okay, the user wants an alt text for a QR code image. The filename is qrCodeMec.f50a2cc9.png, and",
+        "reasoningAsAlt": true
+      },
+      {
+        "source": "llm",
+        "finalAlt": "Okay, the user wants an alt text for a QR code image. The filename is qrCodeMec.f50a2cc9.png, and",
+        "reasoningAsAlt": true
+      }
+    ],
+    "axe": {
+      "byImpact": {
+        "critical": 0,
+        "serious": 3,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 3,
+      "incomplete": 46,
+      "rules": {
+        "list": 3
+      },
+      "newViolations": {
+        "byTarget": 0,
+        "byRule": {}
+      },
+      "baselineFrom": {
+        "runId": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1",
+        "session": "20261024-044942665-c2ac",
+        "attempt": null
+      }
+    },
+    "genericLabels": {
+      "total": 62,
+      "byKind": {
+        "link": 4,
+        "button": 40,
+        "field": 3,
+        "image": 0,
+        "graphic": 14,
+        "iframe": 1,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": 4096,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 5
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 0,
+        "paused": 2,
+        "framesSkipped": 0
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 2,
+          "framesSkipped": 0
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_v1.1.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-044942665-c2ac__a1.json",
+    "runId": "jis2026_v1.1.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+    "tentativa": 1,
+    "status": "ok",
+    "erros": [],
+    "appliedChanges": 116,
+    "llmCalls": [
+      {
+        "contentChars": 0,
+        "error": null,
+        "finishReason": "length",
+        "httpStatus": 200,
+        "latencyMs": 24952,
+        "maxTokens": 64,
+        "model": "qwen3:8b",
+        "modelId": "qwen3:8b",
+        "networkError": null,
+        "reasoningChars": 247,
+        "reasoningEffort": null,
+        "selector": "#page > table > tbody > tr > td > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > table:nth-of-type(1) > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > img",
+        "stage": "alt-text",
+        "temperature": 0,
+        "tokensIn": 151,
+        "tokensOut": 64,
+        "vision": false,
+        "visionError": null,
+        "visionSource": null
+      },
+      {
+        "contentChars": 0,
+        "error": null,
+        "finishReason": "length",
+        "httpStatus": 200,
+        "latencyMs": 17142,
+        "maxTokens": 64,
+        "model": "qwen3:8b",
+        "modelId": "qwen3:8b",
+        "networkError": null,
+        "reasoningChars": 244,
+        "reasoningEffort": null,
+        "selector": "#page > table > tbody > tr > td > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > table:nth-of-type(1) > tbody > tr:nth-of-type(1) > td:nth-of-type(3) > img",
+        "stage": "alt-text",
+        "temperature": 0,
+        "tokensIn": 150,
+        "tokensOut": 64,
+        "vision": false,
+        "visionError": null,
+        "visionSource": null
+      }
+    ],
+    "altTexts": [
+      {
+        "source": "llm",
+        "finalAlt": "Okay, the user wants an alt text for the image \"top_logo_next_end.gif\" which is 24x86 pixels. They",
+        "reasoningAsAlt": true
+      },
+      {
+        "source": "llm",
+        "finalAlt": "Okay, the user wants an alt text for the image \"top_weather.gif\" which is 128x86 pixels. The",
+        "reasoningAsAlt": true
+      }
+    ],
+    "axe": {
+      "byImpact": {
+        "critical": 1,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 1,
+      "incomplete": 11,
+      "rules": {
+        "select-name": 1
+      },
+      "newViolations": {
+        "byTarget": 0,
+        "byRule": {}
+      },
+      "baselineFrom": {
+        "runId": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "session": "20261024-044942665-c2ac",
+        "attempt": null
+      }
+    },
+    "genericLabels": {
+      "total": 7,
+      "byKind": {
+        "link": 7,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": 4096,
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 0
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 0,
+        "paused": 0,
+        "framesSkipped": 0
+      },
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 0,
+          "framesSkipped": 0
+        },
+        "elementsRecorded": 0
+      }
+    }
+  }
+]

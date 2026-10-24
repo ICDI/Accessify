@@ -1,39 +1,5 @@
-import http from 'node:http';
 import { findTabByUrl } from '../lib/browser.js';
-
-/**
- * POST JSON ao Ollama por node:http. O fetch do Node desiste sozinho se os cabeçalhos
- * demoram mais de 300 s, e o Ollama sem streaming só responde quando termina de gerar:
- * as recomendações da v1.0.0 (max_tokens 32000, com raciocínio) passam disso. Aqui o
- * único prazo é o do estudo (timeouts.llmCallMs).
- */
-function postJson(url, payload, { timeoutMs, signal }) {
-  return new Promise((resolve, reject) => {
-    const body = Buffer.from(JSON.stringify(payload));
-    const request = http.request(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': body.length },
-      signal
-    }, (response) => {
-      const chunks = [];
-      response.on('data', (chunk) => chunks.push(chunk));
-      response.on('end', () => {
-        clearTimeout(timer);
-        resolve({ status: response.statusCode, text: Buffer.concat(chunks).toString('utf8') });
-      });
-      response.on('error', (error) => {
-        clearTimeout(timer);
-        reject(error);
-      });
-    });
-    const timer = setTimeout(() => request.destroy(new Error(`sem resposta do Ollama em ${timeoutMs} ms`)), timeoutMs);
-    request.on('error', (error) => {
-      clearTimeout(timer);
-      reject(error);
-    });
-    request.end(body);
-  });
-}
+import { postJson } from '../lib/http.js';
 
 /**
  * Adaptador de provedor da v1.0.0 (decisão D1). A v1.0.0 só fala com o OpenRouter; uma
@@ -45,11 +11,13 @@ function postJson(url, payload, { timeoutMs, signal }) {
  *
  * Portão por run: fora de um run ativo (begin/end), qualquer chamada é recusada na hora
  * e fica registrada à parte. Um job da v1.0.0 que sobreviveu ao run anterior não chega ao
- * Ollama nem soma tokens no run errado.
+ * Ollama nem soma tokens no run errado. Cada chamada fica presa ao runId em que entrou, e
+ * end(runId) só fecha o portão e aborta as chamadas daquele run: um run abandonado pelo
+ * watchdog que termine depois não mexe no run seguinte.
  */
 export async function installProviderAdapter(context, condition, config) {
   let activeRunId = null;
-  const calls = [];
+  const callsByRun = new Map();
   const strayCalls = [];
   const pending = new Map();
 
@@ -83,6 +51,12 @@ export async function installProviderAdapter(context, condition, config) {
     const runId = activeRunId;
     const startedAt = Date.now();
     const call = { runId, originalModel, model: body.model, temperature: body.temperature, maxTokens: body.max_tokens || null, reasoning: 'original' };
+    const record = () => {
+      if (!callsByRun.has(runId)) {
+        callsByRun.set(runId, []);
+      }
+      callsByRun.get(runId).push(call);
+    };
     const controller = new AbortController();
 
     const handled = (async () => {
@@ -104,17 +78,17 @@ export async function installProviderAdapter(context, condition, config) {
         } catch (error) {
           call.parseError = error.message;
         }
-        calls.push(call);
+        record();
         await route.fulfill({ status: response.status, contentType: 'application/json', body: response.text }).catch(() => {});
       } catch (error) {
         call.latencyMs = Date.now() - startedAt;
         call.networkError = controller.signal.aborted ? 'abortada no fim do run' : error.message;
-        calls.push(call);
+        record();
         await route.fulfill({ status: 502, contentType: 'application/json', body: JSON.stringify({ error: { message: `Adaptador: ${call.networkError}` } }) }).catch(() => {});
       }
     })();
 
-    pending.set(controller, handled);
+    pending.set(controller, { runId, handled });
     try {
       await handled;
     } finally {
@@ -125,18 +99,22 @@ export async function installProviderAdapter(context, condition, config) {
   return {
     begin(runId) {
       activeRunId = runId;
-      calls.length = 0;
+      callsByRun.set(runId, []);
     },
     /**
-     * Fecha o portão, aborta o que ficou pendurado e espera essas chamadas serem
-     * registradas antes de devolver as do run.
+     * Fecha o portão (se ainda for deste run), aborta as chamadas deste run que ficaram
+     * penduradas e espera elas serem registradas antes de devolver as do run.
      */
-    async end() {
-      activeRunId = null;
-      const aborted = pending.size;
-      pending.forEach((handled, controller) => controller.abort());
-      await Promise.allSettled([...pending.values()]);
-      return { calls: calls.splice(0, calls.length), aborted };
+    async end(runId) {
+      if (activeRunId === runId) {
+        activeRunId = null;
+      }
+      const mine = [...pending.entries()].filter(([, entry]) => entry.runId === runId);
+      mine.forEach(([controller]) => controller.abort());
+      await Promise.allSettled(mine.map(([, entry]) => entry.handled));
+      const calls = callsByRun.get(runId) || [];
+      callsByRun.delete(runId);
+      return { calls, aborted: mine.length };
     },
     takeStrayCalls: () => strayCalls.splice(0, strayCalls.length)
   };
@@ -156,9 +134,10 @@ async function getJob(serviceWorker, tabId) {
  * onReady abre o portão do adaptador só depois que o job anterior parou e foi zerado: a
  * v1.0.0 só confere o runId entre as etapas, então um laço de imagens de uma tentativa
  * anterior continua chamando o LLM. Com o portão fechado essas chamadas falham na hora e
- * o job antigo termina sozinho, sem somar tokens no run novo.
+ * o job antigo termina sozinho, sem somar tokens no run novo. onPanel recebe a aba do
+ * painel, para o watchdog do run poder fechá-la.
  */
-export async function runPanelDriver(context, extensionId, serviceWorker, page, config, onReady = () => {}) {
+export async function runPanelDriver(context, extensionId, serviceWorker, page, config, { onReady = () => {}, onPanel = () => {} } = {}) {
   const tab = await findTabByUrl(serviceWorker, page.url());
   if (!tab) {
     return { status: 'falha', errors: [{ stage: 'harness', message: 'Aba do snapshot não encontrada pelo service worker.' }] };
@@ -176,6 +155,7 @@ export async function runPanelDriver(context, extensionId, serviceWorker, page, 
   onReady();
 
   const panel = await context.newPage();
+  onPanel(panel);
   try {
     await panel.addInitScript((target) => {
       const originalQuery = chrome.tabs.query.bind(chrome.tabs);
@@ -210,13 +190,14 @@ export async function runPanelDriver(context, extensionId, serviceWorker, page, 
       return { status: 'falha', tabId: tab.id, staleJob, job, errors: [{ stage: 'analise', message: job.error || 'erro sem mensagem' }] };
     }
 
-    // O painel consulta o job a cada 1 s e então mostra os resultados com o botão Aplicar
+    // O painel consulta o job a cada 1 s e então mostra os resultados com o botão Aplicar.
+    // A aplicação é local (mensagens ao content script), sem LLM: tem prazo próprio
     await panel.waitForFunction(() => {
       const results = document.getElementById('results-section');
       return results && getComputedStyle(results).display !== 'none';
     }, null, { timeout: 15000 });
     await panel.click('#apply-optimizations-btn');
-    await panel.waitForFunction(() => /\b(success|error)\b/.test(document.getElementById('report-status').className), null, { timeout: config.timeouts.panelMs });
+    await panel.waitForFunction(() => /\b(success|error)\b/.test(document.getElementById('report-status').className), null, { timeout: config.timeouts.applyMs });
     const report = await panel.evaluate(() => ({
       status: document.getElementById('report-status').className,
       summary: document.getElementById('report-summary').innerText

@@ -1,15 +1,17 @@
 import { AxeBuilder } from '@axe-core/playwright';
 
 /**
- * Roda o axe-core com as tags do estudo e resume por impacto, contando nós (elementos)
- * afetados. `keys` (regra + alvo) alimenta novos_erros_axe; a diferença por regra fica
- * no JSON bruto.
+ * Roda o axe-core com as tags do estudo e resume por impacto. byImpact conta pares
+ * (regra, nó): um elemento que falha em duas regras conta duas vezes, como nas contagens
+ * do próprio axe. `elements` conta elementos distintos com alguma violação. `keys`
+ * (regra + alvo) alimenta novos_erros_axe; a diferença por regra fica no JSON bruto.
  */
 export async function runAxe(page, tags) {
   const results = await new AxeBuilder({ page }).withTags(tags).analyze();
   const byImpact = { critical: 0, serious: 0, moderate: 0, minor: 0 };
   const keys = [];
   const rules = {};
+  const targets = new Set();
 
   results.violations.forEach((violation) => {
     rules[violation.id] = violation.nodes.length;
@@ -18,13 +20,16 @@ export async function runAxe(page, tags) {
       if (impact in byImpact) {
         byImpact[impact] += 1;
       }
-      keys.push(`${violation.id}|${JSON.stringify(node.target)}`);
+      const target = JSON.stringify(node.target);
+      targets.add(target);
+      keys.push(`${violation.id}|${target}`);
     });
   });
 
   return {
     engine: results.testEngine,
     byImpact,
+    elements: targets.size,
     incomplete: results.incomplete.reduce((sum, item) => sum + item.nodes.length, 0),
     rules,
     keys,
