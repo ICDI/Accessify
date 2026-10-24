@@ -27,6 +27,39 @@ Pendências da Fase 0:
 - Na máquina do lote: driver NVIDIA compatível, `OLLAMA_KEEP_ALIVE`, `OLLAMA_CONTEXT_LENGTH` conforme D8 e teste de memória com imagem (o `gemma3:4b` ficou inconclusivo aqui).
 - Opcional: apagar `D:\Ollama\models` (~0,8 GB de downloads parciais que falharam no FAT32).
 
+## Sessão de 23/10/2026 — Fase 1 (C10, log estruturado)
+
+Branch `eval/fase-1-c10` (PR para a `semish2026`). As fases 1 a 5 vão em branches encadeadas, cada uma com uma PR própria para a `semish2026`, para que nenhum merge fora de ordem deixe trabalho para trás.
+
+O que mudou:
+
+- `content.js`: contadores por regra em `applyDeterministicFixes()` e por categoria em `applyAiProvidedOptimizations()` (só registram o que já era somado em `appliedCount`); `applyOptimizations()` devolve também `deterministicFixes`, `aiFixes`, `remainingByType`, `genericLabels` (diferença no DOM antes/depois, então cobre fallbacks do content, do background e do painel sem contar rótulos que a página já tinha) e `nothingToApply`; `extractImages()` inclui `selector`; o resultado de toda aplicação é reportado ao background (`recordApplyResult`).
+- `background.js`: runLog por aba em `analysisRunLog:<tabId>`, com fila por aba para leitura e escrita; as escritas não seguram o fluxo da análise (entram na fila sem `await`, e uma falha do log nunca interrompe a extensão: vira `storageError` no `getRunLog`); `chatCompletion()` mede latência, tokens, `finish_reason` e o tamanho de `content` e `reasoning`, inclusive em falha de rede; `processImages()` marca a origem de cada alt (`heuristic`, `limite`, `llm`, `erro`); `reasoningAsAlt` sinaliza quando o raciocínio do modelo virou o alt; erros por etapa; `getRunLog` por mensagem (`{ action: 'getRunLog', tabId }`) e `optimizer.getRunLog(tabId)` no SW; logs órfãos removidos na inicialização.
+- `popup.js` e `buildOptimizationsForApplication()`: campos aditivos `origin` (`llm`, `heuristic`, `limite`, `painel`) em cada item do payload e `runId` na mensagem de aplicação. O aplicador ignora os dois; o log usa para separar o que veio da IA do que veio de fallback e para não misturar execuções.
+
+Significado dos campos que pedem cuidado na análise:
+
+- `deterministicFixes`: operações por regra e rodada (`type` = tipo de problema quando a correspondência é 1:1; `fixRuleIssueTypes` mapeia as demais regras). `noop: true` em `accessify-styles` quando a folha própria não mudou na rodada.
+- `aiFixes`: operações de `applyAiProvidedOptimizations()` por categoria e origem (`imageAlts:llm`, `structureChanges:painel`, ...). Só `:llm` é IA de fato.
+- `rounds`: alterações e problemas restantes por rodada.
+- `altTexts`: `eligible` (o background ofereceu o alt), `applied`/`finalAlt` (o que chegou ao DOM), `discardedAlt` (alt de uma chamada que falhou, que não é aplicado), `reasoningAsAlt`.
+- `apply.overrodeDeterministicAlt`: imagens em que o alt do background sobrescreveu o da heurística do content (a mesma imagem aparece em `deterministicFixes` e em `aiFixes`).
+- `apply` descreve a aplicação mais recente; `applies` guarda todas (o painel permite reaplicar).
+- `genericLabels`: rótulos de fallback novos no DOM (diferença antes/depois), de qualquer origem.
+
+Teste (Playwright 1.64.1, Chromium 1248, extensão descompactada, painel `popup.html` operado de verdade):
+
+| Verificação | Resultado |
+|---|---|
+| DOM final do build = DOM final da tag `v1.1.0` (test-page, sem LLM) | igual (18 599 caracteres; IDs aleatórios normalizados) |
+| Dois runs seguidos | DOM igual e mesmas `deterministicFixes` |
+| Soma dos contadores = `appliedCount` | 40 determinísticas + 12 de `applyAiProvidedOptimizations()` = 52 (`ariaLabels:painel` 3, `structureChanges:painel` 6, `styles:painel` 1, `imageAlts:painel` 1, `imageAlts:heuristic` 1; nenhuma da IA) |
+| Rodadas | 48, 3 e 1 alterações; 23, 21 e 21 problemas restantes |
+| runLog com todos os campos e JSON válido | sim |
+| Imagem sem contexto com `qwen3:8b` | alt gravado: "Okay, the user wants me to generate an alt text for an image named IMG_2034.png with dimensions"; `reasoningAsAlt: true`, `finish_reason: length`, 153/64 tokens, 79 s. O avaliador da própria extensão contou 0 problemas restantes |
+
+O último caso confirma, dentro da extensão, o defeito que a sonda tinha mostrado fora dela (D5).
+
 ## Decisões
 
 | Id | Decisão | Situação |
@@ -35,21 +68,23 @@ Pendências da Fase 0:
 | D2 | Subestudo de alt text com visão como condição separada `v1.1.0-vision` | tomada |
 | D3 | Um contexto de navegador por condição | tomada |
 | D4 | Snapshot = DOM sem scripts + HAR dos subrecursos; índice de hashes versionado | tomada |
-| D5 | Raciocínio na v1.1.0 local (o Ollama ignora `think: false`; confirmado na prática) | **pendente** |
-| D6 | WAVE: os termos da WebAIM proíbem automatizar a extensão | **pendente** |
-| D7 | Caminho de aplicação medido: "Aplicar" do painel ou otimização automática | **pendente** |
-| D8 | Parâmetros de geração: `OLLAMA_CONTEXT_LENGTH`, temperatura da `v1.1.0`, limites do adaptador da v1.0.0 | **pendente** |
+| D5 | Duas condições: `v1.1.0` (original, o Ollama ignora `think: false` e o alt vira raciocínio) e `v1.1.0-fix` (`reasoning_effort: 'none'` só no modo automação) | tomada em 23/10/2026 |
+| D6 | Segundo avaliador = IBM Equal Access (`accessibility-checker-engine`, Apache-2.0) no DOM pós; a WAVE automatizada fica de fora (termos da WebAIM) | tomada em 23/10/2026 |
+| D7 | O estudo mede o "Aplicar" do painel: o harness opera o `popup.html` real (v1.0.0) e o gancho C11 da v1.1.0 aplica as mesmas correções do painel | tomada em 23/10/2026 |
+| D8 | `temperature: 0` em todas as chamadas das duas versões, `OLLAMA_CONTEXT_LENGTH=4096`, `max_tokens` originais; run lento demais vira falha por timeout | tomada em 23/10/2026 |
 
 ## Desvios em relação às instruções e à v1.1.0 (entram no artigo)
 
-- Código da v1.1.0: nenhum desvio até aqui.
+- Código da v1.1.0: o C10 só acrescenta instrumentação (contadores, medições, log); o teste da Fase 1 mostrou o DOM final idêntico ao da tag `v1.1.0` na `test-page.html` operando o painel.
 - Condição v1.0.0 roda com adaptador de provedor (D1); a v1.0.0 original só fala com o OpenRouter.
 - Condição `v1.1.0-vision` (D2) muda o caminho local do alt text; a condição `v1.1.0` fica com o caminho original.
+- Condição `v1.1.0-fix` (D5) troca `think: false` por `reasoning_effort: 'none'` nas chamadas ao Ollama.
+- `temperature: 0` (D8) substitui os literais da v1.1.0 (0.3 no alt, 0.1 nas recomendações) e o 0.7 da v1.0.0 nas condições do estudo; o uso manual da extensão continua com os valores originais.
 - Um contexto por condição (D3) em vez das três extensões juntas (seção 4.1 das instruções).
 - Snapshot sem scripts + HAR (D4).
 - C11 usa `action` (convenção do código) em vez de `type` nas mensagens.
-- A WAVE automatizada da seção 4.4 das instruções não será feita sem permissão da WebAIM (D6).
-- Se D8 trocar a temperatura do alt (0.3) pela do gancho, isso é desvio da v1.1.0.
+- A WAVE automatizada da seção 4.4 das instruções foi substituída pelo IBM Equal Access (D6).
+- O runLog fica numa chave própria (`analysisRunLog:<tabId>`) ligada ao job pelo `runId`, e não dentro do job, que é zerado a cada carregamento da aba.
 
 ## Ambiente de desenvolvimento
 
@@ -151,5 +186,7 @@ Resultado de uma verificação adversarial: um pesquisador por grupo de premissa
 
 ## Próximos passos
 
-1. C10 — log estruturado (instrumentação; não depende das decisões pendentes).
-2. Decidir D5, D7 e D8 antes do C11 (gancho e overrides) e D6 antes do segundo avaliador.
+1. Fase 2 — C11, gancho de automação (com as correções do painel, `v1.1.0-fix` e `v1.1.0-vision`).
+2. Fase 3 — harness `eval/` com axe-core.
+3. Fase 4 — IBM Equal Access.
+4. Fase 5 — aceites.

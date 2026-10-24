@@ -759,7 +759,8 @@ class PopupController {
       // mais orquestrar rodadas manuais daqui nem depender de outro clique do usuário.
       const applyResult = await this.sendMessageToContent({
         action: 'applyOptimizations',
-        optimizations: this.optimizations
+        optimizations: this.optimizations,
+        runId: this.jobState?.runId || null
       });
 
       if (!applyResult.success) {
@@ -881,7 +882,8 @@ class PopupController {
    * Combina recomendações da IA com alt texts gerados para aplicação.
    */
   combineOptimizations(optimizations, imageAltResults) {
-    const imageAlts = imageAltResults.map(({ index, alt }) => ({ index, alt }));
+    // `origin` só alimenta o log estruturado (C10): quem aplica ignora o campo.
+    const imageAlts = imageAltResults.map(({ index, alt, source }) => ({ index, alt, origin: source || 'llm' }));
     const textChanges = [...(optimizations?.textChanges || [])];
     const ariaLabels = [...(optimizations?.ariaLabels || [])];
     const structureChanges = [...(optimizations?.structureChanges || [])];
@@ -889,7 +891,7 @@ class PopupController {
     this.buildDefaultSpacerImageFixes().forEach((fix) => {
       const hasImageAlt = imageAlts.some((imageAlt) => imageAlt.index === fix.index);
       if (!hasImageAlt) {
-        imageAlts.push(fix);
+        imageAlts.push({ ...fix, origin: 'painel' });
       }
     });
 
@@ -899,7 +901,8 @@ class PopupController {
         textChanges.push({
           selector: fix.selector,
           text: fix.text,
-          reason: 'Fallback automático para link vazio'
+          reason: 'Fallback automático para link vazio',
+          origin: 'painel'
         });
       }
 
@@ -908,7 +911,8 @@ class PopupController {
         ariaLabels.push({
           selector: fix.selector,
           label: fix.text,
-          role: null
+          role: null,
+          origin: 'painel'
         });
       }
     });
@@ -920,7 +924,8 @@ class PopupController {
           textChanges.push({
             selector: fix.selector,
             text: fix.text,
-            reason: 'Fallback automático para botão vazio'
+            reason: 'Fallback automático para botão vazio',
+            origin: 'painel'
           });
         }
       }
@@ -932,7 +937,8 @@ class PopupController {
             selector: fix.selector,
             newTag: null,
             attributes: fix.attributes,
-            reason: 'Fallback automático para botão vazio'
+            reason: 'Fallback automático para botão vazio',
+            origin: 'painel'
           });
         }
       }
@@ -942,7 +948,8 @@ class PopupController {
         ariaLabels.push({
           selector: fix.selector,
           label: fix.label,
-          role: null
+          role: null,
+          origin: 'painel'
         });
       }
     });
@@ -959,7 +966,8 @@ class PopupController {
           selector: fix.selector,
           newTag: null,
           attributes: { title: null },
-          reason: 'Fallback automático para title redundante'
+          reason: 'Fallback automático para title redundante',
+          origin: 'painel'
         });
       }
     });
@@ -967,9 +975,9 @@ class PopupController {
     this.buildDefaultRedundantImageAltFixes().forEach((fix) => {
       const existingIndex = imageAlts.findIndex((imageAlt) => imageAlt.index === fix.index);
       if (existingIndex >= 0) {
-        imageAlts.splice(existingIndex, 1, fix);
+        imageAlts.splice(existingIndex, 1, { ...fix, origin: 'painel' });
       } else {
-        imageAlts.push(fix);
+        imageAlts.push({ ...fix, origin: 'painel' });
       }
     });
 
@@ -980,7 +988,8 @@ class PopupController {
           selector: fix.selector,
           newTag: null,
           attributes: fix.attributes,
-          reason: 'Fallback automático para campo sem label'
+          reason: 'Fallback automático para campo sem label',
+          origin: 'painel'
         });
       }
 
@@ -989,7 +998,8 @@ class PopupController {
         ariaLabels.push({
           selector: fix.selector,
           label: fix.label,
-          role: null
+          role: null,
+          origin: 'painel'
         });
       }
     });
@@ -1006,7 +1016,8 @@ class PopupController {
           selector: fix.selector,
           newTag: null,
           attributes: fix.attributes,
-          reason: 'Fallback automático para conteúdo aria-hidden'
+          reason: 'Fallback automático para conteúdo aria-hidden',
+          origin: 'painel'
         });
       }
     });
@@ -1024,13 +1035,17 @@ class PopupController {
       .filter((value) => typeof value === 'string' && value.trim().length > 0)
       .join('\n');
 
+    const hasAiStyles = typeof optimizations?.styles === 'string' && optimizations.styles.trim().length > 0;
+    const hasFallbackStyles = fallbackStyles.length > 0;
+
     return {
       ...optimizations,
       imageAlts: [...(optimizations?.imageAlts || []), ...imageAlts],
       structureChanges,
       textChanges,
       ariaLabels,
-      styles
+      styles,
+      stylesOrigin: hasAiStyles && hasFallbackStyles ? 'llm+painel' : (hasFallbackStyles ? 'painel' : 'llm')
     };
   }
 
