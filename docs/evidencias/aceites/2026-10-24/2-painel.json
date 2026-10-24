@@ -1,0 +1,633 @@
+{
+  "aceite": "2-painel",
+  "iniciadoEm": "2026-10-24T07:52:54.478Z",
+  "args": {
+    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+  },
+  "checks": [
+    {
+      "label": "painel: Analisar → Aplicar com sucesso, sem LLM",
+      "ok": true,
+      "detail": "52 alterações aplicadas em 3 rodada(s) automáticas | Problemas restantes: 21 | Tempo total do processo: 366 ms"
+    },
+    {
+      "label": "painel: alterações aplicadas",
+      "ok": true,
+      "detail": "52"
+    },
+    {
+      "label": "runLog (C10) com todos os campos",
+      "ok": true,
+      "detail": "completo"
+    },
+    {
+      "label": "runLog sem erro de gravação",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "soma determinística + IA = appliedCount",
+      "ok": true,
+      "detail": "40 + 12 vs 52"
+    },
+    {
+      "label": "appliedCount do runLog = alterações do painel",
+      "ok": true,
+      "detail": "52 vs 52"
+    },
+    {
+      "label": "sem erros de JavaScript nas páginas da extensão",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "gancho desligado sem o opt-in (automationHookEnabled), com o content script carregado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "controle: com o opt-in, o gancho responde",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "extension": {
+    "gitDescribe": "v1.1.0-12-ga28ba68",
+    "copySha256": "512fd4b842d003abae778685fa2ac69c399d8f2f4d6d9d30e27ee78c4e7abb9d"
+  },
+  "panel": {
+    "status": "ok",
+    "appliedChanges": 52,
+    "report": {
+      "status": "report-status success",
+      "summary": "52 alterações aplicadas em 3 rodada(s) automáticas\nProblemas restantes: 21\nTempo total do processo: 366 ms"
+    },
+    "errors": []
+  },
+  "runLog": {
+    "aiFixes": [
+      {
+        "applied": 3,
+        "round": 1,
+        "type": "ariaLabels:painel"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "imageAlts:heuristic"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "imageAlts:painel"
+      },
+      {
+        "applied": 6,
+        "round": 1,
+        "type": "structureChanges:painel"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "styles:painel"
+      }
+    ],
+    "altTexts": [
+      {
+        "alt": "Imagem sem alt text:",
+        "applied": true,
+        "chars": 20,
+        "discardedAlt": null,
+        "eligible": true,
+        "error": null,
+        "fallbackHeuristic": true,
+        "finalAlt": "Imagem sem alt text:",
+        "index": 0,
+        "latencyMs": null,
+        "reasoningAsAlt": false,
+        "selector": "html > body > div > div:nth-of-type(2) > div:nth-of-type(1) > img",
+        "source": "heuristic",
+        "tokensIn": null,
+        "tokensOut": null,
+        "vision": false,
+        "visionError": null,
+        "visionSource": null
+      }
+    ],
+    "applies": [
+      {
+        "appliedCount": 52,
+        "error": null,
+        "partial": false,
+        "recordedAt": "2026-10-24T07:53:02.889Z",
+        "status": "aplicado"
+      }
+    ],
+    "apply": {
+      "appliedCount": 52,
+      "error": null,
+      "overrodeDeterministicAlt": 1,
+      "partial": false,
+      "recordedAt": "2026-10-24T07:53:02.889Z",
+      "status": "aplicado"
+    },
+    "automation": null,
+    "deterministicFixes": [
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "accessify-styles"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "aria-hidden-content"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "autoplay-media-no-control"
+      },
+      {
+        "applied": 3,
+        "round": 1,
+        "type": "clickable-non-semantic"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "duplicate-id"
+      },
+      {
+        "applied": 2,
+        "round": 1,
+        "type": "duplicate-landmark-no-label"
+      },
+      {
+        "applied": 3,
+        "round": 1,
+        "type": "form-field-no-visible-label"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "iframe-missing-title"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "image-missing-alt"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "justified-text"
+      },
+      {
+        "applied": 3,
+        "round": 1,
+        "type": "link-generic-text"
+      },
+      {
+        "applied": 2,
+        "round": 1,
+        "type": "low-color-contrast"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "missing-autocomplete"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "new-tab-link-no-warning"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "no-bypass-blocks"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "no-h1"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "redundant-title-text"
+      },
+      {
+        "applied": 6,
+        "round": 1,
+        "type": "small-text"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "svg-missing-name"
+      },
+      {
+        "applied": 3,
+        "round": 1,
+        "type": "table-missing-headers"
+      },
+      {
+        "applied": 1,
+        "round": 1,
+        "type": "zoom-restricted"
+      },
+      {
+        "applied": 1,
+        "round": 2,
+        "type": "accessify-styles"
+      },
+      {
+        "applied": 2,
+        "round": 2,
+        "type": "label-in-name-mismatch"
+      },
+      {
+        "applied": 1,
+        "noop": true,
+        "round": 3,
+        "type": "accessify-styles"
+      }
+    ],
+    "errors": [],
+    "fixRuleIssueTypes": {
+      "accessify-styles": [
+        "focus-outline-removed",
+        "color-only-link",
+        "justified-text",
+        "small-text",
+        "low-color-contrast",
+        "low-non-text-contrast",
+        "infinite-animation-no-reduced-motion",
+        "underlined-non-link-text"
+      ],
+      "empty-links-and-buttons": [
+        "link-no-text",
+        "empty-button"
+      ],
+      "form-field-no-visible-label": [
+        "form-field-no-visible-label",
+        "form-field-no-label"
+      ],
+      "graphic-fallbacks": [
+        "input-image-missing-alt",
+        "area-missing-alt"
+      ],
+      "image-missing-alt": [
+        "image-missing-alt",
+        "linked-image-missing-alt",
+        "spacer-image-missing-alt"
+      ],
+      "no-h1": [
+        "no-h1",
+        "no-headings"
+      ],
+      "page-title": [
+        "no-page-title",
+        "page-title-too-short"
+      ]
+    },
+    "genericLabels": 1,
+    "genericLabelsByKind": {
+      "area": 0,
+      "button": 0,
+      "field": 0,
+      "graphic": 1,
+      "iframe": 0,
+      "image": 0,
+      "inputImage": 0,
+      "link": 0,
+      "pageTitle": 0
+    },
+    "issuesFound": [
+      {
+        "count": 2,
+        "selectors": [
+          "html > body > div > div:nth-of-type(6) > div:nth-of-type(1)",
+          "html > body > div > div:nth-of-type(7) > div"
+        ],
+        "severity": "warning",
+        "type": "aria-hidden-content"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(6) > video"
+        ],
+        "severity": "critical",
+        "type": "autoplay-media-no-control"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(8) > p:nth-of-type(2) > a"
+        ],
+        "severity": "warning",
+        "type": "broken-same-page-link"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(6) > div:nth-of-type(2)"
+        ],
+        "severity": "critical",
+        "type": "captcha-detected"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(9) > div"
+        ],
+        "severity": "critical",
+        "type": "clickable-non-semantic"
+      },
+      {
+        "count": 4,
+        "selectors": [
+          "html > body > div > div:nth-of-type(3) > ul > li:nth-of-type(1) > a",
+          "html > body > div > div:nth-of-type(3) > ul > li:nth-of-type(2) > a",
+          "html > body > div > div:nth-of-type(3) > ul > li:nth-of-type(3) > a",
+          "html > body > div > div:nth-of-type(8) > p:nth-of-type(2) > a"
+        ],
+        "severity": "warning",
+        "type": "color-only-link"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "#dup"
+        ],
+        "severity": "critical",
+        "type": "duplicate-id"
+      },
+      {
+        "count": 2,
+        "selectors": [
+          "html > body > div > div:nth-of-type(6) > nav:nth-of-type(1)",
+          "html > body > div > div:nth-of-type(6) > nav:nth-of-type(2)"
+        ],
+        "severity": "warning",
+        "type": "duplicate-landmark-no-label"
+      },
+      {
+        "count": 1,
+        "selectors": [],
+        "severity": "critical",
+        "type": "focus-outline-removed"
+      },
+      {
+        "count": 3,
+        "selectors": [
+          "html > body > div > div:nth-of-type(4) > form > input:nth-of-type(1)",
+          "html > body > div > div:nth-of-type(4) > form > input:nth-of-type(2)",
+          "html > body > div > div:nth-of-type(4) > form > textarea"
+        ],
+        "severity": "critical",
+        "type": "form-error-not-announced"
+      },
+      {
+        "count": 3,
+        "selectors": [
+          "html > body > div > div:nth-of-type(4) > form > input:nth-of-type(1)",
+          "html > body > div > div:nth-of-type(4) > form > input:nth-of-type(2)",
+          "html > body > div > div:nth-of-type(4) > form > textarea"
+        ],
+        "severity": "critical",
+        "type": "form-field-no-label"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(8) > h5"
+        ],
+        "severity": "warning",
+        "type": "heading-level-skip"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > h3"
+        ],
+        "severity": "warning",
+        "type": "heading-structure-invalid"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(8) > iframe"
+        ],
+        "severity": "critical",
+        "type": "iframe-missing-title"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(2) > div:nth-of-type(2) > img"
+        ],
+        "severity": "warning",
+        "type": "image-alt-too-short"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(2) > div:nth-of-type(1) > img"
+        ],
+        "severity": "critical",
+        "type": "image-missing-alt"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(6) > div:nth-of-type(1)"
+        ],
+        "severity": "warning",
+        "type": "infinite-animation-no-reduced-motion"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(7) > p:nth-of-type(1)"
+        ],
+        "severity": "warning",
+        "type": "justified-text"
+      },
+      {
+        "count": 3,
+        "selectors": [
+          "html > body > div > div:nth-of-type(3) > ul > li:nth-of-type(1) > a",
+          "html > body > div > div:nth-of-type(3) > ul > li:nth-of-type(2) > a",
+          "html > body > div > div:nth-of-type(3) > ul > li:nth-of-type(3) > a"
+        ],
+        "severity": "warning",
+        "type": "link-generic-text"
+      },
+      {
+        "count": 2,
+        "selectors": [
+          "html > body > div > div:nth-of-type(1)",
+          "html > body > div > div:nth-of-type(1) > strong"
+        ],
+        "severity": "warning",
+        "type": "low-color-contrast"
+      },
+      {
+        "count": 3,
+        "selectors": [
+          "html > body > div > div:nth-of-type(4) > form > input:nth-of-type(1)",
+          "html > body > div > div:nth-of-type(4) > form > input:nth-of-type(2)",
+          "html > body > div > div:nth-of-type(4) > form > textarea"
+        ],
+        "severity": "warning",
+        "type": "low-non-text-contrast"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > head > meta:nth-of-type(3)"
+        ],
+        "severity": "warning",
+        "type": "meta-refresh-redirect"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(4) > form > input:nth-of-type(2)"
+        ],
+        "severity": "warning",
+        "type": "missing-autocomplete"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(3) > ul > li:nth-of-type(4) > a"
+        ],
+        "severity": "warning",
+        "type": "new-tab-link-no-warning"
+      },
+      {
+        "count": 1,
+        "selectors": [],
+        "severity": "warning",
+        "type": "no-bypass-blocks"
+      },
+      {
+        "count": 1,
+        "selectors": [],
+        "severity": "critical",
+        "type": "no-h1"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(2) > div:nth-of-type(3) > p > img"
+        ],
+        "severity": "warning",
+        "type": "redundant-image-alt"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(7) > p:nth-of-type(2)"
+        ],
+        "severity": "warning",
+        "type": "redundant-title-text"
+      },
+      {
+        "count": 6,
+        "selectors": [
+          "html > body > div > div:nth-of-type(1)",
+          "html > body > div > div:nth-of-type(4) > form > div",
+          "html > body > div > div:nth-of-type(7) > p:nth-of-type(3)",
+          "html > body > div > div:nth-of-type(12)",
+          "html > body > div > div:nth-of-type(12) > p:nth-of-type(1)",
+          "html > body > div > div:nth-of-type(12) > p:nth-of-type(2)"
+        ],
+        "severity": "warning",
+        "type": "small-text"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(8) > svg"
+        ],
+        "severity": "warning",
+        "type": "svg-missing-name"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > body > div > div:nth-of-type(5) > table"
+        ],
+        "severity": "critical",
+        "type": "table-missing-headers"
+      },
+      {
+        "count": 1,
+        "selectors": [
+          "html > head > meta:nth-of-type(2)"
+        ],
+        "severity": "critical",
+        "type": "zoom-restricted"
+      }
+    ],
+    "issuesTotal": 51,
+    "llmCalls": [],
+    "model": "qwen3:8b",
+    "modelId": null,
+    "provider": "local",
+    "remainingByType": {
+      "autoplay-media-no-control": 1,
+      "broken-same-page-link": 1,
+      "captcha-detected": 1,
+      "color-only-link": 1,
+      "excessive-div-roles": 1,
+      "focus-outline-removed": 1,
+      "form-error-not-announced": 3,
+      "heading-level-skip": 2,
+      "image-alt-too-short": 1,
+      "infinite-animation-no-reduced-motion": 1,
+      "low-non-text-contrast": 3,
+      "meta-refresh-redirect": 1,
+      "redundant-image-alt": 1,
+      "redundant-title-text": 3
+    },
+    "remainingIssues": 21,
+    "rounds": [
+      {
+        "applied": 48,
+        "remainingIssues": 23,
+        "round": 1
+      },
+      {
+        "applied": 3,
+        "remainingIssues": 21,
+        "round": 2
+      },
+      {
+        "applied": 1,
+        "remainingIssues": 21,
+        "round": 3
+      }
+    ],
+    "roundsRun": 3,
+    "runId": "1792828381627-1paapyxq",
+    "tabId": 249796199,
+    "temperature": null,
+    "timestamp": "2026-10-24T07:53:01.627Z",
+    "totals": {
+      "tokensIn": 0,
+      "tokensOut": 0,
+      "latencyMs": 0
+    },
+    "url": "http://127.0.0.1:64431/test-page.html",
+    "version": "1.1.0"
+  },
+  "terminadoEm": "2026-10-24T07:53:06.831Z",
+  "ok": true
+}

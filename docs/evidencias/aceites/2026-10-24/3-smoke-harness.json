@@ -1,0 +1,224 @@
+{
+  "aceite": "3-smoke-harness",
+  "iniciadoEm": "2026-10-24T07:54:38.751Z",
+  "args": {
+    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+  },
+  "checks": [
+    {
+      "label": "run.js --smoke terminou (código 0)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "9 linhas (3 URLs × baseline, v1.0.0, v1.1.0)",
+      "ok": true,
+      "detail": "9"
+    },
+    {
+      "label": "todas as combinações URL × condição presentes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "status válido e falhas com motivo em observacoes",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "JSON bruto de cada linha existe, é válido e bate com raw_sha256",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "axe preenchido em todas as linhas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "IBM preenchido (ou erro do avaliador justificado)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "IBM rodou em toda baseline e em ao menos uma linha de cada condição",
+      "ok": true,
+      "detail": "0 linha(s) com erro do IBM"
+    },
+    {
+      "label": "novos_erros_axe e novos_erros_ibm nas condições com plugin",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "tokens e latência nas condições com plugin",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "cada condição com plugin chamou o LLM (tokens_in > 0 em ao menos uma linha)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "ao menos um run com plugin aplicou (ok ou parcial)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "registro de sessão com versões (Playwright, axe, IBM, Ollama) e fim do lote",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "procedência das extensões na sessão",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "contexto do Ollama = 4096 na carga de cada condição (D8)",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "results": "C:\\Users\\marlo\\AppData\\Local\\Temp\\accessify-aceite-smoke-C9eyUV",
+  "sessao": "20261024-075439422-0ac5",
+  "rows": [
+    {
+      "condicao": "baseline",
+      "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
+      "status": "ok",
+      "tentativas": "1",
+      "observacoes": ""
+    },
+    {
+      "condicao": "baseline",
+      "url": "https://www.utfpr.edu.br/",
+      "status": "ok",
+      "tentativas": "1",
+      "observacoes": ""
+    },
+    {
+      "condicao": "baseline",
+      "url": "https://www.gov.br/pt-br",
+      "status": "ok",
+      "tentativas": "1",
+      "observacoes": ""
+    },
+    {
+      "condicao": "v1.0.0",
+      "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
+      "status": "falha",
+      "tentativas": "2",
+      "observacoes": "tempo: A análise não terminou em 290000 ms. | tentativa 1: tempo: A análise não terminou em 290000 ms."
+    },
+    {
+      "condicao": "v1.0.0",
+      "url": "https://www.utfpr.edu.br/",
+      "status": "falha",
+      "tentativas": "2",
+      "observacoes": "tempo: A análise não terminou em 290000 ms. | tentativa 1: tempo: A análise não terminou em 290000 ms."
+    },
+    {
+      "condicao": "v1.0.0",
+      "url": "https://www.gov.br/pt-br",
+      "status": "falha",
+      "tentativas": "2",
+      "observacoes": "analise: Erro da API (502): {\"error\":{\"message\":\"Adaptador: sem resposta em 280000 ms\"}} | tentativa 1: analise: Erro da API (502): {\"error\":{\"message\":\"Adaptador: sem resposta em 280000 ms\"}}"
+    },
+    {
+      "condicao": "v1.1.0",
+      "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
+      "status": "ok",
+      "tentativas": "1",
+      "observacoes": ""
+    },
+    {
+      "condicao": "v1.1.0",
+      "url": "https://www.utfpr.edu.br/",
+      "status": "ok",
+      "tentativas": "1",
+      "observacoes": ""
+    },
+    {
+      "condicao": "v1.1.0",
+      "url": "https://www.gov.br/pt-br",
+      "status": "ok",
+      "tentativas": "1",
+      "observacoes": ""
+    }
+  ],
+  "statusPorCondicao": {
+    "baseline": [
+      "ok",
+      "ok",
+      "ok"
+    ],
+    "v1.0.0": [
+      "falha",
+      "falha",
+      "falha"
+    ],
+    "v1.1.0": [
+      "ok",
+      "ok",
+      "ok"
+    ]
+  },
+  "session": {
+    "sessionId": "20261024-075439422-0ac5",
+    "versions": {
+      "node": "v22.14.0",
+      "playwright": "1.64.1",
+      "axeCore": "4.14.0",
+      "axeCorePlaywright": "4.14.0",
+      "ibmEngine": "4.0.34",
+      "harness": {
+        "commit": "a28ba689316051b6d7239a30d6e947b50780bdf8",
+        "describe": "v1.1.0-12-ga28ba68",
+        "dirty": false,
+        "sha256": "6ff6e79582ed05ee4b1f5581f6db30ee96cebe10ebb0515fb4ba147234365fb8"
+      }
+    },
+    "ollama": "0.40.9",
+    "contexts": {
+      "baseline": {
+        "browser": "Chrome/156.0.8078.4",
+        "ollama": null,
+        "relaunches": 0,
+        "strayLlmCalls": 0
+      },
+      "v1.0.0": {
+        "browser": "Chrome/156.0.8078.4",
+        "extension": "v1.0.0-semish",
+        "ollama": {
+          "ok": true,
+          "version": "0.40.9",
+          "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+          "warmupMs": 34,
+          "contextLength": 4096
+        },
+        "relaunches": 0,
+        "strayLlmCalls": 40
+      },
+      "v1.1.0": {
+        "browser": "Chrome/156.0.8078.4",
+        "extension": "v1.1.0-12-ga28ba68",
+        "ollama": {
+          "ok": true,
+          "version": "0.40.9",
+          "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+          "warmupMs": 13,
+          "contextLength": 4096
+        },
+        "relaunches": 0,
+        "strayLlmCalls": 0
+      }
+    },
+    "warnings": [],
+    "harnessErrors": [],
+    "aborted": null
+  },
+  "terminadoEm": "2026-10-24T08:27:39.411Z",
+  "ok": true
+}

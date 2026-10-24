@@ -1,0 +1,46 @@
+{
+  "aceite": "1-sintaxe",
+  "iniciadoEm": "2026-10-24T07:52:51.045Z",
+  "args": {
+    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+  },
+  "checks": [
+    {
+      "label": "node --check em 33 arquivos JS",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "manifest.json é JSON válido (MV3)",
+      "ok": true,
+      "detail": "versão 1.1.0"
+    },
+    {
+      "label": "sem permissões além das da tag v1.1.0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "nenhuma chave de API nos arquivos versionados",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": ".env fora do git",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "nenhum innerHTML/insertAdjacentHTML novo na extensão desde a v1.1.0",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "nenhum arquivo da extensão fora do git na raiz",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "terminadoEm": "2026-10-24T07:52:53.771Z",
+  "ok": true
+}

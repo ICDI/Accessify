@@ -1,0 +1,451 @@
+{
+  "aceite": "4-determinismo",
+  "iniciadoEm": "2026-10-24T07:53:56.551Z",
+  "args": {
+    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+  },
+  "checks": [
+    {
+      "label": "a) os dois runs aplicaram",
+      "ok": true,
+      "detail": "ok/52 x ok/52"
+    },
+    {
+      "label": "a) mesmo DOM final nos dois runs (sem LLM)",
+      "ok": true,
+      "detail": "18599 x 18599 caracteres"
+    },
+    {
+      "label": "a) mesmas deterministicFixes nos dois runs",
+      "ok": true,
+      "detail": "[[\"accessify-styles\",1,1],[\"aria-hidden-content\",1,1],[\"autoplay-media-no-control\",1,1],[\"clickable-non-semantic\",1,3],[\"duplicate-id\",1,1],[\"duplicate-landmark-no-label\",1,2],[\"form-field-no-visible-label\",1,3],[\"iframe-missing-title\",1,1],[\"image-missing-alt\",1,1],[\"justified-text\",1,1],[\"link-generic-text\",1,3],[\"low-color-contrast\",1,2],[\"missing-autocomplete\",1,1],[\"new-tab-link-no-warning\",1,1],[\"no-bypass-blocks\",1,1],[\"no-h1\",1,1],[\"redundant-title-text\",1,1],[\"small-text\",1,6],[\"svg-missing-name\",1,1],[\"table-missing-headers\",1,3],[\"zoom-restricted\",1,1],[\"accessify-styles\",2,1],[\"label-in-name-mismatch\",2,2],[\"accessify-styles\",3,1]]"
+    },
+    {
+      "label": "b) harness rodou v1.1.0-fix duas vezes",
+      "ok": true,
+      "detail": "código 0, 2 linhas"
+    },
+    {
+      "label": "b) os dois runs aplicaram (ok ou parcial)",
+      "ok": true,
+      "detail": "ok (sem baseline válido (mesmo snapshot, mesmo axe, mesmo ambiente e código do harne) x ok (sem baseline válido (mesmo snapshot, mesmo axe, mesmo ambiente e código do harne)"
+    },
+    {
+      "label": "b) mesmas deterministicFixes nos dois runs (com LLM)",
+      "ok": true,
+      "detail": "[[\"accessify-styles\",1,1],[\"empty-links-and-buttons\",1,7],[\"image-missing-alt\",1,23],[\"link-generic-text\",1,2],[\"low-color-contrast\",1,2],[\"new-tab-link-no-warning\",1,2],[\"no-language-declared\",1,1],[\"small-text\",1,5],[\"spacer-image-missing-alt\",1,10],[\"table-missing-headers\",1,23],[\"accessify-styles\",2,1],[\"link-generic-text\",2,2],[\"new-tab-link-no-warning\",2,2]] x [[\"accessify-styles\",1,1],[\"empty-links-and-buttons\",1,7],[\"image-missing-alt\",1,23],[\"link-generic-text\",1,2],[\"low-color-contrast\",1,2],[\"new-tab-link-no-warning\",1,2],[\"no-language-declared\",1,1],[\"small-text\",1,5],[\"spacer-image-missing-alt\",1,10],[\"table-missing-headers\",1,23],[\"accessify-styles\",2,1],[\"link-generic-text\",2,2],[\"new-tab-link-no-warning\",2,2]]"
+    }
+  ],
+  "semLlm": [
+    {
+      "status": "ok",
+      "appliedChanges": 52,
+      "deterministicFixes": [
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "accessify-styles"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "aria-hidden-content"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "autoplay-media-no-control"
+        },
+        {
+          "applied": 3,
+          "round": 1,
+          "type": "clickable-non-semantic"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "duplicate-id"
+        },
+        {
+          "applied": 2,
+          "round": 1,
+          "type": "duplicate-landmark-no-label"
+        },
+        {
+          "applied": 3,
+          "round": 1,
+          "type": "form-field-no-visible-label"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "iframe-missing-title"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "image-missing-alt"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "justified-text"
+        },
+        {
+          "applied": 3,
+          "round": 1,
+          "type": "link-generic-text"
+        },
+        {
+          "applied": 2,
+          "round": 1,
+          "type": "low-color-contrast"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "missing-autocomplete"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "new-tab-link-no-warning"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "no-bypass-blocks"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "no-h1"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "redundant-title-text"
+        },
+        {
+          "applied": 6,
+          "round": 1,
+          "type": "small-text"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "svg-missing-name"
+        },
+        {
+          "applied": 3,
+          "round": 1,
+          "type": "table-missing-headers"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "zoom-restricted"
+        },
+        {
+          "applied": 1,
+          "round": 2,
+          "type": "accessify-styles"
+        },
+        {
+          "applied": 2,
+          "round": 2,
+          "type": "label-in-name-mismatch"
+        },
+        {
+          "applied": 1,
+          "noop": true,
+          "round": 3,
+          "type": "accessify-styles"
+        }
+      ]
+    },
+    {
+      "status": "ok",
+      "appliedChanges": 52,
+      "deterministicFixes": [
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "accessify-styles"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "aria-hidden-content"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "autoplay-media-no-control"
+        },
+        {
+          "applied": 3,
+          "round": 1,
+          "type": "clickable-non-semantic"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "duplicate-id"
+        },
+        {
+          "applied": 2,
+          "round": 1,
+          "type": "duplicate-landmark-no-label"
+        },
+        {
+          "applied": 3,
+          "round": 1,
+          "type": "form-field-no-visible-label"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "iframe-missing-title"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "image-missing-alt"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "justified-text"
+        },
+        {
+          "applied": 3,
+          "round": 1,
+          "type": "link-generic-text"
+        },
+        {
+          "applied": 2,
+          "round": 1,
+          "type": "low-color-contrast"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "missing-autocomplete"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "new-tab-link-no-warning"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "no-bypass-blocks"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "no-h1"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "redundant-title-text"
+        },
+        {
+          "applied": 6,
+          "round": 1,
+          "type": "small-text"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "svg-missing-name"
+        },
+        {
+          "applied": 3,
+          "round": 1,
+          "type": "table-missing-headers"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "zoom-restricted"
+        },
+        {
+          "applied": 1,
+          "round": 2,
+          "type": "accessify-styles"
+        },
+        {
+          "applied": 2,
+          "round": 2,
+          "type": "label-in-name-mismatch"
+        },
+        {
+          "applied": 1,
+          "noop": true,
+          "round": 3,
+          "type": "accessify-styles"
+        }
+      ]
+    }
+  ],
+  "comLlm": {
+    "condition": "v1.1.0-fix",
+    "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
+    "results": "C:\\Users\\marlo\\AppData\\Local\\Temp\\accessify-aceite-determinismo-QLcLBw",
+    "exit": 0,
+    "rows": [
+      {
+        "execucao": "1",
+        "status": "ok",
+        "observacoes": "sem baseline válido (mesmo snapshot, mesmo axe, mesmo ambiente e código do harness) para novos_erros_axe | sem baseline do IBM (mesmo snapshot e ambiente, mesma versão do motor, conjunto de regras e formato) para novos_erros_ibm"
+      },
+      {
+        "execucao": "2",
+        "status": "ok",
+        "observacoes": "sem baseline válido (mesmo snapshot, mesmo axe, mesmo ambiente e código do harness) para novos_erros_axe | sem baseline do IBM (mesmo snapshot e ambiente, mesma versão do motor, conjunto de regras e formato) para novos_erros_ibm"
+      }
+    ],
+    "deterministicFixes": [
+      [
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "accessify-styles"
+        },
+        {
+          "applied": 7,
+          "round": 1,
+          "type": "empty-links-and-buttons"
+        },
+        {
+          "applied": 23,
+          "round": 1,
+          "type": "image-missing-alt"
+        },
+        {
+          "applied": 2,
+          "round": 1,
+          "type": "link-generic-text"
+        },
+        {
+          "applied": 2,
+          "round": 1,
+          "type": "low-color-contrast"
+        },
+        {
+          "applied": 2,
+          "round": 1,
+          "type": "new-tab-link-no-warning"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "no-language-declared"
+        },
+        {
+          "applied": 5,
+          "round": 1,
+          "type": "small-text"
+        },
+        {
+          "applied": 10,
+          "round": 1,
+          "type": "spacer-image-missing-alt"
+        },
+        {
+          "applied": 23,
+          "round": 1,
+          "type": "table-missing-headers"
+        },
+        {
+          "applied": 1,
+          "round": 2,
+          "type": "accessify-styles"
+        },
+        {
+          "applied": 2,
+          "round": 2,
+          "type": "link-generic-text"
+        },
+        {
+          "applied": 2,
+          "round": 2,
+          "type": "new-tab-link-no-warning"
+        }
+      ],
+      [
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "accessify-styles"
+        },
+        {
+          "applied": 7,
+          "round": 1,
+          "type": "empty-links-and-buttons"
+        },
+        {
+          "applied": 23,
+          "round": 1,
+          "type": "image-missing-alt"
+        },
+        {
+          "applied": 2,
+          "round": 1,
+          "type": "link-generic-text"
+        },
+        {
+          "applied": 2,
+          "round": 1,
+          "type": "low-color-contrast"
+        },
+        {
+          "applied": 2,
+          "round": 1,
+          "type": "new-tab-link-no-warning"
+        },
+        {
+          "applied": 1,
+          "round": 1,
+          "type": "no-language-declared"
+        },
+        {
+          "applied": 5,
+          "round": 1,
+          "type": "small-text"
+        },
+        {
+          "applied": 10,
+          "round": 1,
+          "type": "spacer-image-missing-alt"
+        },
+        {
+          "applied": 23,
+          "round": 1,
+          "type": "table-missing-headers"
+        },
+        {
+          "applied": 1,
+          "round": 2,
+          "type": "accessify-styles"
+        },
+        {
+          "applied": 2,
+          "round": 2,
+          "type": "link-generic-text"
+        },
+        {
+          "applied": 2,
+          "round": 2,
+          "type": "new-tab-link-no-warning"
+        }
+      ]
+    ]
+  },
+  "terminadoEm": "2026-10-24T07:54:37.888Z",
+  "ok": true
+}

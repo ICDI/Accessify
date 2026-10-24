@@ -1,0 +1,127 @@
+{
+  "aceite": "5-falha-injetada",
+  "iniciadoEm": "2026-10-24T07:53:36.556Z",
+  "args": {
+    "saida": "D:\\workspace\\Accessify\\docs\\evidencias\\aceites\\2026-10-24"
+  },
+  "checks": [
+    {
+      "label": "captura terminou (código 0) apesar das URLs inválidas",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "label": "captura: URL que não resolve registrada como falha",
+      "ok": true,
+      "detail": "page.goto: net::ERR_NAME_NOT_RESOLVED at https://accessify-aceite.invalid/"
+    },
+    {
+      "label": "captura: URL sem esquema registrada como falha",
+      "ok": true,
+      "detail": "URL inválida: \"www.accessify-sem-esquema.test/pagina\""
+    },
+    {
+      "label": "captura: URL válida capturada depois delas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "run terminou (código 0) com as URLs inválidas",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "label": "run: uma linha por URL",
+      "ok": true,
+      "detail": "3"
+    },
+    {
+      "label": "run: URL que não resolve → status falha com motivo",
+      "ok": true,
+      "detail": "snapshot com falha: page.goto: net::ERR_NAME_NOT_RESOLVED at https://accessify-aceite.invalid/"
+    },
+    {
+      "label": "run: URL sem esquema → status falha com motivo",
+      "ok": true,
+      "detail": "URL inválida: \"www.accessify-sem-esquema.test/pagina\""
+    },
+    {
+      "label": "run: URL válida → ok",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "label": "run com snapshot adulterado terminou (código 0)",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "label": "snapshot adulterado → falha (sha256 diferente do índice)",
+      "ok": true,
+      "detail": "snapshot no disco diferente do índice (sha256)"
+    }
+  ],
+  "work": "C:\\Users\\marlo\\AppData\\Local\\Temp\\accessify-aceite-falha-7ZQXDo",
+  "capture": {
+    "exit": 0,
+    "index": [
+      {
+        "url": "https://accessify-aceite.invalid/",
+        "status": "falha",
+        "observacoes": "page.goto: net::ERR_NAME_NOT_RESOLVED at https://accessify-aceite.invalid/"
+      },
+      {
+        "url": "www.accessify-sem-esquema.test/pagina",
+        "status": "falha",
+        "observacoes": "URL inválida: \"www.accessify-sem-esquema.test/pagina\""
+      },
+      {
+        "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
+        "status": "ok",
+        "observacoes": ""
+      }
+    ]
+  },
+  "run1": {
+    "exit": 0,
+    "rows": [
+      {
+        "url": "https://accessify-aceite.invalid/",
+        "status": "falha",
+        "observacoes": "snapshot com falha: page.goto: net::ERR_NAME_NOT_RESOLVED at https://accessify-aceite.invalid/"
+      },
+      {
+        "url": "www.accessify-sem-esquema.test/pagina",
+        "status": "falha",
+        "observacoes": "URL inválida: \"www.accessify-sem-esquema.test/pagina\""
+      },
+      {
+        "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
+        "status": "ok",
+        "observacoes": ""
+      }
+    ]
+  },
+  "run2": {
+    "exit": 0,
+    "rows": [
+      {
+        "url": "https://accessify-aceite.invalid/",
+        "status": "falha",
+        "observacoes": "snapshot com falha: page.goto: net::ERR_NAME_NOT_RESOLVED at https://accessify-aceite.invalid/"
+      },
+      {
+        "url": "www.accessify-sem-esquema.test/pagina",
+        "status": "falha",
+        "observacoes": "URL inválida: \"www.accessify-sem-esquema.test/pagina\""
+      },
+      {
+        "url": "https://www.w3.org/WAI/demos/bad/before/home.html",
+        "status": "falha",
+        "observacoes": "snapshot no disco diferente do índice (sha256)"
+      }
+    ]
+  },
+  "terminadoEm": "2026-10-24T07:53:55.943Z",
+  "ok": true
+}

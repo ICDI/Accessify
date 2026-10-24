@@ -237,6 +237,32 @@ Teste:
 | Conjunto de regras inexistente | antes: zero resultados, sem erro; agora `ibm_status: erro` |
 | W3C BAD, baseline + v1.1.0 numa sessão, v1.1.0 de novo noutra sessão | baseline: 57 violações, 19 potenciais, 9 recomendações, 35 manuais (1877 resultados de 47 regras); v1.1.0: 19 violações. `novos_erros_ibm` = 18 nas duas sessões (a segunda achou a baseline do IBM nos JSON brutos), todos de `aria_role_valid`, que o plugin introduziu e o axe não acusa: `applyAiProvidedOptimizations()` (`content.js:373`, comportamento da v1.1.0) põe `role="img"` em toda imagem que recebe alt, inclusive nas espaçadoras com `alt=""`, e o IBM acusa o papel como inválido para o elemento (20 imagens com `role="img"` no DOM pós). Antes do pareamento em passadas eram 19: um `<select>` sem rótulo que já existia, dentro de uma célula que a v1.1.0 transformou em `th`, contava como novo |
 
+## Sessão de 24/10/2026 — Fase 5 (aceites)
+
+Branch `eval/fase-5-aceites`, encadeada na da Fase 4. Um script por critério de aceite em `eval/aceites/` (tabela em `eval/README.md`), cada um com um JSON de evidência; `npm run aceites` roda todos. Rodada final nesta máquina em 24/10/2026, com o código commitado das três fases (`versao_harness` = `v1.1.0-12-ga28ba68`, sem alteração local): evidência em `docs/evidencias/aceites/2026-10-24/` (um JSON por aceite, o resumo e, para o 3, o `runs.csv` e a sessão do smoke).
+
+| Aceite | Verificações | Resultado |
+|---|---|---|
+| 1 — sintaxe e manifest | 7 | `node --check` em 33 arquivos JS, um por chamada; manifest MV3 válido e sem permissões além das da tag `v1.1.0`; nenhuma chave de API versionada; nenhum `innerHTML` novo na extensão desde a `v1.1.0`; nenhum arquivo da extensão fora do git |
+| 2 — painel na `test-page.html` | 9 | Analisar → Aplicar sem LLM: 52 alterações (40 determinísticas + 12 do painel), runLog do C10 completo e coerente com o painel, sem erros de JavaScript; gancho desligado sem o opt-in na aba em que o content script acabou de aplicar, e respondendo com o opt-in |
+| 3 — smoke do harness | 15 | 9 linhas: baseline `ok` × 3, v1.0.0 `falha` × 3 (prazo de 290 s nesta máquina só com CPU), v1.1.0 `ok` × 3; JSON brutos válidos e com o `raw_sha256` das linhas; axe e IBM em todas as linhas, sem erro do IBM; as duas condições com plugin chamaram o LLM; contexto 4096 na carga de cada condição; nenhum erro do harness. IBM na v1.1.0: `novos_erros_ibm` 18 / 30 / 6 e `novos_erros_ibm_regra` 18 / 12 / 6 (W3C BAD, UTFPR, gov.br); na UTFPR a diferença entre as duas colunas mostra violações que mudaram de lugar sem o pareamento achar o par, e a coluna por regra é a mais robusta |
+| 4 — determinismo | 6 | (a) pelo painel sem LLM, dois runs: DOM final idêntico e as mesmas 24 entradas de `deterministicFixes`; (b) `v1.1.0-fix` duas vezes pelo harness, com LLM, na W3C BAD: as mesmas 13 entradas |
+| 5 — falha injetada | 11 | URL que não resolve e URL sem esquema → `falha` na captura e no run, com motivo, e a URL válida segue; snapshot adulterado → `falha` por sha256; código de saída 0 em todos |
+| 6 — equivalência | 13 | tag `v1.1.0` × build sem LLM: DOM final igual por `optimizer.runAutoOptimization` (17 771 caracteres) e pelo painel (18 599); D7: DOM do gancho = DOM do painel, 52 alterações nos dois, nenhuma chamada ao LLM; payload do painel da tag = `panel-fixes.js` nos 5 casos |
+
+Os critérios do plano e onde cada um está:
+
+| Critério do plano | Aceite |
+|---|---|
+| `node --check` em cada JS alterado (um arquivo por chamada) | 1 |
+| Smoke manual na `test-page.html` (UI sem regressão) | 2, automatizado pelo painel real; o uso manual da extensão pela pessoa continua valendo como conferência |
+| Smoke do harness 3 × 3 com axe e o avaliador do D6 preenchidos | 3 |
+| Determinismo: as mesmas correções determinísticas em dois runs | 4 |
+| Falha injetada (URL inválida) → `falha` e o lote continua | 5 (também URL sem esquema e snapshot adulterado) |
+| Equivalência tag `v1.1.0` × build pelo mesmo caminho, sem LLM | 6 (também pelo painel, gancho × painel e payload do painel) |
+
+Revisão dos aceites: os dois verificadores da segunda rodada acharam verificações que passavam sem testar nada (o 3 passava com o Ollama fora do ar e com o IBM falhando em todas as linhas; o 2 passava com o content script ausente), falsos negativos (`--validar` no `runs.csv` do lote, `novos_erros_ibm` vazio justificado, `--condicao` sem runLog), a normalização de IDs que escondia um rótulo ligado ao campo errado, caminhos com acento fora da busca por chaves, evidência perdida quando um erro escapava das verificações e perfis do Chromium deixados no diretório temporário. Todos corrigidos.
+
 ## Decisões
 
 | Id | Decisão | Situação |
@@ -367,5 +393,7 @@ Resultado de uma verificação adversarial: um pesquisador por grupo de premissa
 
 ## Próximos passos
 
-1. Fase 5 — aceites.
+1. Revisar e mergear as PRs das Fases 1 a 5 na `semish2026`, na ordem (cada uma está encadeada na anterior).
 2. Na máquina do lote: medir o tempo da v1.0.0 com GPU contra os prazos do D8, confirmar a D9 e recapturar os snapshots (a captura e o lote rodam na mesma máquina).
+3. Montar a lista de URLs do estudo em `eval/urls.csv`, com os estratos (`visao`, `variancia`), e rodar `npm run aceites` na máquina do lote antes do lote.
+4. Criar a tag do build usado no lote.
