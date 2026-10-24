@@ -1,6 +1,6 @@
 # Estado atual — avaliação Accessify (estudo JIS)
 
-Atualizado em 23/10/2026. O plano detalhado (`docs/PLANO_AVALIACAO.md`) e as instruções do Claude Code (`CLAUDE.md`) são arquivos de apoio locais, fora do git; este arquivo resume o que deles importa para o estudo.
+Atualizado em 24/10/2026. O plano detalhado (`docs/PLANO_AVALIACAO.md`) e as instruções do Claude Code (`CLAUDE.md`) são arquivos de apoio locais, fora do git; este arquivo resume o que deles importa para o estudo.
 
 ## Referências congeladas
 
@@ -106,6 +106,105 @@ Consequência para o subestudo de visão: com `max_tokens: 64`, o `qwen3-vl:8b` 
 
 Ambiente: nesta máquina o codificador de imagem cai no Vulkan da MX350 ("ggml_vulkan: device lost"); os testes de visão rodaram com o servidor só na CPU (`CUDA_VISIBLE_DEVICES=-1`, `OLLAMA_VULKAN=0`, nada persistente).
 
+## Sessão de 24/10/2026 — Fase 3 (harness `eval/` com axe-core)
+
+Branch `eval/fase-3-harness`, encadeada na da Fase 2. Uso, condições, saídas e colunas do CSV: `eval/README.md`.
+
+O que entra:
+
+- `eval/src/capture.js` (D4): por URL, um contexto sem extensão com `recordHar`; espera rede quieta, um mínimo depois do `load` e o DOM parar de mudar (com tetos); serializa o DOM renderizado com shadow roots, estado de formulários e o doctype real, sem `<script>`; congela os iframes do mesmo jeito; limpa o HAR. A captura só entra no índice como `ok` depois de reaberta em replay e comparada com a página real (tela e texto); senão fica `suspeito` e o run não a usa.
+- Replay (`lib/snapshot.js`): documento principal e iframes congelados servidos do disco com CSP `script-src 'none'`; subrecursos do HAR, o resto abortado e contado; iframes não congelados bloqueados; só a primeira navegação do frame principal; animações CSS num estado fixo; rolagem da janela e dos contêineres restaurada antes de medir.
+- `eval/src/run.js`: um contexto por condição (D3), baseline primeiro, execuções intercaladas; por URL × execução: replay → rótulos genéricos antes → driver → axe pós → DOM pós → JSON bruto (um por tentativa) → linha no `runs.csv`. Antes de cada condição com modelo, o Ollama e o modelo são conferidos, o modelo é carregado e o contexto (D8) conferido; depois de cada run, o contexto é conferido de novo.
+- Drivers: v1.1.0 pelo gancho C11 (`drivers/hook.js`); v1.0.0 pelo painel real (`drivers/panel.js`, D7) com o adaptador de provedor (D1).
+- Adaptador da v1.0.0: rota de contexto em `openrouter.ai/api/v1/**` → `/v1/chat/completions` do Ollama, trocando só `model` e `temperature` (D8); o resto do corpo segue como a v1.0.0 mandou e nenhum campo de raciocínio é acrescentado (o Ollama liga o raciocínio do `qwen3:8b` por padrão). A chamada ao Ollama é feita por `node:http`: o `fetch` do Node desiste sozinho quando os cabeçalhos demoram mais de 300 s, e o Ollama sem streaming só responde ao terminar. Portão por run: as chamadas fora de um run são recusadas na hora e registradas à parte, e o portão só abre depois que o job anterior parou e foi zerado (a v1.0.0 só confere o `runId` entre etapas, e o laço de imagens de uma tentativa que estourou o prazo somaria tokens no run seguinte). Cada chamada fica presa ao run em que entrou.
+
+Política do harness que entra na análise (as instruções pediam só "uma nova tentativa por falha"; o resto foi decidido aqui):
+
+| Regra | Valor (`config.json`) |
+|---|---|
+| Prazo do gancho da v1.1.0 / da análise da v1.0.0 | 290 s (`hookMs`, `panelMs`); o harness espera mais 75 s pelo teto do content script e, se ele disparar, mais 60 s pela resposta tardia antes de medir |
+| Prazo de cada chamada ao Ollama pela v1.0.0 | 280 s (`llmCallMs`) |
+| Prazo do Aplicar do painel da v1.0.0 | 120 s (`applyMs`) |
+| Prazo total de um run (watchdog) | 900 s; o watchdog cancela o run e relança o navegador |
+| Prazo do axe | 120 s (`evaluatorMs`) |
+| Tentativas | uma nova tentativa por falha (`retries: 1`); falhas do harness (queda do navegador, replay que não abre, medição que falha depois do driver) não contam (até 2 por URL); navegador que não abre 3 vezes seguidas encerra a condição com `falha` |
+| Baseline de outra sessão | a mais recente do mesmo snapshot (HTML, HAR e pasta), do mesmo axe e do mesmo ambiente (Chromium, viewport, locale e hash do código do harness) |
+| Snapshot `suspeito` | mais de 10% dos pixels diferentes entre captura e replay, mais de 5% das linhas do texto visível sem par, load do replay sem terminar, `compatMode` diferente ou sinal forte de desafio anti-bot (título de desafio, ou o padrão numa página quase sem texto) |
+| URL em mais de um estrato | uma entrada só, com todos os estratos (um snapshot, um `run_id` por execução); `estrato` no CSV junta todos com `+` |
+
+Revisão independente: um fluxo com um revisor por dimensão (snapshot, laço do lote, drivers, medição) e um verificador adversarial por dimensão, mais um revisor do diff das Fases 4 e 5. Foram 38 apontamentos sobre a Fase 3, nenhum refutado (alguns só "plausíveis"). Os que mudaram o código:
+
+- **`<noscript>` no replay (alto, confirmado nos dados):** o reparse do snapshot roda com scripts desligados e transformava o texto dos `<noscript>` em elementos; no `<head>`, eles iam para o `<body>`. A W3C BAD ganhava uma faixa vermelha ("This page uses scripts!!!") que a página real não mostra, com uma violação de contraste fantasma em todas as condições, inclusive na baseline. Agora o conteúdo dos `<noscript>` é esvaziado antes da serialização; recapturada, a W3C BAD tem 10 violações sérias na baseline em vez de 11 e o replay é idêntico à captura (0% de pixels diferentes).
+- **Replay sem verificação de fidelidade:** a captura entrava como `ok` mesmo com o replay visivelmente diferente. Agora compara tela e texto e marca `suspeito`.
+- **Animações e rolagem:** as animações recomeçavam no replay e a baseline media no meio delas; a rolagem de contêineres (carrosséis) mexida pelo caminho de visão não voltava.
+- **Fidelidade do snapshot:**
+  - entradas do HAR sem corpo viravam 200 vazio;
+  - iframes congelados não eram servidos quando o `src` difere da URL final;
+  - o shadow DOM se perdia em silêncio com Trusted Types;
+  - `cssom_sincronizados` contava quase todo `<style>`, porque a serialização do Chrome normaliza o texto;
+  - páginas em codificação diferente de UTF-8;
+  - o hash cobria só o HTML e o HAR; agora cobre também a pasta.
+- **Lote:**
+  - um relançamento do navegador que falhasse, ou uma URL sem esquema, derrubava o lote inteiro;
+  - a baseline de outra sessão era escolhida pela ordem dos nomes de arquivo, não pela data;
+  - a extensão era copiada de novo a cada lançamento, então um checkout no meio do lote trocaria o código;
+  - o Ollama não era conferido antes;
+  - o modelo era carregado dentro do primeiro run medido;
+  - o contexto (D8) era conferido uma vez só;
+  - as execuções repetidas de uma URL rodavam em sequência;
+  - nomes de sessão e de JSON bruto podiam colidir;
+  - erros de E/S e de gravação da sessão não tinham nova tentativa;
+  - perfis temporários nunca eram apagados;
+  - o watchdog não cancelava o run: o run abandonado podia gravar baseline e fechar o portão do adaptador do run seguinte;
+  - o harness desistia do gancho antes do teto do content script e gravava 0 tokens para um run que chamou o LLM;
+  - `versao_plugin` saía com `-dirty` por causa de arquivos do harness.
+- **Documentação e JSON bruto:**
+  - `axe_violations_*` são pares (regra, nó), não elementos; a nova coluna `axe_elementos` conta elementos;
+  - os handlers inline ficam no DOM, ao contrário do que o README dizia (a CSP os bloqueia);
+  - o DOM pós do JSON bruto não tinha o doctype real nem os shadow roots.
+
+Segunda rodada: um fluxo verificou cada correção acima no código (por dimensão, com um verificador adversarial para cada defeito novo) e achou o que faltava ou o que a própria correção introduziu. Corrigido também:
+
+- **Comparação captura × replay:** a tela da captura saía com as animações em qualquer fase e a do replay com elas congeladas; uma página com hero animado grande viraria `suspeito` sem motivo. Agora a captura congela as animações antes da tela. O texto passou a ser comparado linha a linha (antes só o tamanho), e as animações dentro de shadow roots também são congeladas.
+- **Snapshot:** a rolagem de contêineres feita por script (carrossel numa imagem que não é a primeira) é gravada na captura e reaplicada no replay; `<noscript>` só é esvaziado quando o conteúdo é texto cru (num iframe `sandbox` sem scripts ele aparece e fica); a reescrita de URLs em páginas fora de UTF-8 não mexe mais na página ao vivo (trocar o `src` de um iframe o recarregava) e cobre `srcset`, `href` de SVG e `url()` em estilos, e os CSS sem charset ganham o da página no HAR; o hash da pasta deixava de fora os `.png` do HAR (recursos da página), agora só as duas capturas de tela; `frames_servidos` conta arquivos distintos.
+- **Desafio anti-bot:** o padrão de texto ("captcha", "acesso negado") excluía páginas legítimas que só mencionam reCAPTCHA; agora só um sinal forte exclui.
+- **Lote:** uma URL na amostra e num subconjunto (`visao`, `variancia`) ficava só no primeiro estrato, e as condições de subconjunto rodariam vazias; falha de replay ou de medição depois do driver descartava o resultado do driver e contava como tentativa do plugin; uma baseline medida com outro código de replay ou de medição era reaproveitada (o ambiente agora inclui o hash do harness, e a versão do harness vai para a sessão e para a coluna `versao_harness`); a procedência da baseline saía sem a tentativa; tokens de um run da v1.1.0 inacabado (runLog parcial lido do service worker) eram gravados como completos, e os de um run que nem começou como desconhecidos; o encerramento depois de um erro inesperado deixava o navegador aberto e o processo preso; a sessão, o índice dos snapshots e a remoção das cópias não tinham nova tentativa; `--resultados ""` caía na pasta do lote; uma nova tentativa de gravação podia duplicar uma linha do CSV.
+
+Terceira verificação, com o critério só de defeitos médios ou altos, confirmados por um verificador adversarial. Corrigido também:
+
+- **Botões de formulário (alto):** ao gravar o estado dos campos, `<input type="submit">` e `type="reset"` sem `value` ganhavam `value=""` no snapshot. O botão perdia o rótulo padrão do navegador ("Enviar") e o axe acusava uma violação crítica (`input-button-name`) que a página real não tem, em todas as condições, inclusive na baseline; o plugin, que preenche o valor de botões vazios, ganhava crédito por corrigir um erro criado pelo harness. Numa página de teste com os dois botões: 2 críticas antes, 0 agora. Agora só os campos em que o valor digitado pode diferir do atributo viram atributo.
+- **Rolagem instantânea:** com `scroll-behavior: smooth` (o `:root` do Bootstrap 5, carrosséis com scroll-snap), as rolagens do harness eram animadas e a posição era gravada e medida no meio da animação, em momentos diferentes em cada condição. Agora todas são instantâneas, e o replay congela as animações antes de reaplicar a rolagem, na mesma ordem da captura.
+- **Charset do CSS:** um CSS com BOM ou `@charset "UTF-8"` numa página fora de UTF-8 ganhava o charset da página no cabeçalho, que passa por cima da declaração do arquivo. Agora só CSS sem nenhuma declaração ganha o charset.
+
+Ficaram só registrados: o cache de prompt do Ollama numa nova tentativa logo depois de um timeout (a nova tentativa aparece em `tentativas` e `observacoes`); um job da v1.0.0 que continue `running` 60 s depois do fim do run anterior (vai para `observacoes`; com o portão fechado, as chamadas dele falham na hora); requisições abortadas no replay e iframes congelados não pedidos (registrados no índice, sem bloquear: a comparação de tela pega o que aparece).
+
+Condição `v1.1.0-vision`: modelo `gemma3:4b` (D9, provisória). O `qwen3-vl:8b` raciocina mesmo com `reasoning_effort: 'none'` e o alt gravado é o raciocínio; o `gemma3:4b` não tem modo de raciocínio. A condição usa o mesmo modelo nas chamadas de texto do run.
+
+Smoke (aceite da Fase 3) nesta máquina, 24/10/2026, com o código commitado da fase (`versao_harness` = `v1.1.0-9-g1111e7e`, sem alteração local) sobre snapshots recapturados com ele: 3 URLs do estrato `smoke` × {`baseline`, `v1.0.0`, `v1.1.0`}, `qwen3:8b`, Ollama 0.40.9 só na CPU, Chromium 156.0.8078.4. Evidência: `docs/evidencias/smoke-fase3-2026-10-24/` (`runs.csv`, sessão e um resumo dos JSON brutos, sem o DOM). O primeiro smoke, antes da revisão, fica em `docs/evidencias/smoke-fase3-2026-10-24-antes-da-revisao/` (com a violação fantasma da W3C BAD: 11 sérias na baseline); os smokes intermediários (código da primeira rodada, ainda não commitado, e da segunda rodada) deram os mesmos números de axe que este.
+
+| URL | Condição | Status | axe crítico / sério (elementos) | Alterações | Chamadas ao LLM | Observação |
+|---|---|---|---|---|---|---|
+| W3C BAD (`BackCompat`) | baseline | ok | 34 / 10 (44) | — | — | replay idêntico à captura |
+| | v1.0.0 | falha (2 tentativas) | 34 / 10 (44) | 0 | 3 por tentativa, 66–110 s cada, mais uma abortada no fim do prazo | prazo de 290 s |
+| | v1.1.0 | ok | 1 / 0 (1) | 117 | 2 (301/128 tokens) | os 2 alts do LLM são o raciocínio ("Okay, the user wants an alt text for the image "top_logo_next_end.gif"…") |
+| UTFPR | baseline | ok | 6 / 6 (12) | — | — | 5 iframes congelados e servidos |
+| | v1.0.0 | falha (2 tentativas) | 6 / 6 (12) | 0 | 2 por tentativa (119–153 s), mais uma abortada | prazo de 290 s |
+| | v1.1.0 | ok | 0 / 3 (3) | 474 | 2 (320/128 tokens) | os 2 alts do LLM são o raciocínio; 62 rótulos genéricos novos |
+| gov.br | baseline | ok | 3 / 1 (4) | — | — | |
+| | v1.0.0 | falha (2 tentativas) | 3 / 1 (4) | 0 | 1 por tentativa, sem resposta do Ollama em 280 s | erro 502 do adaptador |
+| | v1.1.0 | ok | 1 / 1 (2) | 641 | 0 (heurística resolveu todas as imagens) | 15 rótulos genéricos novos |
+
+O que o smoke mostrou:
+
+- O aceite da fase (9 linhas, axe preenchido em todas, inclusive nas falhas) passou, sem nenhum erro do harness. Nenhum `novos_erros_axe` nas 6 linhas com plugin.
+- v1.0.0 não termina em 290 s nesta máquina: as chamadas de alt da v1.0.0 (`max_tokens` 16 000, raciocínio ligado) levam 66–153 s cada na CPU, uma de cada vez. Na máquina do lote (GPU) o prazo do D8 tem de ser medido antes do lote; se a v1.0.0 continuar estourando, isso é resultado do estudo, não falha do harness.
+- O defeito do D5 aparece nas páginas reais: todo alt que a v1.1.0 local pediu ao LLM gravou o começo do raciocínio, em inglês.
+- Contexto efetivo do Ollama = 4096 na carga de cada condição e depois de cada run (D8).
+- 40 chamadas da v1.0.0 chegaram fora de um run e foram recusadas pelo portão: são os laços de imagens dos jobs que estouraram o prazo.
+- Perfis temporários e cópias das extensões apagados no fim; axe idêntico entre execuções repetidas da baseline (teste com `--execucoes 2`).
+
+Fixtures da segunda e da terceira rodada (captura de páginas sintéticas servidas localmente): página em ISO-8859-1 com URLs acentuadas em `src`, `srcset`, `<iframe>`, `url()` e num CSS sem charset → 5 URLs reescritas, charset acrescentado ao CSS, nenhum abortado no replay; contêiner rolado por script e animação infinita dentro de shadow root → rolagem reaplicada, 0% de diferença de tela; `<noscript>` dentro de iframe `sandbox` → mantido; página com "protegido por reCAPTCHA" → `suspeita_desafio: fraca`, `ok`; formulário com `<input type="submit">` e `type="reset"` sem `value` → 0 violações críticas (2 com o código anterior); `scroll-behavior: smooth` no `:root` e num contêiner rolado → rolagem reaplicada, 0% de diferença de tela; CSS em UTF-8 com `@charset` numa página ISO-8859-1 → sem charset acrescentado.
+
 ## Decisões
 
 | Id | Decisão | Situação |
@@ -118,6 +217,7 @@ Ambiente: nesta máquina o codificador de imagem cai no Vulkan da MX350 ("ggml_v
 | D6 | Segundo avaliador = IBM Equal Access (`accessibility-checker-engine`, Apache-2.0) no DOM pós; a WAVE automatizada fica de fora (termos da WebAIM) | tomada em 23/10/2026 |
 | D7 | O estudo mede o "Aplicar" do painel: o harness opera o `popup.html` real (v1.0.0) e o gancho C11 da v1.1.0 aplica as mesmas correções do painel | tomada em 23/10/2026 |
 | D8 | `temperature: 0` em todas as chamadas das duas versões, `OLLAMA_CONTEXT_LENGTH=4096`, `max_tokens` originais; run lento demais vira falha por timeout | tomada em 23/10/2026 |
+| D9 | Modelo da condição `v1.1.0-vision` = `gemma3:4b` com `reasoning: 'none'`, em todas as chamadas do run (texto e visão): o `qwen3-vl:8b` raciocina mesmo com `reasoning_effort: 'none'` e grava o raciocínio como alt | provisória (24/10/2026); confirmar antes do lote |
 
 ## Desvios em relação às instruções e à v1.1.0 (entram no artigo)
 
@@ -131,6 +231,9 @@ Ambiente: nesta máquina o codificador de imagem cai no Vulkan da MX350 ("ggml_v
 - C11 usa `action` (convenção do código) em vez de `type` nas mensagens.
 - A WAVE automatizada da seção 4.4 das instruções foi substituída pelo IBM Equal Access (D6).
 - O runLog fica numa chave própria (`analysisRunLog:<tabId>`) ligada ao job pelo `runId`, e não dentro do job, que é zerado a cada carregamento da aba.
+- Política do harness além de "uma nova tentativa por falha" (prazos, quedas do navegador, watchdog, escolha da baseline, snapshot `suspeito`): tabela na seção da Fase 3.
+- O snapshot não é o DOM cru: `<noscript>` esvaziado, CSSOM alterado por script reescrito como `<style>`, URLs com acento reescritas em páginas fora de UTF-8; no replay, animações CSS num estado fixo e rolagem restaurada antes de medir (seção da Fase 3).
+- `axe_violations_*` contam pares (regra, nó), como o próprio axe; `axe_elementos` conta elementos distintos.
 
 ## Ambiente de desenvolvimento
 
@@ -232,7 +335,6 @@ Resultado de uma verificação adversarial: um pesquisador por grupo de premissa
 
 ## Próximos passos
 
-1. Fase 3 — harness `eval/` com axe-core.
-2. Fase 4 — IBM Equal Access.
-3. Fase 5 — aceites.
-4. Escolher o modelo da condição `v1.1.0-vision` (o `qwen3-vl:8b` grava o raciocínio; o `gemma3:4b` funciona).
+1. Fase 4 — IBM Equal Access (D6).
+2. Fase 5 — aceites.
+3. Na máquina do lote: medir o tempo da v1.0.0 com GPU contra os prazos do D8, confirmar a D9 e recapturar os snapshots (a captura e o lote rodam na mesma máquina).
