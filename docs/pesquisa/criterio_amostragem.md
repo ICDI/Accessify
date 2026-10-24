@@ -137,8 +137,8 @@ Uma candidata é excluída quando falha no filtro 3 (sem resposta, 403/404, cont
 
 ## 8. Subestratos definidos após a coleta
 
-- `visao`: páginas em que a baseline do axe-core acusa **ao menos 5 violações de `image-alt` em imagens de conteúdo**. É medido, não escolhido, e é nele que roda a condição `v1.1.0-vision`. Adicionar as linhas `url,visao` ao `urls.csv` depois da baseline, antes das condições com modelo.
-- `variancia`: 10 páginas da amostra, sorteadas com a mesma semente dentro de três faixas de tamanho do DOM (`html_bytes` do `index.csv`: terços), onde rodam 3 execuções. Adicionar as linhas `url,variancia` após a captura.
+- `visao`: páginas em que a baseline do axe-core acusa **ao menos 1 violação de `image-alt`**. É medido, não escolhido, e é nele que roda a condição `v1.1.0-vision`. Adicionar as linhas `url,visao` ao `urls.csv` depois da baseline, antes das condições com modelo. (Versão inicial do protocolo: ≥ 5. Alterado para ≥ 1 em 24/10/2026, antes de qualquer execução da condição: com ≥ 5 sobravam 6 páginas, e como a extensão descreve no máximo 2 imagens por página no provedor local, o número de descrições avaliáveis depende do número de páginas, não de imagens por página. Resultado: 19 páginas, 110 imagens sem alt.)
+- `variancia`: 10 páginas da amostra, sorteadas com a mesma semente dentro de três faixas de tamanho do DOM (`html_bytes` do `index.csv`: terços, 3 + 3 + 4), onde rodam 3 execuções. Adicionar as linhas `url,variancia` após a captura. (Aplicado em 24/10/2026: limites dos terços 123 458 e 273 269 bytes.)
 
 ## 9. Ameaças à validade da amostra
 
