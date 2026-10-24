@@ -11,6 +11,9 @@
   "axe": {
     "tags": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
   },
+  "ibm": {
+    "ruleset": "WCAG_2_1"
+  },
   "timeouts": {
     "navigationMs": 45000,
     "settleMs": 8000,

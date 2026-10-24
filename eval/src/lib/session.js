@@ -82,7 +82,8 @@ export function packageVersions() {
     node: process.version,
     playwright: version('playwright'),
     axeCore: version('axe-core'),
-    axeCorePlaywright: version('@axe-core/playwright')
+    axeCorePlaywright: version('@axe-core/playwright'),
+    ibmEngine: version('accessibility-checker-engine')
   };
 }
 

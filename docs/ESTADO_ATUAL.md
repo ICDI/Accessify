@@ -205,6 +205,38 @@ O que o smoke mostrou:
 
 Fixtures da segunda e da terceira rodada (captura de páginas sintéticas servidas localmente): página em ISO-8859-1 com URLs acentuadas em `src`, `srcset`, `<iframe>`, `url()` e num CSS sem charset → 5 URLs reescritas, charset acrescentado ao CSS, nenhum abortado no replay; contêiner rolado por script e animação infinita dentro de shadow root → rolagem reaplicada, 0% de diferença de tela; `<noscript>` dentro de iframe `sandbox` → mantido; página com "protegido por reCAPTCHA" → `suspeita_desafio: fraca`, `ok`; formulário com `<input type="submit">` e `type="reset"` sem `value` → 0 violações críticas (2 com o código anterior); `scroll-behavior: smooth` no `:root` e num contêiner rolado → rolagem reaplicada, 0% de diferença de tela; CSS em UTF-8 com `@charset` numa página ISO-8859-1 → sem charset acrescentado.
 
+## Sessão de 24/10/2026 — Fase 4 (IBM Equal Access)
+
+Branch `eval/fase-4-ibm`, encadeada na da Fase 3. Decisão D6.
+
+O que entra:
+
+- `eval/src/lib/ibm.js`: o motor `accessibility-checker-engine` 4.0.34 (Apache-2.0; versão exata no `package.json`) é injetado no DOM pós pelo CDP (`page.evaluate`), então a CSP do replay não o bloqueia, e roda `new ace.Checker().check(document, ['WCAG_2_1'])` (WCAG 2.1 A e AA, o mesmo escopo das tags do axe). Roda por último no run, porque deixa `ace` no escopo global da página, e tem prazo próprio (`evaluatorMs`).
+- O motor sozinho não preenche `level` nos resultados (quem preenche é o `accessibility-checker`, o pacote que o embrulha para Node). O nível sai de `value: [política, confiança]` com o mesmo mapeamento: `VIOLATION`+`FAIL` → violation, `VIOLATION`+`POTENTIAL` → potentialviolation, `RECOMMENDATION`+`FAIL` → recommendation, `RECOMMENDATION`+`POTENTIAL` → potentialrecommendation, `VIOLATION`/`RECOMMENDATION`+`MANUAL` → manual. Um primeiro rascunho filtrava por `level` e não contaria nada.
+- Um conjunto de regras desconhecido não dá erro no motor: ele desliga todas as regras e devolve zero resultados, o que pareceria uma página perfeita. O harness exige ao menos um resultado (`numExecuted`, que no motor conta resultados, inclusive os que passaram, não regras); senão o IBM daquele run é `erro`.
+- `runs.csv`: `ibm_violations`, `ibm_potential_violations`, `ibm_recommendations`, `ibm_potential_recommendations`, `ibm_manual` (resultados por regra, elemento e motivo: uma regra pode devolver mais de um resultado para o mesmo elemento), `novos_erros_ibm`, `novos_erros_ibm_regra` e `ibm_status`. Um erro ou estouro de prazo do avaliador não muda o `status` do run.
+- `novos_erros_ibm` pareia as violações do pós com as da baseline em quatro passadas (cada uma usada uma vez): mesma regra, motivo, argumentos e XPath; depois regra, motivo e XPath sem os argumentos; depois o mesmo trecho de HTML do elemento; depois a mesma posição na árvore sem nomes de tag. Os argumentos trazem valores medidos (razão de contraste, tamanho da fonte): a v1.1.0 aumenta a fonte de textos pequenos sem corrigir o contraste deles, e uma violação de contraste que já existia mudaria de chave. O XPath do IBM é feito de nomes de tag e muda quando o plugin troca a tag de um ancestral (a v1.1.0 transforma células de cabeçalho `td` em `th`): sem as passadas extras, uma violação que já existia dentro dessa célula contava como nova. `novos_erros_ibm_regra` (crescimento por regra) não depende de caminhos e é a medida mais robusta.
+- Baseline do IBM escolhida à parte da do axe: a mais recente do mesmo snapshot e ambiente com a mesma versão do motor, o mesmo conjunto de regras e o mesmo formato dos resultados, mesmo que de outro run da baseline. Na sessão, uma execução da baseline com IBM válido substitui outra em que o IBM deu erro. Sem nenhuma, `novos_erros_ibm` fica vazio e o motivo vai para `observacoes`.
+- Exceções de regras dentro do motor (o motor registra no console e descarta os resultados daquela regra no elemento) são contadas no JSON bruto e em `observacoes`.
+- Sessão registra a versão do motor.
+
+Limites:
+
+- Cobertura: documento principal, shadow roots abertos e iframes da mesma origem (o motor entra em todo iframe cujo documento consegue ler); iframes de outra origem ficam de fora. O axe entra em todos os iframes congelados.
+- Contagens do IBM e do axe não são comparáveis entre si (granularidade e regras diferentes); cada uma é comparada com a própria baseline.
+
+Revisão: um verificador por dimensão (IBM e aceites) conferiu as correções e procurou defeitos novos, com um verificador adversarial para cada um. Corrigidos na Fase 4: o pareamento por XPath e pelos argumentos da mensagem (acima), uma baseline do IBM gravada em outro formato aceita sem conferência e a comparação fora do tratamento de erro (agora `keyFormat` e erro só do IBM), exceções de regras sem registro, `manual` para qualquer política com confiança `MANUAL`, a baseline do IBM presa às mesmas tags do axe e a documentação da cobertura de iframes e do `numExecuted`.
+
+Teste:
+
+| Verificação | Resultado |
+|---|---|
+| Página de teste com CSP `script-src 'none'` | motor injetado e executado (52 resultados, inclusive os que passaram); violações esperadas (`html_lang_exists`, `page_title_exists`, `img_alt_valid`, `a_text_purpose`, `input_label_exists`) |
+| Correção + erro novo na mesma página, segunda injeção | `html_lang_exists` e `img_alt_valid` somem; `novos_erros_ibm` = 1 (`a_text_purpose`) |
+| Célula `td` trocada por `th` com um `<select>` sem rótulo dentro, mais um link vazio novo | `novos_erros_ibm` = 1 (só o link): o `<select>` foi pareado pelo trecho de HTML, embora o XPath tenha mudado |
+| Conjunto de regras inexistente | antes: zero resultados, sem erro; agora `ibm_status: erro` |
+| W3C BAD, baseline + v1.1.0 numa sessão, v1.1.0 de novo noutra sessão | baseline: 57 violações, 19 potenciais, 9 recomendações, 35 manuais (1877 resultados de 47 regras); v1.1.0: 19 violações. `novos_erros_ibm` = 18 nas duas sessões (a segunda achou a baseline do IBM nos JSON brutos), todos de `aria_role_valid`, que o plugin introduziu e o axe não acusa: `applyAiProvidedOptimizations()` (`content.js:373`, comportamento da v1.1.0) põe `role="img"` em toda imagem que recebe alt, inclusive nas espaçadoras com `alt=""`, e o IBM acusa o papel como inválido para o elemento (20 imagens com `role="img"` no DOM pós). Antes do pareamento em passadas eram 19: um `<select>` sem rótulo que já existia, dentro de uma célula que a v1.1.0 transformou em `th`, contava como novo |
+
 ## Decisões
 
 | Id | Decisão | Situação |
@@ -335,6 +367,5 @@ Resultado de uma verificação adversarial: um pesquisador por grupo de premissa
 
 ## Próximos passos
 
-1. Fase 4 — IBM Equal Access (D6).
-2. Fase 5 — aceites.
-3. Na máquina do lote: medir o tempo da v1.0.0 com GPU contra os prazos do D8, confirmar a D9 e recapturar os snapshots (a captura e o lote rodam na mesma máquina).
+1. Fase 5 — aceites.
+2. Na máquina do lote: medir o tempo da v1.0.0 com GPU contra os prazos do D8, confirmar a D9 e recapturar os snapshots (a captura e o lote rodam na mesma máquina).
