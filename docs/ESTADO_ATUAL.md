@@ -180,15 +180,15 @@ Ficaram só registrados: o cache de prompt do Ollama numa nova tentativa logo de
 
 Condição `v1.1.0-vision`: modelo `gemma3:4b` (D9, provisória). O `qwen3-vl:8b` raciocina mesmo com `reasoning_effort: 'none'` e o alt gravado é o raciocínio; o `gemma3:4b` não tem modo de raciocínio. A condição usa o mesmo modelo nas chamadas de texto do run.
 
-Smoke (aceite da Fase 3) nesta máquina, 24/10/2026, com o código da primeira rodada da revisão, ainda não commitado quando rodou (a sessão registra o commit anterior, `10468d7`): snapshots recapturados, 3 URLs do estrato `smoke` × {`baseline`, `v1.0.0`, `v1.1.0`}, `qwen3:8b`, Ollama 0.40.9 só na CPU, Chromium 156.0.8078.4. Evidência: `docs/evidencias/smoke-fase3-2026-10-24/` (`runs.csv`, sessão e um resumo dos JSON brutos, sem o DOM). O primeiro smoke, antes da revisão, fica em `docs/evidencias/smoke-fase3-2026-10-24-antes-da-revisao/` (com a violação fantasma da W3C BAD: 11 sérias na baseline).
+Smoke (aceite da Fase 3) nesta máquina, 24/10/2026, com o código commitado da fase (`versao_harness` = `v1.1.0-9-g1111e7e`, sem alteração local) sobre snapshots recapturados com ele: 3 URLs do estrato `smoke` × {`baseline`, `v1.0.0`, `v1.1.0`}, `qwen3:8b`, Ollama 0.40.9 só na CPU, Chromium 156.0.8078.4. Evidência: `docs/evidencias/smoke-fase3-2026-10-24/` (`runs.csv`, sessão e um resumo dos JSON brutos, sem o DOM). O primeiro smoke, antes da revisão, fica em `docs/evidencias/smoke-fase3-2026-10-24-antes-da-revisao/` (com a violação fantasma da W3C BAD: 11 sérias na baseline); os smokes intermediários (código da primeira rodada, ainda não commitado, e da segunda rodada) deram os mesmos números de axe que este.
 
 | URL | Condição | Status | axe crítico / sério (elementos) | Alterações | Chamadas ao LLM | Observação |
 |---|---|---|---|---|---|---|
 | W3C BAD (`BackCompat`) | baseline | ok | 34 / 10 (44) | — | — | replay idêntico à captura |
-| | v1.0.0 | falha (2 tentativas) | 34 / 10 (44) | 0 | 3 por tentativa, 80–107 s cada, mais uma abortada | prazo de 290 s |
+| | v1.0.0 | falha (2 tentativas) | 34 / 10 (44) | 0 | 3 por tentativa, 66–110 s cada, mais uma abortada no fim do prazo | prazo de 290 s |
 | | v1.1.0 | ok | 1 / 0 (1) | 117 | 2 (301/128 tokens) | os 2 alts do LLM são o raciocínio ("Okay, the user wants an alt text for the image "top_logo_next_end.gif"…") |
 | UTFPR | baseline | ok | 6 / 6 (12) | — | — | 5 iframes congelados e servidos |
-| | v1.0.0 | falha (2 tentativas) | 6 / 6 (12) | 0 | 2 por tentativa | prazo de 290 s |
+| | v1.0.0 | falha (2 tentativas) | 6 / 6 (12) | 0 | 2 por tentativa (119–153 s), mais uma abortada | prazo de 290 s |
 | | v1.1.0 | ok | 0 / 3 (3) | 474 | 2 (320/128 tokens) | os 2 alts do LLM são o raciocínio; 62 rótulos genéricos novos |
 | gov.br | baseline | ok | 3 / 1 (4) | — | — | |
 | | v1.0.0 | falha (2 tentativas) | 3 / 1 (4) | 0 | 1 por tentativa, sem resposta do Ollama em 280 s | erro 502 do adaptador |
@@ -197,11 +197,13 @@ Smoke (aceite da Fase 3) nesta máquina, 24/10/2026, com o código da primeira r
 O que o smoke mostrou:
 
 - O aceite da fase (9 linhas, axe preenchido em todas, inclusive nas falhas) passou, sem nenhum erro do harness. Nenhum `novos_erros_axe` nas 6 linhas com plugin.
-- v1.0.0 não termina em 290 s nesta máquina: as chamadas de alt da v1.0.0 (`max_tokens` 16 000, raciocínio ligado) levam 80–107 s cada na CPU, uma de cada vez. Na máquina do lote (GPU) o prazo do D8 tem de ser medido antes do lote; se a v1.0.0 continuar estourando, isso é resultado do estudo, não falha do harness.
+- v1.0.0 não termina em 290 s nesta máquina: as chamadas de alt da v1.0.0 (`max_tokens` 16 000, raciocínio ligado) levam 66–153 s cada na CPU, uma de cada vez. Na máquina do lote (GPU) o prazo do D8 tem de ser medido antes do lote; se a v1.0.0 continuar estourando, isso é resultado do estudo, não falha do harness.
 - O defeito do D5 aparece nas páginas reais: todo alt que a v1.1.0 local pediu ao LLM gravou o começo do raciocínio, em inglês.
-- Contexto efetivo do Ollama = 4096 na carga de cada condição e depois de cada run (D8). A carga do `qwen3:8b` antes da v1.0.0 levou 22 s e ficou fora do primeiro run medido.
+- Contexto efetivo do Ollama = 4096 na carga de cada condição e depois de cada run (D8).
 - 40 chamadas da v1.0.0 chegaram fora de um run e foram recusadas pelo portão: são os laços de imagens dos jobs que estouraram o prazo.
 - Perfis temporários e cópias das extensões apagados no fim; axe idêntico entre execuções repetidas da baseline (teste com `--execucoes 2`).
+
+Fixtures da segunda e da terceira rodada (captura de páginas sintéticas servidas localmente): página em ISO-8859-1 com URLs acentuadas em `src`, `srcset`, `<iframe>`, `url()` e num CSS sem charset → 5 URLs reescritas, charset acrescentado ao CSS, nenhum abortado no replay; contêiner rolado por script e animação infinita dentro de shadow root → rolagem reaplicada, 0% de diferença de tela; `<noscript>` dentro de iframe `sandbox` → mantido; página com "protegido por reCAPTCHA" → `suspeita_desafio: fraca`, `ok`; formulário com `<input type="submit">` e `type="reset"` sem `value` → 0 violações críticas (2 com o código anterior); `scroll-behavior: smooth` no `:root` e num contêiner rolado → rolagem reaplicada, 0% de diferença de tela; CSS em UTF-8 com `@charset` numa página ISO-8859-1 → sem charset acrescentado.
 
 ## Decisões
 

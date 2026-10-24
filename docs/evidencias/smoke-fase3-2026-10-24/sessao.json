@@ -1,10 +1,10 @@
 {
-  "sessionId": "20261024-044942665-c2ac",
-  "startedAt": "2026-10-24T04:49:42.665Z",
+  "sessionId": "20261024-071913012-1a00",
+  "startedAt": "2026-10-24T07:19:13.012Z",
   "study": "jis2026",
   "args": {
     "smoke": true,
-    "resultados": "C:\\Users\\marlo\\AppData\\Local\\Temp\\claude\\D--workspace-globald-agents-v2\\55367d16-1412-46d7-a8a8-4ae8f85d5a5f\\scratchpad\\fase3-rev-smoke"
+    "resultados": "C:\\Users\\marlo\\AppData\\Local\\Temp\\claude\\D--workspace-globald-agents-v2\\55367d16-1412-46d7-a8a8-4ae8f85d5a5f\\scratchpad\\fase3-r3-smoke"
   },
   "conditions": [
     "baseline",
@@ -17,7 +17,13 @@
     "node": "v22.14.0",
     "playwright": "1.64.1",
     "axeCore": "4.14.0",
-    "axeCorePlaywright": "4.14.0"
+    "axeCorePlaywright": "4.14.0",
+    "harness": {
+      "commit": "1111e7ea07007f35770f04d2ebec20aac89637e8",
+      "describe": "v1.1.0-9-g1111e7e",
+      "dirty": false,
+      "sha256": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    }
   },
   "ollama": {
     "version": "0.40.9",
@@ -134,7 +140,28 @@
         ]
       }
     ],
-    "loaded": []
+    "loaded": [
+      {
+        "name": "qwen3:8b",
+        "model": "qwen3:8b",
+        "size": 5945667091,
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M"
+        },
+        "expires_at": "2026-10-24T04:43:31.2540946-03:00",
+        "size_vram": 0,
+        "context_length": 4096,
+        "runner": "llamacpp"
+      }
+    ]
   },
   "expectedContextLength": 4096,
   "extensions": {
@@ -151,8 +178,8 @@
       "label": "accessifyV11",
       "sourceDir": "D:\\workspace\\Accessify",
       "version": "1.1.0",
-      "gitCommit": "10468d7e20c43ec645cb22ce7db754ebdd2c2b6b",
-      "gitDescribe": "v1.1.0-6-g10468d7",
+      "gitCommit": "1111e7ea07007f35770f04d2ebec20aac89637e8",
+      "gitDescribe": "v1.1.0-9-g1111e7e",
       "gitDirty": false,
       "copySha256": "512fd4b842d003abae778685fa2ac69c399d8f2f4d6d9d30e27ee78c4e7abb9d"
     }
@@ -167,7 +194,7 @@
       },
       "launches": [
         {
-          "at": "2026-10-24T04:49:43.910Z",
+          "at": "2026-10-24T07:19:15.537Z",
           "browser": "Chrome/156.0.8078.4",
           "copySha256": null
         }
@@ -193,7 +220,7 @@
       },
       "launches": [
         {
-          "at": "2026-10-24T04:50:28.098Z",
+          "at": "2026-10-24T07:19:44.486Z",
           "browser": "Chrome/156.0.8078.4",
           "copySha256": "8e4816637733f2eb503ace860055f31a1fb9c6bc64eb4c4f0e01c38f59c77d04"
         }
@@ -203,168 +230,168 @@
         "ok": true,
         "version": "0.40.9",
         "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
-        "warmupMs": 21781,
+        "warmupMs": 56,
         "contextLength": 4096
       },
       "strayLlmCalls": [
         {
-          "at": "2026-10-24T04:55:21.848Z",
+          "at": "2026-10-24T07:24:36.798Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:21.866Z",
+          "at": "2026-10-24T07:24:36.845Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:21.878Z",
+          "at": "2026-10-24T07:24:36.923Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:21.887Z",
+          "at": "2026-10-24T07:24:36.966Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:21.915Z",
+          "at": "2026-10-24T07:24:36.986Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:21.949Z",
+          "at": "2026-10-24T07:24:37.029Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:21.961Z",
+          "at": "2026-10-24T07:24:37.045Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:21.970Z",
+          "at": "2026-10-24T07:24:37.075Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:21.981Z",
+          "at": "2026-10-24T07:24:37.092Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:21.986Z",
+          "at": "2026-10-24T07:24:37.104Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:21.995Z",
+          "at": "2026-10-24T07:24:37.135Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:22.002Z",
+          "at": "2026-10-24T07:24:37.141Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:22.010Z",
+          "at": "2026-10-24T07:24:37.145Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:22.016Z",
+          "at": "2026-10-24T07:24:37.151Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:22.022Z",
+          "at": "2026-10-24T07:24:37.157Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:22.033Z",
+          "at": "2026-10-24T07:24:37.163Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:22.039Z",
+          "at": "2026-10-24T07:24:37.169Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:22.046Z",
+          "at": "2026-10-24T07:24:37.174Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:22.053Z",
+          "at": "2026-10-24T07:24:37.180Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T04:55:22.211Z",
+          "at": "2026-10-24T07:24:37.239Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:14.901Z",
+          "at": "2026-10-24T07:29:29.251Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:14.980Z",
+          "at": "2026-10-24T07:29:29.317Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.014Z",
+          "at": "2026-10-24T07:29:29.344Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.027Z",
+          "at": "2026-10-24T07:29:29.361Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.039Z",
+          "at": "2026-10-24T07:29:29.381Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.052Z",
+          "at": "2026-10-24T07:29:29.429Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.066Z",
+          "at": "2026-10-24T07:29:29.444Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.078Z",
+          "at": "2026-10-24T07:29:29.466Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.120Z",
+          "at": "2026-10-24T07:29:29.480Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.131Z",
+          "at": "2026-10-24T07:29:29.496Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.142Z",
+          "at": "2026-10-24T07:29:29.515Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.153Z",
+          "at": "2026-10-24T07:29:29.526Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.163Z",
+          "at": "2026-10-24T07:29:29.553Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.175Z",
+          "at": "2026-10-24T07:29:29.566Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.184Z",
+          "at": "2026-10-24T07:29:29.602Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.194Z",
+          "at": "2026-10-24T07:29:29.617Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.207Z",
+          "at": "2026-10-24T07:29:29.624Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.216Z",
+          "at": "2026-10-24T07:29:29.631Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.226Z",
+          "at": "2026-10-24T07:29:29.637Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         },
         {
-          "at": "2026-10-24T05:00:15.291Z",
+          "at": "2026-10-24T07:29:29.692Z",
           "url": "https://openrouter.ai/api/v1/chat/completions"
         }
       ]
@@ -374,8 +401,8 @@
         "label": "accessifyV11",
         "sourceDir": "D:\\workspace\\Accessify",
         "version": "1.1.0",
-        "gitCommit": "10468d7e20c43ec645cb22ce7db754ebdd2c2b6b",
-        "gitDescribe": "v1.1.0-6-g10468d7",
+        "gitCommit": "1111e7ea07007f35770f04d2ebec20aac89637e8",
+        "gitDescribe": "v1.1.0-9-g1111e7e",
         "gitDirty": false,
         "copySha256": "512fd4b842d003abae778685fa2ac69c399d8f2f4d6d9d30e27ee78c4e7abb9d"
       },
@@ -386,7 +413,7 @@
       },
       "launches": [
         {
-          "at": "2026-10-24T05:20:09.969Z",
+          "at": "2026-10-24T07:49:28.769Z",
           "browser": "Chrome/156.0.8078.4",
           "copySha256": "512fd4b842d003abae778685fa2ac69c399d8f2f4d6d9d30e27ee78c4e7abb9d"
         }
@@ -396,7 +423,7 @@
         "ok": true,
         "version": "0.40.9",
         "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
-        "warmupMs": 17,
+        "warmupMs": 12,
         "contextLength": 4096
       },
       "strayLlmCalls": []
@@ -404,7 +431,7 @@
   },
   "warnings": [],
   "harnessErrors": [],
-  "finishedAt": "2026-10-24T05:21:55.178Z",
+  "finishedAt": "2026-10-24T07:51:17.301Z",
   "ollamaAfter": {
     "version": "0.40.9",
     "error": null,
@@ -536,7 +563,7 @@
           "parameter_size": "8.2B",
           "quantization_level": "Q4_K_M"
         },
-        "expires_at": "2026-10-24T02:51:32.4599524-03:00",
+        "expires_at": "2026-10-24T05:20:48.3280362-03:00",
         "size_vram": 0,
         "context_length": 4096,
         "runner": "llamacpp"

@@ -1,6 +1,6 @@
 [
   {
-    "arquivo": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1__20261024-044942665-c2ac__a1.json",
+    "arquivo": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1__20261024-071913012-1a00__a1.json",
     "runId": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1",
     "tentativa": 1,
     "status": "ok",
@@ -38,12 +38,22 @@
       }
     },
     "ollamaContext": null,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 2
+        "frozenFramesServed": 1,
+        "frozenFrameRequests": 2
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -52,6 +62,7 @@
         "paused": 0,
         "framesSkipped": 2
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
@@ -66,7 +77,7 @@
     }
   },
   {
-    "arquivo": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1__20261024-044942665-c2ac__a1.json",
+    "arquivo": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1__20261024-071913012-1a00__a1.json",
     "runId": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1",
     "tentativa": 1,
     "status": "ok",
@@ -109,12 +120,22 @@
       }
     },
     "ollamaContext": null,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 5
+        "frozenFramesServed": 5,
+        "frozenFrameRequests": 5
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -123,6 +144,7 @@
         "paused": 2,
         "framesSkipped": 0
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
@@ -137,7 +159,7 @@
     }
   },
   {
-    "arquivo": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-044942665-c2ac__a1.json",
+    "arquivo": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-071913012-1a00__a1.json",
     "runId": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
     "tentativa": 1,
     "status": "ok",
@@ -178,12 +200,22 @@
       }
     },
     "ollamaContext": null,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 0
+        "frozenFramesServed": 0,
+        "frozenFrameRequests": 0
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -192,6 +224,7 @@
         "paused": 0,
         "framesSkipped": 0
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
@@ -206,7 +239,7 @@
     }
   },
   {
-    "arquivo": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1__20261024-044942665-c2ac__a1.json",
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1__20261024-071913012-1a00__a1.json",
     "runId": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1",
     "tentativa": 1,
     "status": "falha",
@@ -217,18 +250,18 @@
       }
     ],
     "staleJob": {
-      "waitMs": 681,
+      "waitMs": 213,
       "stillRunningAtReset": false
     },
     "llmCalls": [
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1#24f7cafd",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 32000,
         "reasoning": "original",
-        "latencyMs": 280018,
+        "latencyMs": 280008,
         "networkError": "sem resposta em 280000 ms"
       }
     ],
@@ -252,8 +285,8 @@
       },
       "baselineFrom": {
         "runId": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1",
-        "session": "20261024-044942665-c2ac",
-        "attempt": null
+        "session": "20261024-071913012-1a00",
+        "attempt": 1
       }
     },
     "genericLabels": {
@@ -271,12 +304,22 @@
       }
     },
     "ollamaContext": 4096,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 2
+        "frozenFramesServed": 1,
+        "frozenFrameRequests": 2
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -285,6 +328,7 @@
         "paused": 0,
         "framesSkipped": 2
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
@@ -299,7 +343,7 @@
     }
   },
   {
-    "arquivo": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1__20261024-044942665-c2ac__a2.json",
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1__20261024-071913012-1a00__a2.json",
     "runId": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1",
     "tentativa": 2,
     "status": "falha",
@@ -310,18 +354,18 @@
       }
     ],
     "staleJob": {
-      "waitMs": 226,
+      "waitMs": 231,
       "stillRunningAtReset": false
     },
     "llmCalls": [
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_gov-br-pt-br-270759d9_run1#ca7c89df",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 32000,
         "reasoning": "original",
-        "latencyMs": 280013,
+        "latencyMs": 280014,
         "networkError": "sem resposta em 280000 ms"
       }
     ],
@@ -345,8 +389,8 @@
       },
       "baselineFrom": {
         "runId": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1",
-        "session": "20261024-044942665-c2ac",
-        "attempt": null
+        "session": "20261024-071913012-1a00",
+        "attempt": 1
       }
     },
     "genericLabels": {
@@ -364,12 +408,22 @@
       }
     },
     "ollamaContext": 4096,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 2
+        "frozenFramesServed": 1,
+        "frozenFrameRequests": 2
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -378,6 +432,7 @@
         "paused": 0,
         "framesSkipped": 2
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
@@ -392,7 +447,7 @@
     }
   },
   {
-    "arquivo": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1__20261024-044942665-c2ac__a1.json",
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1__20261024-071913012-1a00__a1.json",
     "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
     "tentativa": 1,
     "status": "falha",
@@ -403,48 +458,48 @@
       }
     ],
     "staleJob": {
-      "waitMs": 86,
+      "waitMs": 64,
       "stillRunningAtReset": false
     },
     "llmCalls": [
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1#01088ab2",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 16000,
         "reasoning": "original",
-        "latencyMs": 126214,
+        "latencyMs": 144439,
         "httpStatus": 200,
         "tokensIn": 127,
-        "tokensOut": 440,
+        "tokensOut": 530,
         "finishReason": "stop",
-        "contentChars": 26,
-        "reasoningChars": 1764
+        "contentChars": 15,
+        "reasoningChars": 2151
       },
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1#01088ab2",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 16000,
         "reasoning": "original",
-        "latencyMs": 152207,
+        "latencyMs": 140724,
         "httpStatus": 200,
         "tokensIn": 127,
-        "tokensOut": 573,
+        "tokensOut": 530,
         "finishReason": "stop",
-        "contentChars": 22,
-        "reasoningChars": 2266
+        "contentChars": 15,
+        "reasoningChars": 2151
       },
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1#01088ab2",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 32000,
         "reasoning": "original",
-        "latencyMs": 10595,
+        "latencyMs": 3883,
         "networkError": "abortada no fim do run"
       }
     ],
@@ -473,8 +528,8 @@
       },
       "baselineFrom": {
         "runId": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1",
-        "session": "20261024-044942665-c2ac",
-        "attempt": null
+        "session": "20261024-071913012-1a00",
+        "attempt": 1
       }
     },
     "genericLabels": {
@@ -492,12 +547,22 @@
       }
     },
     "ollamaContext": 4096,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 5
+        "frozenFramesServed": 5,
+        "frozenFrameRequests": 5
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -506,6 +571,7 @@
         "paused": 2,
         "framesSkipped": 0
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
@@ -520,7 +586,7 @@
     }
   },
   {
-    "arquivo": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1__20261024-044942665-c2ac__a2.json",
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1__20261024-071913012-1a00__a2.json",
     "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
     "tentativa": 2,
     "status": "falha",
@@ -531,18 +597,18 @@
       }
     ],
     "staleJob": {
-      "waitMs": 292,
+      "waitMs": 289,
       "stillRunningAtReset": false
     },
     "llmCalls": [
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1#c1748fd5",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 16000,
         "reasoning": "original",
-        "latencyMs": 126536,
+        "latencyMs": 118617,
         "httpStatus": 200,
         "tokensIn": 127,
         "tokensOut": 440,
@@ -551,13 +617,13 @@
         "reasoningChars": 1764
       },
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1#c1748fd5",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 16000,
         "reasoning": "original",
-        "latencyMs": 152164,
+        "latencyMs": 152504,
         "httpStatus": 200,
         "tokensIn": 127,
         "tokensOut": 573,
@@ -566,13 +632,13 @@
         "reasoningChars": 2266
       },
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1#c1748fd5",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 32000,
         "reasoning": "original",
-        "latencyMs": 10427,
+        "latencyMs": 18303,
         "networkError": "abortada no fim do run"
       }
     ],
@@ -601,8 +667,8 @@
       },
       "baselineFrom": {
         "runId": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1",
-        "session": "20261024-044942665-c2ac",
-        "attempt": null
+        "session": "20261024-071913012-1a00",
+        "attempt": 1
       }
     },
     "genericLabels": {
@@ -620,12 +686,22 @@
       }
     },
     "ollamaContext": 4096,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 5
+        "frozenFramesServed": 5,
+        "frozenFrameRequests": 5
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -634,6 +710,7 @@
         "paused": 2,
         "framesSkipped": 0
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
@@ -648,7 +725,7 @@
     }
   },
   {
-    "arquivo": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-044942665-c2ac__a1.json",
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-071913012-1a00__a1.json",
     "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
     "tentativa": 1,
     "status": "falha",
@@ -659,174 +736,33 @@
       }
     ],
     "staleJob": {
-      "waitMs": 20,
+      "waitMs": 15,
       "stillRunningAtReset": false
     },
     "llmCalls": [
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1#6634b534",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 16000,
         "reasoning": "original",
-        "latencyMs": 86528,
+        "latencyMs": 110280,
         "httpStatus": 200,
         "tokensIn": 125,
-        "tokensOut": 279,
-        "finishReason": "stop",
-        "contentChars": 19,
-        "reasoningChars": 1155
-      },
-      {
-        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
-        "originalModel": "openai/gpt-5-nano",
-        "model": "qwen3:8b",
-        "temperature": 0,
-        "maxTokens": 16000,
-        "reasoning": "original",
-        "latencyMs": 80889,
-        "httpStatus": 200,
-        "tokensIn": 124,
-        "tokensOut": 272,
-        "finishReason": "stop",
-        "contentChars": 10,
-        "reasoningChars": 1145
-      },
-      {
-        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
-        "originalModel": "openai/gpt-5-nano",
-        "model": "qwen3:8b",
-        "temperature": 0,
-        "maxTokens": 16000,
-        "reasoning": "original",
-        "latencyMs": 107053,
-        "httpStatus": 200,
-        "tokensIn": 125,
-        "tokensOut": 355,
-        "finishReason": "stop",
-        "contentChars": 21,
-        "reasoningChars": 1489
-      },
-      {
-        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
-        "originalModel": "openai/gpt-5-nano",
-        "model": "qwen3:8b",
-        "temperature": 0,
-        "maxTokens": 16000,
-        "reasoning": "original",
-        "latencyMs": 14472,
-        "networkError": "abortada no fim do run"
-      }
-    ],
-    "altTexts": [],
-    "axe": {
-      "byImpact": {
-        "critical": 34,
-        "serious": 10,
-        "moderate": 0,
-        "minor": 0
-      },
-      "elements": 44,
-      "incomplete": 2,
-      "rules": {
-        "color-contrast": 2,
-        "html-has-lang": 1,
-        "image-alt": 33,
-        "link-name": 7,
-        "select-name": 1
-      },
-      "newViolations": {
-        "byTarget": 0,
-        "byRule": {}
-      },
-      "baselineFrom": {
-        "runId": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
-        "session": "20261024-044942665-c2ac",
-        "attempt": null
-      }
-    },
-    "genericLabels": {
-      "total": 0,
-      "byKind": {
-        "link": 0,
-        "button": 0,
-        "field": 0,
-        "image": 0,
-        "graphic": 0,
-        "iframe": 0,
-        "inputImage": 0,
-        "area": 0,
-        "pageTitle": 0
-      }
-    },
-    "ollamaContext": 4096,
-    "replay": {
-      "counters": {
-        "mainServed": 1,
-        "blockedNavigations": 0,
-        "blockedFrames": 0,
-        "frozenFramesServed": 0
-      },
-      "loadTimedOut": false,
-      "compatModeMismatch": null,
-      "animations": {
-        "finished": 0,
-        "paused": 0,
-        "framesSkipped": 0
-      },
-      "scroll": {
-        "x": 0,
-        "y": 0,
-        "elementsRestored": 0,
-        "animations": {
-          "finished": 0,
-          "paused": 0,
-          "framesSkipped": 0
-        },
-        "elementsRecorded": 0
-      }
-    }
-  },
-  {
-    "arquivo": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-044942665-c2ac__a2.json",
-    "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
-    "tentativa": 2,
-    "status": "falha",
-    "erros": [
-      {
-        "stage": "tempo",
-        "message": "A análise não terminou em 290000 ms."
-      }
-    ],
-    "staleJob": {
-      "waitMs": 103,
-      "stillRunningAtReset": false
-    },
-    "llmCalls": [
-      {
-        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
-        "originalModel": "openai/gpt-5-nano",
-        "model": "qwen3:8b",
-        "temperature": 0,
-        "maxTokens": 16000,
-        "reasoning": "original",
-        "latencyMs": 95712,
-        "httpStatus": 200,
-        "tokensIn": 125,
-        "tokensOut": 345,
+        "tokensOut": 356,
         "finishReason": "stop",
         "contentChars": 13,
-        "reasoningChars": 1453
+        "reasoningChars": 1538
       },
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1#6634b534",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 16000,
         "reasoning": "original",
-        "latencyMs": 78726,
+        "latencyMs": 77489,
         "httpStatus": 200,
         "tokensIn": 124,
         "tokensOut": 307,
@@ -835,13 +771,13 @@
         "reasoningChars": 1337
       },
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1#6634b534",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 16000,
         "reasoning": "original",
-        "latencyMs": 91679,
+        "latencyMs": 88840,
         "httpStatus": 200,
         "tokensIn": 125,
         "tokensOut": 355,
@@ -850,13 +786,13 @@
         "reasoningChars": 1489
       },
       {
-        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1#6634b534",
         "originalModel": "openai/gpt-5-nano",
         "model": "qwen3:8b",
         "temperature": 0,
         "maxTokens": 16000,
         "reasoning": "original",
-        "latencyMs": 23299,
+        "latencyMs": 11977,
         "networkError": "abortada no fim do run"
       }
     ],
@@ -883,8 +819,8 @@
       },
       "baselineFrom": {
         "runId": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
-        "session": "20261024-044942665-c2ac",
-        "attempt": null
+        "session": "20261024-071913012-1a00",
+        "attempt": 1
       }
     },
     "genericLabels": {
@@ -902,12 +838,22 @@
       }
     },
     "ollamaContext": 4096,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 0
+        "frozenFramesServed": 0,
+        "frozenFrameRequests": 0
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -916,6 +862,7 @@
         "paused": 0,
         "framesSkipped": 0
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
@@ -930,12 +877,165 @@
     }
   },
   {
-    "arquivo": "jis2026_v1.1.0_qwen3-8b_gov-br-pt-br-270759d9_run1__20261024-044942665-c2ac__a1.json",
+    "arquivo": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-071913012-1a00__a2.json",
+    "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+    "tentativa": 2,
+    "status": "falha",
+    "erros": [
+      {
+        "stage": "tempo",
+        "message": "A análise não terminou em 290000 ms."
+      }
+    ],
+    "staleJob": {
+      "waitMs": 69,
+      "stillRunningAtReset": false
+    },
+    "llmCalls": [
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1#05d23542",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 66374,
+        "httpStatus": 200,
+        "tokensIn": 125,
+        "tokensOut": 267,
+        "finishReason": "stop",
+        "contentChars": 25,
+        "reasoningChars": 1108
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1#05d23542",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 67584,
+        "httpStatus": 200,
+        "tokensIn": 124,
+        "tokensOut": 272,
+        "finishReason": "stop",
+        "contentChars": 10,
+        "reasoningChars": 1145
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1#05d23542",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 89831,
+        "httpStatus": 200,
+        "tokensIn": 125,
+        "tokensOut": 355,
+        "finishReason": "stop",
+        "contentChars": 21,
+        "reasoningChars": 1489
+      },
+      {
+        "runId": "jis2026_v1.0.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1#05d23542",
+        "originalModel": "openai/gpt-5-nano",
+        "model": "qwen3:8b",
+        "temperature": 0,
+        "maxTokens": 16000,
+        "reasoning": "original",
+        "latencyMs": 65023,
+        "networkError": "abortada no fim do run"
+      }
+    ],
+    "altTexts": [],
+    "axe": {
+      "byImpact": {
+        "critical": 34,
+        "serious": 10,
+        "moderate": 0,
+        "minor": 0
+      },
+      "elements": 44,
+      "incomplete": 2,
+      "rules": {
+        "color-contrast": 2,
+        "html-has-lang": 1,
+        "image-alt": 33,
+        "link-name": 7,
+        "select-name": 1
+      },
+      "newViolations": {
+        "byTarget": 0,
+        "byRule": {}
+      },
+      "baselineFrom": {
+        "runId": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
+        "session": "20261024-071913012-1a00",
+        "attempt": 1
+      }
+    },
+    "genericLabels": {
+      "total": 0,
+      "byKind": {
+        "link": 0,
+        "button": 0,
+        "field": 0,
+        "image": 0,
+        "graphic": 0,
+        "iframe": 0,
+        "inputImage": 0,
+        "area": 0,
+        "pageTitle": 0
+      }
+    },
+    "ollamaContext": 4096,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
+    "replay": {
+      "counters": {
+        "mainServed": 1,
+        "blockedNavigations": 0,
+        "blockedFrames": 0,
+        "frozenFramesServed": 0,
+        "frozenFrameRequests": 0
+      },
+      "loadTimedOut": false,
+      "compatModeMismatch": null,
+      "animations": {
+        "finished": 0,
+        "paused": 0,
+        "framesSkipped": 0
+      },
+      "scrollRestoredFromCapture": 0,
+      "scroll": {
+        "x": 0,
+        "y": 0,
+        "elementsRestored": 0,
+        "animations": {
+          "finished": 0,
+          "paused": 0,
+          "framesSkipped": 0
+        },
+        "elementsRecorded": 0
+      }
+    }
+  },
+  {
+    "arquivo": "jis2026_v1.1.0_qwen3-8b_gov-br-pt-br-270759d9_run1__20261024-071913012-1a00__a1.json",
     "runId": "jis2026_v1.1.0_qwen3-8b_gov-br-pt-br-270759d9_run1",
     "tentativa": 1,
     "status": "ok",
     "erros": [],
-    "appliedChanges": 642,
+    "usage": "runLog",
+    "appliedChanges": 644,
     "llmCalls": [],
     "altTexts": [],
     "axe": {
@@ -957,8 +1057,8 @@
       },
       "baselineFrom": {
         "runId": "jis2026_baseline_sem-modelo_gov-br-pt-br-270759d9_run1",
-        "session": "20261024-044942665-c2ac",
-        "attempt": null
+        "session": "20261024-071913012-1a00",
+        "attempt": 1
       }
     },
     "genericLabels": {
@@ -976,12 +1076,22 @@
       }
     },
     "ollamaContext": 4096,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 2
+        "frozenFramesServed": 1,
+        "frozenFrameRequests": 2
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -990,6 +1100,7 @@
         "paused": 0,
         "framesSkipped": 2
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
@@ -1004,11 +1115,12 @@
     }
   },
   {
-    "arquivo": "jis2026_v1.1.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1__20261024-044942665-c2ac__a1.json",
+    "arquivo": "jis2026_v1.1.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1__20261024-071913012-1a00__a1.json",
     "runId": "jis2026_v1.1.0_qwen3-8b_utfpr-edu-br-1a9b8abd_run1",
     "tentativa": 1,
     "status": "ok",
     "erros": [],
+    "usage": "runLog",
     "appliedChanges": 474,
     "llmCalls": [
       {
@@ -1016,7 +1128,7 @@
         "error": null,
         "finishReason": "length",
         "httpStatus": 200,
-        "latencyMs": 18672,
+        "latencyMs": 18424,
         "maxTokens": 64,
         "model": "qwen3:8b",
         "modelId": "qwen3:8b",
@@ -1037,7 +1149,7 @@
         "error": null,
         "finishReason": "length",
         "httpStatus": 200,
-        "latencyMs": 16247,
+        "latencyMs": 16078,
         "maxTokens": 64,
         "model": "qwen3:8b",
         "modelId": "qwen3:8b",
@@ -1084,8 +1196,8 @@
       },
       "baselineFrom": {
         "runId": "jis2026_baseline_sem-modelo_utfpr-edu-br-1a9b8abd_run1",
-        "session": "20261024-044942665-c2ac",
-        "attempt": null
+        "session": "20261024-071913012-1a00",
+        "attempt": 1
       }
     },
     "genericLabels": {
@@ -1103,12 +1215,22 @@
       }
     },
     "ollamaContext": 4096,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 5
+        "frozenFramesServed": 5,
+        "frozenFrameRequests": 5
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -1117,6 +1239,7 @@
         "paused": 2,
         "framesSkipped": 0
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
@@ -1131,11 +1254,12 @@
     }
   },
   {
-    "arquivo": "jis2026_v1.1.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-044942665-c2ac__a1.json",
+    "arquivo": "jis2026_v1.1.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1__20261024-071913012-1a00__a1.json",
     "runId": "jis2026_v1.1.0_qwen3-8b_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
     "tentativa": 1,
     "status": "ok",
     "erros": [],
+    "usage": "runLog",
     "appliedChanges": 116,
     "llmCalls": [
       {
@@ -1143,12 +1267,12 @@
         "error": null,
         "finishReason": "length",
         "httpStatus": 200,
-        "latencyMs": 24952,
+        "latencyMs": 22702,
         "maxTokens": 64,
         "model": "qwen3:8b",
         "modelId": "qwen3:8b",
         "networkError": null,
-        "reasoningChars": 247,
+        "reasoningChars": 243,
         "reasoningEffort": null,
         "selector": "#page > table > tbody > tr > td > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > table:nth-of-type(1) > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > img",
         "stage": "alt-text",
@@ -1164,7 +1288,7 @@
         "error": null,
         "finishReason": "length",
         "httpStatus": 200,
-        "latencyMs": 17142,
+        "latencyMs": 16701,
         "maxTokens": 64,
         "model": "qwen3:8b",
         "modelId": "qwen3:8b",
@@ -1211,8 +1335,8 @@
       },
       "baselineFrom": {
         "runId": "jis2026_baseline_sem-modelo_w3-org-wai-demos-bad-before-home-html-bcc5b738_run1",
-        "session": "20261024-044942665-c2ac",
-        "attempt": null
+        "session": "20261024-071913012-1a00",
+        "attempt": 1
       }
     },
     "genericLabels": {
@@ -1230,12 +1354,22 @@
       }
     },
     "ollamaContext": 4096,
+    "environment": {
+      "browser": "Chrome/156.0.8078.4",
+      "viewport": {
+        "width": 1366,
+        "height": 768
+      },
+      "locale": "pt-BR",
+      "harness": "8a520e0afe127af9dab07df475396c96aa5c17557d5ef4305e59ce2be5a3ec56"
+    },
     "replay": {
       "counters": {
         "mainServed": 1,
         "blockedNavigations": 0,
         "blockedFrames": 0,
-        "frozenFramesServed": 0
+        "frozenFramesServed": 0,
+        "frozenFrameRequests": 0
       },
       "loadTimedOut": false,
       "compatModeMismatch": null,
@@ -1244,6 +1378,7 @@
         "paused": 0,
         "framesSkipped": 0
       },
+      "scrollRestoredFromCapture": 0,
       "scroll": {
         "x": 0,
         "y": 0,
