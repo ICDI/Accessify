@@ -56,8 +56,17 @@ export function prepareExtension(sourceDir, label) {
   };
 }
 
+/**
+ * Apaga a cópia da extensão. Nunca lança: devolve o erro, se houver, para a sessão.
+ */
 export function removeExtensionCopy(extension) {
-  if (extension?.dir) {
-    fs.rmSync(extension.dir, { recursive: true, force: true });
+  if (!extension?.dir) {
+    return null;
+  }
+  try {
+    fs.rmSync(extension.dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    return null;
+  } catch (error) {
+    return error.message;
   }
 }

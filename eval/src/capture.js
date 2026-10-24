@@ -12,9 +12,10 @@ import { chromium } from 'playwright';
 import { loadConfig, loadUrls, parseArgs } from './lib/config.js';
 import { appendCsvRow } from './lib/csv.js';
 import { sha256, sha256Dir, sha256File, slugForUrl } from './lib/hash.js';
+import { withIoRetries } from './lib/io.js';
 import {
-  SNAPSHOT_EVIDENCE, SNAPSHOT_INDEX_COLUMNS, cleanHar, countRenderingAborts, openSnapshot, screenshotDiff,
-  serializeDocumentInPage, settle, stripHash
+  SNAPSHOT_EVIDENCE, SNAPSHOT_INDEX_COLUMNS, cleanHar, countRenderingAborts, freezeAnimations, openSnapshot, screenshotDiff,
+  serializeDocumentInPage, settle, stripHash, textDifference
 } from './lib/snapshot.js';
 
 const args = parseArgs();
@@ -22,14 +23,19 @@ const config = loadConfig(args);
 const indexFile = path.join(config.dirs.snapshots, 'index.csv');
 // EVAL_DEBUG=1 mostra no stderr quanto cada etapa da captura levou
 const debug = process.env.EVAL_DEBUG ? (url, label, since) => console.error(`  [${Math.round((Date.now() - since) / 1000)} s] ${label} — ${url}`) : () => {};
+// Desafio anti-bot: um título de desafio conhecido, ou o padrão numa página quase sem texto,
+// vira 'suspeito' (forte); o padrão numa página com conteúdo ("protegido por reCAPTCHA"
+// perto de um formulário) só fica registrado (fraca)
+const CHALLENGE_TITLE = /just a moment|attention required|verify you are human|are you a robot|verifique se você é humano/i;
 const CHALLENGE_PATTERN = /just a moment|attention required|you have been blocked|access denied|verify you are human|are you a robot|captcha|verifique se você é humano|acesso negado/i;
+const CHALLENGE_SHORT_TEXT = 1000;
 
 let urls = loadUrls(args.urls);
 if (urls.duplicates.length) {
-  console.warn(`URLs repetidas ignoradas (vale a primeira linha): ${urls.duplicates.map((entry) => entry.url).join(', ')}`);
+  console.warn(`URLs em mais de uma linha (uma captura só): ${urls.duplicates.map((entry) => entry.url).join(', ')}`);
 }
 if (args.estrato) {
-  urls = urls.filter((entry) => entry.estrato === args.estrato);
+  urls = urls.filter((entry) => entry.estratos.includes(args.estrato));
 }
 if (args.url) {
   urls = urls.filter((entry) => entry.url === args.url);
@@ -112,7 +118,7 @@ function replayProblems(row, replay) {
   if (row.replay_diff_texto > config.replay.maxDiffTexto) {
     problems.push(`texto do replay difere da captura em ${(row.replay_diff_texto * 100).toFixed(1)}%`);
   }
-  if (row.suspeita_desafio === 'sim') {
+  if (row.suspeita_desafio === 'forte') {
     problems.push('a página capturada parece um desafio anti-bot');
   }
   return problems;
@@ -128,7 +134,7 @@ async function captureOne(browser, entry, userAgent, holder) {
   const finalDir = path.join(config.dirs.snapshots, row.dir);
   const workDir = fs.mkdtempSync(path.join(os.tmpdir(), `accessify-captura-${row.slug}-`));
   const notes = [];
-  let liveTextLength = 0;
+  let liveText = '';
   const since = Date.now();
 
   try {
@@ -159,15 +165,23 @@ async function captureOne(browser, entry, userAgent, holder) {
       debug(entry.url, 'página assentou', since);
 
       const title = await page.title();
-      const bodyText = await page.evaluate(() => (document.body?.innerText || '').slice(0, 2000));
-      row.suspeita_desafio = CHALLENGE_PATTERN.test(`${title} ${bodyText}`) ? 'sim' : '';
+      const bodyText = await page.evaluate(() => document.body?.innerText || '');
+      if (CHALLENGE_TITLE.test(title) || (CHALLENGE_PATTERN.test(`${title} ${bodyText}`) && bodyText.trim().length < CHALLENGE_SHORT_TEXT)) {
+        row.suspeita_desafio = 'forte';
+      } else if (CHALLENGE_PATTERN.test(`${title} ${bodyText.slice(0, 2000)}`)) {
+        row.suspeita_desafio = 'fraca';
+      }
 
-      // Documento principal primeiro e a tela logo depois: um carrossel que gira entre as
-      // duas coisas deixaria a tela da captura diferente do DOM congelado
+      // As animações ficam no mesmo estado que o replay vai usar (finitas no fim, infinitas
+      // no início), para a comparação de tela não acusar só a fase de uma animação. Depois,
+      // o documento principal e a tela logo em seguida: um carrossel que gira entre as duas
+      // coisas deixaria a tela da captura diferente do DOM congelado
+      await freezeAnimations(page);
+      await settle(page, config.timeouts.settleMs);
       const serialized = await page.evaluate(serializeDocumentInPage);
       await page.screenshot({ path: path.join(workDir, 'page.png'), fullPage: false });
       fs.writeFileSync(path.join(workDir, 'page.html'), serialized.html);
-      liveTextLength = serialized.bodyTextLength;
+      liveText = serialized.bodyText;
       debug(entry.url, 'documento principal serializado', since);
       Object.assign(row, {
         compat_mode: serialized.compatMode,
@@ -178,6 +192,7 @@ async function captureOne(browser, entry, userAgent, holder) {
         cssom_sincronizados: serialized.cssomSynced,
         folhas_adotadas: serialized.adopted,
         noscript_esvaziados: serialized.noscriptEmptied,
+        elementos_rolados: serialized.scrolledElements,
         charset: serialized.charset,
         urls_reescritas: serialized.urlsRewritten,
         marcas_carregamento: JSON.stringify(serialized.loadingMarkers)
@@ -238,10 +253,11 @@ async function captureOne(browser, entry, userAgent, holder) {
       throw new Error('captura cancelada pelo watchdog');
     }
     debug(entry.url, 'HAR exportado', since);
-    const har = cleanHar(path.join(workDir, 'page.har'));
+    const har = cleanHar(path.join(workDir, 'page.har'), { documentCharset: row.charset });
     row.har_entradas = har.entries;
     row.har_descartadas = har.dropped;
     row.har_sem_corpo = har.withoutBody;
+    row.har_css_charset = har.cssCharsetAdded;
 
     // Replay offline de verificação, igual ao do run (sem extensão)
     const replayContext = await browser.newContext({ viewport: config.viewport, locale: config.locale });
@@ -256,8 +272,12 @@ async function captureOne(browser, entry, userAgent, holder) {
       row.frames_servidos = replay.counters.frozenFramesServed;
       row.frames_bloqueados = replay.counters.blockedFrames;
       row.replay_diff_pixels = Number((await screenshotDiff(replayContext, fs.readFileSync(path.join(workDir, 'page.png')), fs.readFileSync(path.join(workDir, 'replay.png')))).toFixed(4));
-      row.replay_diff_texto = Number((Math.abs(liveTextLength - replay.bodyTextLength) / Math.max(liveTextLength, 1)).toFixed(4));
+      row.replay_diff_texto = Number(textDifference(liveText, replay.bodyText).toFixed(4));
       problems = replayProblems(row, replay);
+      // Iframe congelado que o replay não pediu (lazy fora da tela, por exemplo): só registro
+      if (row.frames_servidos < row.frames_congelados) {
+        notes.push(`${row.frames_congelados - row.frames_servidos} iframe(s) congelado(s) não pedido(s) no replay`);
+      }
       debug(entry.url, 'replay comparado', since);
     } finally {
       await replayContext.close().catch(() => {});
@@ -280,7 +300,11 @@ async function captureOne(browser, entry, userAgent, holder) {
     row.status = 'falha';
     notes.push(error.message.split('\n')[0]);
   } finally {
-    fs.rmSync(workDir, { recursive: true, force: true });
+    try {
+      fs.rmSync(workDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+    } catch (error) {
+      // pasta temporária presa: fica no diretório temporário, a captura vale
+    }
   }
 
   row.observacoes = notes.join(' | ');
@@ -333,7 +357,13 @@ try {
         row = { ...baseRow(entry, '', ''), status: 'falha', observacoes: `navegador: ${error.message.split('\n')[0]}` };
       }
     }
-    appendCsvRow(indexFile, SNAPSHOT_INDEX_COLUMNS, row);
+    try {
+      withIoRetries(() => appendCsvRow(indexFile, SNAPSHOT_INDEX_COLUMNS, row));
+    } catch (error) {
+      // Sem a linha no índice o run não usa a captura; a próxima URL segue
+      console.error(`  índice não gravado para ${entry.url} (${row.dir}): ${error.message}`);
+      process.exitCode = 1;
+    }
     console.log(`${row.status.padEnd(8)} ${entry.url}${row.observacoes ? ` — ${row.observacoes}` : ''}`);
   }
 } finally {

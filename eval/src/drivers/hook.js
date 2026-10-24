@@ -35,10 +35,15 @@ const LATE_KEY = 'accessify-eval-late-result';
  * aplicando: o driver espera o 'accessify:late-result' (hookLateMs) antes de devolver,
  * para nada mexer na página durante a medição, e marca a medição como não assentada se ele
  * não chegar. Sem runLog no resultado, o driver busca o do service worker pela aba.
+ *
+ * `usage` diz se tokens e latência do runLog valem para o run inteiro: 'runLog' (o run
+ * terminou e devolveu o log), 'nenhum' (o run nem começou: listener mudo, configuração ou
+ * fila recusadas; uso zero) ou 'desconhecido' (o run não terminou a tempo; o log lido do
+ * service worker é parcial, as chamadas em andamento ainda não estão nele).
  */
 export async function runHookDriver(page, condition, config, runId, serviceWorker = null) {
   if (!(await waitHookReady(page))) {
-    return { status: 'falha', errors: [{ stage: 'harness', message: 'O listener do gancho não respondeu em 10 s.' }] };
+    return { status: 'falha', usage: 'nenhum', errors: [{ stage: 'harness', message: 'O listener do gancho não respondeu em 10 s.' }] };
   }
 
   const hookConfig = {
@@ -85,8 +90,10 @@ export async function runHookDriver(page, condition, config, runId, serviceWorke
       const parsed = JSON.parse(late);
       result.lateResult = { status: parsed.status, appliedChanges: parsed.appliedChanges, errors: parsed.errors };
       result.runLog = parsed.runLog || null;
+      result.usage = result.runLog ? 'runLog' : 'desconhecido';
     } else {
       result.measurementUnsettled = true;
+      result.usage = 'desconhecido';
     }
     // O próprio content script remove o nó quando um run novo começa; aqui não haverá
     await page.evaluate(() => document.getElementById('accessify-result')?.remove()).catch(() => {});
@@ -99,6 +106,9 @@ export async function runHookDriver(page, condition, config, runId, serviceWorke
       result.runLog = runLog;
       result.runLogSource = 'service-worker';
     }
+  }
+  if (!result.usage) {
+    result.usage = result.runLog ? 'runLog' : 'nenhum';
   }
   return result;
 }

@@ -12,29 +12,35 @@ const escapeCell = (value) => {
 /**
  * Acrescenta uma linha ao CSV (nunca reescreve o arquivo). Cria o arquivo com o
  * cabeçalho se ele não existir e recusa gravar se o cabeçalho existente for outro:
- * um CSV de uma versão anterior do harness deve ser arquivado, não misturado.
+ * um CSV de uma versão anterior do harness deve ser arquivado, não misturado. Se a
+ * última linha do arquivo já for esta (uma nova tentativa depois de um erro no fsync ou
+ * no close, com a escrita já feita), não grava de novo.
  */
 export function appendCsvRow(file, columns, row) {
   const headerLine = columns.join(',');
 
+  const unknown = Object.keys(row).filter((key) => !columns.includes(key));
+  if (unknown.length > 0) {
+    throw new Error(`Colunas desconhecidas na linha: ${unknown.join(', ')}`);
+  }
+  const line = `${columns.map((column) => escapeCell(row[column])).join(',')}\n`;
+
   if (fs.existsSync(file)) {
-    const firstLine = fs.readFileSync(file, 'utf8').split(/\r?\n/, 1)[0];
-    if (firstLine !== headerLine) {
+    const text = fs.readFileSync(file, 'utf8');
+    if (text.split(/\r?\n/, 1)[0] !== headerLine) {
       throw new Error(`${path.basename(file)} tem outro cabeçalho; arquive o arquivo antigo antes de continuar.`);
+    }
+    if (text.endsWith(line)) {
+      return;
     }
   } else {
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, `${headerLine}\n`);
   }
 
-  const unknown = Object.keys(row).filter((key) => !columns.includes(key));
-  if (unknown.length > 0) {
-    throw new Error(`Colunas desconhecidas na linha: ${unknown.join(', ')}`);
-  }
-
   const fd = fs.openSync(file, 'a');
   try {
-    fs.writeSync(fd, `${columns.map((column) => escapeCell(row[column])).join(',')}\n`);
+    fs.writeSync(fd, line);
     fs.fsyncSync(fd);
   } finally {
     fs.closeSync(fd);

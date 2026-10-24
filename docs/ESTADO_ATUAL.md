@@ -127,9 +127,10 @@ Política do harness que entra na análise (as instruções pediam só "uma nova
 | Prazo do Aplicar do painel da v1.0.0 | 120 s (`applyMs`) |
 | Prazo total de um run (watchdog) | 900 s; o watchdog cancela o run e relança o navegador |
 | Prazo do axe | 120 s (`evaluatorMs`) |
-| Tentativas | uma nova tentativa por falha (`retries: 1`); queda do navegador não conta (até 2); navegador que não abre 3 vezes seguidas encerra a condição com `falha` |
-| Baseline de outra sessão | a mais recente do mesmo snapshot (HTML, HAR e pasta), do mesmo axe e do mesmo ambiente (Chromium, viewport, locale) |
-| Snapshot `suspeito` | mais de 10% dos pixels diferentes entre captura e replay, mais de 5% de diferença no texto visível, load do replay sem terminar, `compatMode` diferente ou suspeita de desafio anti-bot |
+| Tentativas | uma nova tentativa por falha (`retries: 1`); falhas do harness (queda do navegador, replay que não abre, medição que falha depois do driver) não contam (até 2 por URL); navegador que não abre 3 vezes seguidas encerra a condição com `falha` |
+| Baseline de outra sessão | a mais recente do mesmo snapshot (HTML, HAR e pasta), do mesmo axe e do mesmo ambiente (Chromium, viewport, locale e hash do código do harness) |
+| Snapshot `suspeito` | mais de 10% dos pixels diferentes entre captura e replay, mais de 5% das linhas do texto visível sem par, load do replay sem terminar, `compatMode` diferente ou sinal forte de desafio anti-bot (título de desafio, ou o padrão numa página quase sem texto) |
+| URL em mais de um estrato | uma entrada só, com todos os estratos (um snapshot, um `run_id` por execução); `estrato` no CSV junta todos com `+` |
 
 Revisão independente: um fluxo com um revisor por dimensão (snapshot, laço do lote, drivers, medição) e um verificador adversarial por dimensão, mais um revisor do diff das Fases 4 e 5. Foram 38 apontamentos sobre a Fase 3, nenhum refutado (alguns só "plausíveis"). Os que mudaram o código:
 
@@ -162,11 +163,18 @@ Revisão independente: um fluxo com um revisor por dimensão (snapshot, laço do
   - os handlers inline ficam no DOM, ao contrário do que o README dizia (a CSP os bloqueia);
   - o DOM pós do JSON bruto não tinha o doctype real nem os shadow roots.
 
-Ficaram só registrados: o cache de prompt do Ollama numa nova tentativa logo depois de um timeout (a nova tentativa aparece em `tentativas` e `observacoes`), e um job da v1.0.0 que continue `running` 60 s depois do fim do run anterior (vai para `observacoes`; com o portão fechado, as chamadas dele falham na hora).
+Segunda rodada: um fluxo verificou cada correção acima no código (por dimensão, com um verificador adversarial para cada defeito novo) e achou o que faltava ou o que a própria correção introduziu. Corrigido também:
+
+- **Comparação captura × replay:** a tela da captura saía com as animações em qualquer fase e a do replay com elas congeladas; uma página com hero animado grande viraria `suspeito` sem motivo. Agora a captura congela as animações antes da tela. O texto passou a ser comparado linha a linha (antes só o tamanho), e as animações dentro de shadow roots também são congeladas.
+- **Snapshot:** a rolagem de contêineres feita por script (carrossel numa imagem que não é a primeira) é gravada na captura e reaplicada no replay; `<noscript>` só é esvaziado quando o conteúdo é texto cru (num iframe `sandbox` sem scripts ele aparece e fica); a reescrita de URLs em páginas fora de UTF-8 não mexe mais na página ao vivo (trocar o `src` de um iframe o recarregava) e cobre `srcset`, `href` de SVG e `url()` em estilos, e os CSS sem charset ganham o da página no HAR; o hash da pasta deixava de fora os `.png` do HAR (recursos da página), agora só as duas capturas de tela; `frames_servidos` conta arquivos distintos.
+- **Desafio anti-bot:** o padrão de texto ("captcha", "acesso negado") excluía páginas legítimas que só mencionam reCAPTCHA; agora só um sinal forte exclui.
+- **Lote:** uma URL na amostra e num subconjunto (`visao`, `variancia`) ficava só no primeiro estrato, e as condições de subconjunto rodariam vazias; falha de replay ou de medição depois do driver descartava o resultado do driver e contava como tentativa do plugin; uma baseline medida com outro código de replay ou de medição era reaproveitada (o ambiente agora inclui o hash do harness, e a versão do harness vai para a sessão e para a coluna `versao_harness`); a procedência da baseline saía sem a tentativa; tokens de um run da v1.1.0 inacabado (runLog parcial lido do service worker) eram gravados como completos, e os de um run que nem começou como desconhecidos; o encerramento depois de um erro inesperado deixava o navegador aberto e o processo preso; a sessão, o índice dos snapshots e a remoção das cópias não tinham nova tentativa; `--resultados ""` caía na pasta do lote; uma nova tentativa de gravação podia duplicar uma linha do CSV.
+
+Ficaram só registrados: o cache de prompt do Ollama numa nova tentativa logo depois de um timeout (a nova tentativa aparece em `tentativas` e `observacoes`); um job da v1.0.0 que continue `running` 60 s depois do fim do run anterior (vai para `observacoes`; com o portão fechado, as chamadas dele falham na hora); requisições abortadas no replay e iframes congelados não pedidos (registrados no índice, sem bloquear: a comparação de tela pega o que aparece).
 
 Condição `v1.1.0-vision`: modelo `gemma3:4b` (D9, provisória). O `qwen3-vl:8b` raciocina mesmo com `reasoning_effort: 'none'` e o alt gravado é o raciocínio; o `gemma3:4b` não tem modo de raciocínio. A condição usa o mesmo modelo nas chamadas de texto do run.
 
-Smoke (aceite da Fase 3) nesta máquina, 24/10/2026, com o código final da fase: snapshots recapturados, 3 URLs do estrato `smoke` × {`baseline`, `v1.0.0`, `v1.1.0`}, `qwen3:8b`, Ollama 0.40.9 só na CPU, Chromium 156.0.8078.4. Evidência: `docs/evidencias/smoke-fase3-2026-10-24/` (`runs.csv`, sessão e um resumo dos JSON brutos, sem o DOM). O primeiro smoke, antes da revisão, fica em `docs/evidencias/smoke-fase3-2026-10-24-antes-da-revisao/` (com a violação fantasma da W3C BAD: 11 sérias na baseline).
+Smoke (aceite da Fase 3) nesta máquina, 24/10/2026, com o código da primeira rodada da revisão, ainda não commitado quando rodou (a sessão registra o commit anterior, `10468d7`): snapshots recapturados, 3 URLs do estrato `smoke` × {`baseline`, `v1.0.0`, `v1.1.0`}, `qwen3:8b`, Ollama 0.40.9 só na CPU, Chromium 156.0.8078.4. Evidência: `docs/evidencias/smoke-fase3-2026-10-24/` (`runs.csv`, sessão e um resumo dos JSON brutos, sem o DOM). O primeiro smoke, antes da revisão, fica em `docs/evidencias/smoke-fase3-2026-10-24-antes-da-revisao/` (com a violação fantasma da W3C BAD: 11 sérias na baseline).
 
 | URL | Condição | Status | axe crítico / sério (elementos) | Alterações | Chamadas ao LLM | Observação |
 |---|---|---|---|---|---|---|

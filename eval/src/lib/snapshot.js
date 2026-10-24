@@ -6,8 +6,8 @@ import { sha256Dir, sha256File } from './hash.js';
 export const SNAPSHOT_INDEX_COLUMNS = [
   'slug', 'url', 'final_url', 'dir', 'status_http', 'capturado_em', 'status',
   'html_sha256', 'har_sha256', 'pasta_sha256', 'html_bytes', 'har_bytes', 'har_entradas', 'har_descartadas', 'har_sem_corpo',
-  'frames_congelados', 'frames_sem_url', 'frames_servidos', 'frames_bloqueados', 'shadow_roots', 'shadow_roots_perdidos',
-  'cssom_sincronizados', 'folhas_adotadas', 'noscript_esvaziados', 'charset', 'urls_reescritas',
+  'har_css_charset', 'frames_congelados', 'frames_sem_url', 'frames_servidos', 'frames_bloqueados', 'shadow_roots',
+  'shadow_roots_perdidos', 'cssom_sincronizados', 'folhas_adotadas', 'noscript_esvaziados', 'elementos_rolados', 'charset', 'urls_reescritas',
   'compat_mode', 'doctype', 'meta_refresh', 'espera_ms', 'ultima_mutacao_ms', 'marcas_carregamento',
   'replay_ok', 'replay_abortados', 'replay_diff_pixels', 'replay_diff_texto', 'suspeita_desafio',
   'navegador', 'user_agent', 'observacoes'
@@ -17,8 +17,9 @@ export const SNAPSHOT_INDEX_COLUMNS = [
 // extensão, o axe e o IBM rodam pelo CDP ou no mundo isolado e não são afetados.
 const REPLAY_CSP = "script-src 'none'; object-src 'none'";
 
-// Arquivos da pasta do snapshot que são só evidência visual e ficam fora do pasta_sha256
-export const SNAPSHOT_EVIDENCE = (relative) => /\.png$/i.test(relative);
+// As duas capturas de tela da pasta do snapshot são só evidência visual e ficam fora do
+// pasta_sha256 (os .png do HAR, recursos da página, entram)
+export const SNAPSHOT_EVIDENCE = (relative) => relative === 'page.png' || relative === 'replay.png';
 
 export const stripHash = (url) => {
   try {
@@ -53,13 +54,29 @@ export function serializeDocumentInPage() {
   // em elementos: no <head>, eles fecham o head e vão para o <body> visível do replay
   // (a W3C BAD ganhava uma faixa vermelha que a página real não mostra). O replay também
   // roda com scripts ligados (a CSP não os desliga), então esvaziar não muda nada visível.
+  // Num frame com scripts desligados (iframe sandbox sem allow-scripts) o conteúdo foi
+  // parseado como elementos e aparece: esse fica.
   let noscriptEmptied = 0;
   roots.forEach((root) => root.querySelectorAll('noscript').forEach((noscript) => {
-    if (noscript.firstChild) {
+    if (noscript.firstChild && Array.from(noscript.childNodes).every((node) => node.nodeType === Node.TEXT_NODE)) {
       noscript.replaceChildren();
       noscriptEmptied++;
     }
   }));
+
+  // Rolagem de contêineres feita por script (carrossel na 3ª imagem, lista rolada) não vai
+  // para o HTML: fica num atributo que o replay aplica e remove antes de qualquer medição.
+  // A janela entra como atributo do <html>
+  let scrolledElements = 0;
+  roots.forEach((root) => root.querySelectorAll('*').forEach((element) => {
+    if (element !== document.documentElement && element !== document.body && (element.scrollTop || element.scrollLeft)) {
+      element.setAttribute('data-accessify-scroll', `${element.scrollTop},${element.scrollLeft}`);
+      scrolledElements++;
+    }
+  }));
+  if (window.scrollX || window.scrollY) {
+    document.documentElement.setAttribute('data-accessify-window-scroll', `${window.scrollY},${window.scrollX}`);
+  }
 
   // Estado de formulário definido por script não vai para o HTML: vira atributo
   document.querySelectorAll('input').forEach((input) => {
@@ -74,19 +91,44 @@ export function serializeDocumentInPage() {
 
   // O replay é servido em UTF-8. Numa página em outra codificação, a query de uma URL com
   // acento seria codificada de outro jeito e não bateria com o HAR: essas URLs viram a
-  // forma absoluta já codificada que o navegador usou na captura.
+  // forma absoluta já codificada que o navegador usou na captura (um <a> fora do DOM
+  // resolve com a codificação do documento). Atributos, srcset, href de SVG e url() de
+  // estilos. Nada muda no DOM ao vivo (trocar o src de um iframe o recarregaria): o valor
+  // novo vai num atributo marcador, aplicado só na cópia reparseada.
   const charset = document.characterSet;
   let urlsRewritten = 0;
-  if (!/^utf-8$/i.test(charset)) {
-    roots.forEach((root) => root.querySelectorAll('[src], [href], [poster], [data], [action]').forEach((element) => {
-      ['src', 'href', 'poster', 'data', 'action'].forEach((name) => {
+  const URL_MARK = 'data-accessify-url-';
+  // eslint-disable-next-line no-control-regex
+  const nonAscii = /[^\x00-\x7f]/;
+  const legacyCharset = !/^utf-8$/i.test(charset);
+  const resolver = document.createElement('a');
+  const encodeUrl = (value) => {
+    resolver.setAttribute('href', value.trim());
+    return resolver.href;
+  };
+  const encodeCss = (css) => css.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g, (match, quote, url) => (nonAscii.test(url) ? `url("${encodeUrl(url)}")` : match));
+  if (legacyCharset) {
+    roots.forEach((root) => root.querySelectorAll('*').forEach((element) => {
+      ['src', 'href', 'poster', 'data', 'action', 'xlink:href'].forEach((name) => {
         const value = element.getAttribute(name);
-        // eslint-disable-next-line no-control-regex
-        if (value && /[^\x00-\x7f]/.test(value) && typeof element[name] === 'string' && element[name]) {
-          element.setAttribute(name, element[name]);
+        if (value && nonAscii.test(value)) {
+          element.setAttribute(`${URL_MARK}${name.replace(':', '-')}`, encodeUrl(value));
           urlsRewritten++;
         }
       });
+      const srcset = element.getAttribute('srcset');
+      if (srcset && nonAscii.test(srcset)) {
+        element.setAttribute(`${URL_MARK}srcset`, srcset.split(',').map((candidate) => {
+          const [url, ...descriptors] = candidate.trim().split(/\s+/);
+          return [nonAscii.test(url) ? encodeUrl(url) : url, ...descriptors].join(' ');
+        }).join(', '));
+        urlsRewritten++;
+      }
+      const style = element.getAttribute('style');
+      if (style && nonAscii.test(style)) {
+        element.setAttribute(`${URL_MARK}style`, encodeCss(style));
+        urlsRewritten++;
+      }
     }));
   }
 
@@ -130,6 +172,20 @@ export function serializeDocumentInPage() {
       }
     });
   });
+
+  // url() com acento nos <style> (depois da sincronização do CSSOM, que pode ter trocado o
+  // texto): o texto codificado também vai num marcador
+  if (legacyCharset) {
+    roots.forEach((root) => root.querySelectorAll('style').forEach((style) => {
+      if (nonAscii.test(style.textContent || '')) {
+        const encoded = encodeCss(style.textContent);
+        if (encoded !== style.textContent) {
+          style.setAttribute(`${URL_MARK}css`, encoded);
+          urlsRewritten++;
+        }
+      }
+    }));
+  }
 
   const doctype = document.doctype ? new XMLSerializer().serializeToString(document.doctype) : '';
   const htmlAttributes = Array.from(document.documentElement.attributes)
@@ -178,6 +234,25 @@ export function serializeDocumentInPage() {
   };
   [parsed, ...parsedRoots].forEach(removeScripts);
 
+  // Marcadores de URL codificada viram o atributo (ou o texto do <style>) na cópia
+  const applyUrlMarks = (root) => {
+    root.querySelectorAll('*').forEach((element) => {
+      Array.from(element.attributes).filter((attribute) => attribute.name.startsWith(URL_MARK)).forEach((attribute) => {
+        const name = attribute.name.slice(URL_MARK.length);
+        if (name === 'css') {
+          element.textContent = attribute.value;
+        } else if (name === 'xlink-href') {
+          element.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href', attribute.value);
+        } else {
+          element.setAttribute(name, attribute.value);
+        }
+        element.removeAttribute(attribute.name);
+      });
+    });
+    root.querySelectorAll('template').forEach((template) => applyUrlMarks(template.content));
+  };
+  [parsed, ...parsedRoots].forEach(applyUrlMarks);
+
   const head = parsed.head || parsed.documentElement.insertBefore(parsed.createElement('head'), parsed.documentElement.firstChild);
   if (!head.querySelector('base')) {
     const base = parsed.createElement('base');
@@ -203,12 +278,13 @@ export function serializeDocumentInPage() {
     charset,
     urlsRewritten,
     noscriptEmptied,
+    scrolledElements,
     metaRefresh: refresh ? refresh.getAttribute('content') || '' : '',
     shadowRoots: shadowRoots.length,
     shadowRootsLost: trustedTypesFallback ? shadowRoots.length : 0,
     cssomSynced,
     adopted,
-    bodyTextLength: (document.body?.innerText || '').length,
+    bodyText: document.body?.innerText || '',
     loadingMarkers: {
       ariaBusy: document.querySelectorAll('[aria-busy="true"]').length,
       infiniteAnimations,
@@ -224,12 +300,29 @@ export function serializeDocumentInPage() {
  * vazio, sem contar como abortado) e as duplicadas por método + URL (fica a primeira).
  * Sem isso, uma entrada abortada fica pendurada no replay e a página nunca termina de
  * carregar, e uma sem corpo vira folha de estilo ou imagem vazia sem aviso.
+ *
+ * Numa página fora de UTF-8, um CSS sem charset declarado herda a codificação do
+ * documento que o pediu; no replay o documento é UTF-8, então o CSS ganha o charset que
+ * tinha de fato na captura (documentCharset).
  */
-export function cleanHar(harFile) {
+export function cleanHar(harFile, { documentCharset = null } = {}) {
   const har = JSON.parse(fs.readFileSync(harFile, 'utf8'));
   const seen = new Set();
   const before = har.log.entries.length;
   let withoutBody = 0;
+  let cssCharsetAdded = 0;
+  const legacyCharset = documentCharset && !/^utf-8$/i.test(documentCharset);
+  har.log.entries.forEach((entry) => {
+    const response = entry.response;
+    const header = response?.headers?.find((item) => item.name.toLowerCase() === 'content-type');
+    if (legacyCharset && header && /^text\/css\b/i.test(header.value) && !/charset=/i.test(header.value)) {
+      header.value = `${header.value}; charset=${documentCharset}`;
+      if (response.content?.mimeType) {
+        response.content.mimeType = header.value;
+      }
+      cssCharsetAdded++;
+    }
+  });
   har.log.entries = har.log.entries.filter((entry) => {
     const response = entry.response;
     if (!response || response.status <= 0 || response._failureText) {
@@ -249,7 +342,7 @@ export function cleanHar(harFile) {
     return true;
   });
   fs.writeFileSync(harFile, JSON.stringify(har));
-  return { entries: har.log.entries.length, dropped: before - har.log.entries.length, withoutBody };
+  return { entries: har.log.entries.length, dropped: before - har.log.entries.length, withoutBody, cssCharsetAdded };
 }
 
 /**
@@ -304,56 +397,135 @@ export async function settle(page, timeoutMs) {
 }
 
 /**
- * Deixa o estado das animações igual em todas as condições: no replay as animações CSS
- * recomeçam do zero, e a baseline mede segundos depois do load enquanto as condições com
- * plugin medem minutos depois. As finitas (entrada, transições) vão para o estado final,
- * que é o que a captura viu depois de esperar o DOM assentar; as infinitas (spinners,
- * carrosséis em CSS) param no início. Em todos os frames.
+ * Roda fn em cada frame da página e devolve os resultados dos que responderam. Um iframe
+ * cuja navegação foi bloqueada pode nunca ganhar contexto de execução, e o evaluate
+ * esperaria para sempre: cada frame tem 3 s.
  */
-export async function freezeAnimations(page) {
-  const total = { finished: 0, paused: 0, framesSkipped: 0 };
+async function inEachFrame(page, fn) {
+  const results = [];
+  let skipped = 0;
   for (const frame of page.frames()) {
-    // Um iframe cuja navegação foi bloqueada pode nunca ganhar contexto de execução, e o
-    // evaluate esperaria para sempre: cada frame tem 3 s
     let timer;
     const skip = new Promise((resolve) => {
       timer = setTimeout(() => resolve(null), 3000);
     });
     try {
-      const result = await Promise.race([skip, frame.evaluate(() => {
-        let finished = 0;
-        let paused = 0;
-        (document.getAnimations ? document.getAnimations() : []).forEach((animation) => {
-          try {
-            const timing = animation.effect?.getComputedTiming?.();
-            if (!timing || timing.endTime === Infinity || timing.iterations === Infinity) {
-              animation.pause();
-              animation.currentTime = 0;
-              paused++;
-            } else {
-              animation.finish();
-              finished++;
-            }
-          } catch (error) {
-            // animação que não aceita o comando: segue como está
-          }
-        });
-        return { finished, paused };
-      })]);
+      const result = await Promise.race([skip, frame.evaluate(fn)]);
       if (result) {
-        total.finished += result.finished;
-        total.paused += result.paused;
+        results.push(result);
       } else {
-        total.framesSkipped++;
+        skipped++;
       }
     } catch (error) {
       // frame sem acesso (outra origem bloqueada) ou já fechado
-      total.framesSkipped++;
+      skipped++;
     } finally {
       clearTimeout(timer);
     }
   }
-  return total;
+  return { results, skipped };
+}
+
+/**
+ * Deixa o estado das animações igual em todas as condições: no replay as animações CSS
+ * recomeçam do zero, e a baseline mede segundos depois do load enquanto as condições com
+ * plugin medem minutos depois. As finitas (entrada, transições) vão para o estado final,
+ * que é o que a captura viu depois de esperar o DOM assentar; as infinitas (spinners,
+ * carrosséis em CSS) param no início. Em todos os frames e dentro dos shadow roots (o
+ * document.getAnimations() de cada documento não os inclui). A captura chama a mesma
+ * função na página ao vivo antes da tela, para a comparação com o replay ver o mesmo
+ * estado.
+ */
+export async function freezeAnimations(page) {
+  const { results, skipped } = await inEachFrame(page, () => {
+    const animations = new Set(document.getAnimations ? document.getAnimations() : []);
+    const walk = (root) => root.querySelectorAll('*').forEach((element) => {
+      if (element.shadowRoot) {
+        (element.shadowRoot.getAnimations ? element.shadowRoot.getAnimations() : []).forEach((animation) => animations.add(animation));
+        walk(element.shadowRoot);
+      }
+    });
+    walk(document);
+    let finished = 0;
+    let paused = 0;
+    animations.forEach((animation) => {
+      try {
+        const timing = animation.effect?.getComputedTiming?.();
+        if (!timing || timing.endTime === Infinity || timing.iterations === Infinity) {
+          animation.pause();
+          animation.currentTime = 0;
+          paused++;
+        } else {
+          animation.finish();
+          finished++;
+        }
+      } catch (error) {
+        // animação que não aceita o comando: segue como está
+      }
+    });
+    return { finished, paused };
+  });
+  return {
+    finished: results.reduce((sum, item) => sum + item.finished, 0),
+    paused: results.reduce((sum, item) => sum + item.paused, 0),
+    framesSkipped: skipped
+  };
+}
+
+/**
+ * Aplica a rolagem gravada na captura (atributos data-accessify-scroll e, no <html>,
+ * data-accessify-window-scroll) e remove os atributos, em todos os frames, antes de
+ * qualquer medição ou driver.
+ */
+async function restoreCapturedScroll(page) {
+  const { results } = await inEachFrame(page, () => {
+    let restored = 0;
+    const walk = (root) => root.querySelectorAll('*').forEach((element) => {
+      const value = element.getAttribute('data-accessify-scroll');
+      if (value !== null) {
+        const [top, left] = value.split(',').map(Number);
+        element.scrollTop = top;
+        element.scrollLeft = left;
+        element.removeAttribute('data-accessify-scroll');
+        restored++;
+      }
+      if (element.shadowRoot) {
+        walk(element.shadowRoot);
+      }
+    });
+    walk(document);
+    const windowScroll = document.documentElement.getAttribute('data-accessify-window-scroll');
+    if (windowScroll !== null) {
+      const [y, x] = windowScroll.split(',').map(Number);
+      document.documentElement.removeAttribute('data-accessify-window-scroll');
+      window.scrollTo(x, y);
+    }
+    return { restored };
+  });
+  return results.reduce((sum, item) => sum + item.restored, 0);
+}
+
+/**
+ * Diferença entre o texto visível da captura e o do replay: fração das linhas (sem
+ * espaços nas pontas) que não têm par na outra versão, contando repetições. 0 = mesmo
+ * texto; um texto trocado do mesmo tamanho também conta.
+ */
+export function textDifference(a, b) {
+  const lines = (text) => String(text || '').split('\n').map((line) => line.trim()).filter(Boolean);
+  const left = lines(a);
+  const right = lines(b);
+  const remaining = new Map();
+  left.forEach((line) => remaining.set(line, (remaining.get(line) || 0) + 1));
+  let common = 0;
+  right.forEach((line) => {
+    const count = remaining.get(line) || 0;
+    if (count > 0) {
+      remaining.set(line, count - 1);
+      common++;
+    }
+  });
+  const total = left.length + right.length;
+  return total ? (total - 2 * common) / total : 0;
 }
 
 /**
@@ -371,7 +543,10 @@ export async function openSnapshot(context, snapshot, config) {
   const framesFile = path.join(dir, 'frames.json');
   const frameMap = fs.existsSync(framesFile) ? JSON.parse(fs.readFileSync(framesFile, 'utf8')) : {};
   const mainUrl = stripHash(snapshot.final_url);
-  const counters = { mainServed: 0, blockedNavigations: 0, blockedFrames: 0, frozenFramesServed: 0 };
+  // frozenFramesServed: arquivos congelados distintos que o replay serviu (dois iframes com
+  // o mesmo src contam uma vez); frozenFrameRequests: pedidos atendidos
+  const counters = { mainServed: 0, blockedNavigations: 0, blockedFrames: 0, frozenFramesServed: 0, frozenFrameRequests: 0 };
+  const servedFrameFiles = new Set();
   const aborted = { main: [], frames: [] };
 
   const page = await context.newPage();
@@ -410,7 +585,9 @@ export async function openSnapshot(context, snapshot, config) {
       }
       const file = frameMap[stripHash(request.url())];
       if (file) {
-        counters.frozenFramesServed++;
+        counters.frozenFrameRequests++;
+        servedFrameFiles.add(file);
+        counters.frozenFramesServed = servedFrameFiles.size;
         return route.fulfill({
           status: 200,
           headers: { 'content-type': 'text/html; charset=utf-8', 'content-security-policy': REPLAY_CSP },
@@ -423,12 +600,13 @@ export async function openSnapshot(context, snapshot, config) {
     await page.goto(snapshot.final_url, { waitUntil: 'domcontentloaded', timeout: config.timeouts.navigationMs });
     const loadTimedOut = await page.waitForLoadState('load', { timeout: config.timeouts.settleMs }).then(() => false, () => true);
     await settle(page, config.timeouts.settleMs);
-    const animations = await freezeAnimations(page);
-
     if (counters.mainServed !== 1) {
       throw new Error('O documento principal não veio do snapshot congelado.');
     }
-    const state = await page.evaluate(() => ({ compatMode: document.compatMode, bodyTextLength: (document.body?.innerText || '').length }));
+    const scrollRestored = await restoreCapturedScroll(page);
+    const animations = await freezeAnimations(page);
+    await settle(page, config.timeouts.settleMs);
+    const state = await page.evaluate(() => ({ compatMode: document.compatMode, bodyText: document.body?.innerText || '' }));
 
     return {
       page,
@@ -436,7 +614,8 @@ export async function openSnapshot(context, snapshot, config) {
       counters,
       loadTimedOut,
       animations,
-      bodyTextLength: state.bodyTextLength,
+      scrollRestored,
+      bodyText: state.bodyText,
       compatModeMismatch: snapshot.compat_mode && state.compatMode !== snapshot.compat_mode ? `${snapshot.compat_mode} → ${state.compatMode}` : null
     };
   } catch (error) {
@@ -479,10 +658,11 @@ export async function recordScroll(page) {
 }
 
 /**
- * Volta a rolagem ao estado de antes do driver e congela as animações de novo antes de
- * medir: o caminho de visão da v1.1.0 chama scrollIntoView, que rola a janela e todo
- * contêiner rolável acima da imagem (inclusive o viewport de um carrossel com overflow
- * hidden), e cabeçalhos fixos, imagens lazy e slides mudariam o que o axe vê.
+ * Antes de medir: cada contêiner rolável volta à posição de antes do driver, a janela vai
+ * para o topo (todas as condições medem do topo) e as animações são congeladas de novo.
+ * O caminho de visão da v1.1.0 chama scrollIntoView, que rola a janela e todo contêiner
+ * rolável acima da imagem (inclusive o viewport de um carrossel com overflow hidden), e
+ * cabeçalhos fixos, imagens lazy e slides mudariam o que o axe vê.
  */
 export async function resetScroll(page, timeoutMs) {
   const before = await page.evaluate((key) => {

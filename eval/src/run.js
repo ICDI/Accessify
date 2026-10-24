@@ -16,19 +16,21 @@ import { appendCsvRow } from './lib/csv.js';
 import { countGenericLabels, diffGenericLabels, serializeDom } from './lib/dom-metrics.js';
 import { prepareExtension, removeExtensionCopy } from './lib/extensions.js';
 import { sha256, slugForUrl } from './lib/hash.js';
-import { loadedContext, ollamaInfo, packageVersions, prepareModel, writeSession } from './lib/session.js';
+import { withIoRetries } from './lib/io.js';
+import { harnessVersion, loadedContext, ollamaInfo, packageVersions, prepareModel, writeSession } from './lib/session.js';
 import { countRenderingAborts, latestSnapshots, openSnapshot, recordScroll, resetScroll, verifySnapshot } from './lib/snapshot.js';
 
 export const RUN_COLUMNS = [
-  'run_id', 'sessao', 'url', 'estrato', 'data_coleta', 'condicao', 'versao_plugin', 'modelo', 'model_digest',
+  'run_id', 'sessao', 'url', 'estrato', 'data_coleta', 'condicao', 'versao_plugin', 'versao_harness', 'modelo', 'model_digest',
   'execucao', 'tentativas', 'status', 'snapshot_sha256', 'raw_sha256', 'har_abortados',
   'axe_violations_critical', 'axe_violations_serious', 'axe_violations_moderate',
   'axe_violations_minor', 'axe_elementos', 'axe_incomplete', 'novos_erros_axe', 'novos_erros_axe_regra',
   'rotulos_genericos', 'tokens_in', 'tokens_out', 'latencia_ms', 'observacoes'
 ];
 
-// Quedas do navegador da condição não contam como tentativa do plugin, até este limite
-const MAX_CRASH_RETRIES = 2;
+// Falhas do próprio harness (navegador da condição caiu, replay não abriu, medição falhou
+// depois do driver) não contam como tentativa do plugin, até este limite
+const MAX_HARNESS_RETRIES = 2;
 
 const args = parseArgs();
 const config = loadConfig(args);
@@ -64,10 +66,13 @@ const conditions = conditionIds.map((id) => {
 });
 
 const allUrls = loadUrls(args.urls);
+if (allUrls.duplicates.length) {
+  console.warn(`URLs em mais de uma linha de urls.csv (uma entrada só, com todos os estratos): ${[...new Set(allUrls.duplicates.map((entry) => entry.url))].join(', ')}`);
+}
 let urls = allUrls;
 const estrato = args.estrato || (args.smoke ? config.smoke.estrato : null);
 if (estrato) {
-  urls = urls.filter((entry) => entry.estrato === estrato);
+  urls = urls.filter((entry) => entry.estratos.includes(estrato));
 }
 if (args.url) {
   urls = urls.filter((entry) => entry.url === args.url);
@@ -81,7 +86,7 @@ const modelSlug = (condition) => (condition.model ? condition.model.replace(/[^a
 const startedAt = new Date().toISOString();
 // Milissegundos + sufixo aleatório: duas sessões no mesmo segundo não dividem nomes de arquivo
 const sessionId = `${startedAt.replace(/[-:]/g, '').replace('T', '-').replace('.', '').slice(0, 18)}-${crypto.randomBytes(2).toString('hex')}`;
-const versions = packageVersions();
+const versions = { ...packageVersions(), harness: harnessVersion() };
 const session = {
   sessionId,
   startedAt,
@@ -95,7 +100,7 @@ const session = {
   expectedContextLength: config.ollama.expectedContextLength,
   extensions: {},
   contexts: {},
-  warnings: allUrls.duplicates.map((entry) => `URL repetida em urls.csv (estrato ${entry.estrato}), vale a primeira linha: ${entry.url}`),
+  warnings: allUrls.duplicates.map((entry) => `URL em mais de uma linha de urls.csv (estrato ${entry.estrato || 'vazio'}), mesclada numa entrada: ${entry.url}`),
   harnessErrors: []
 };
 let sessionFile = null;
@@ -114,30 +119,15 @@ function harnessError(entry) {
 }
 saveSession();
 
-const sleepSync = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-// No Windows, antivírus e indexador seguram arquivos recém-fechados por instantes
-function withIoRetries(action) {
-  for (let attemptNumber = 1; ; attemptNumber++) {
-    try {
-      return action();
-    } catch (error) {
-      if (attemptNumber >= 5 || !['EPERM', 'EBUSY', 'EACCES', 'EAGAIN'].includes(error.code)) {
-        throw error;
-      }
-      sleepSync(200 * attemptNumber);
-    }
-  }
-}
-
 /**
  * Grava o JSON bruto de uma tentativa (fsync + rename). Nunca sobrescreve um bruto que já
  * existe: o raw_sha256 de uma linha anterior ficaria órfão. Devolve o sha256 do texto, ou
  * '' com o erro, que vai para observacoes e para os erros do harness.
  */
 function saveRaw(raw, attempt) {
-  const text = JSON.stringify(raw, null, 2);
   let file = path.join(config.dirs.raw, `${raw.runId}__${sessionId}__a${attempt}.json`);
   try {
+    const text = JSON.stringify(raw, null, 2);
     if (fs.existsSync(file)) {
       harnessError({ runId: raw.runId, message: `JSON bruto já existia: ${path.basename(file)}` });
       file = file.replace(/\.json$/, `__${crypto.randomBytes(3).toString('hex')}.json`);
@@ -161,12 +151,14 @@ function saveRaw(raw, attempt) {
 }
 
 // Baseline por hash do snapshot: só vale a do mesmo snapshot (HTML, HAR e pasta), do mesmo
-// axe (versão e tags) e do mesmo ambiente de medição (Chromium, viewport, locale). Entre
-// sessões, vale a mais recente pelo início do run; na sessão, a da própria sessão.
+// axe (versão e tags) e do mesmo ambiente de medição (Chromium, viewport, locale e o hash do
+// código do harness, que inclui o replay e a medição). Entre sessões, vale a mais recente
+// pelo início do run; na sessão, a da própria sessão.
 const baselines = new Map();
 const baselineKey = (snapshot) => [snapshot.html_sha256, snapshot.har_sha256, snapshot.pasta_sha256 || ''].join('|');
-const measurementEnvironment = (launched) => ({ browser: launched.browser.product, viewport: config.viewport, locale: config.locale });
+const measurementEnvironment = (launched) => ({ browser: launched.browser.product, viewport: config.viewport, locale: config.locale, harness: versions.harness.sha256 });
 const sameJson = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+const runRef = (raw) => ({ runId: raw.runId, session: raw.session, attempt: raw.attempt ?? null });
 
 function baselineCandidates(snapshot, environment) {
   const prefix = `${config.study}_baseline_sem-modelo_${snapshot.slug}_`;
@@ -198,7 +190,7 @@ function findBaseline(snapshot, environment) {
   if (!best) {
     return null;
   }
-  const baseline = { axe: best.axe.post, from: { runId: best.runId, session: best.session, attempt: best.attempt ?? null } };
+  const baseline = { axe: best.axe.post, from: runRef(best) };
   baselines.set(key, baseline);
   return baseline;
 }
@@ -206,7 +198,7 @@ function findBaseline(snapshot, environment) {
 function rememberBaseline(snapshot, raw, post) {
   const key = baselineKey(snapshot);
   if (!baselines.get(key)?.thisSession) {
-    baselines.set(key, { axe: post, from: { runId: raw.runId, session: sessionId, attempt: raw.attempt ?? null }, thisSession: true });
+    baselines.set(key, { axe: post, from: runRef(raw), thisSession: true });
   }
 }
 
@@ -225,13 +217,23 @@ function withTimeout(promise, ms, label) {
 }
 
 const sumValues = (object) => Object.values(object).reduce((sum, n) => sum + n, 0);
+const firstLine = (error) => String(error?.message || error).split('\n')[0];
 
-async function runOnce(state, condition, entry, snapshot, execution, holder) {
+// Erro do próprio harness (replay que não abre, medição que falha depois do driver): sobe
+// marcado, para a tentativa não contar como do plugin
+function harnessFailure(stage, error) {
+  const failure = new Error(`harness: ${stage}: ${firstLine(error)}`);
+  failure.harness = true;
+  return failure;
+}
+
+async function runOnce(state, condition, entry, snapshot, execution, attempt, holder) {
   const { launched, adapter } = state;
   const runId = `${config.study}_${condition.id}_${modelSlug(condition)}_${snapshot.slug}_run${execution}`;
   const raw = {
     runId,
     session: sessionId,
+    attempt,
     condition,
     url: entry.url,
     estrato: entry.estrato,
@@ -241,7 +243,12 @@ async function runOnce(state, condition, entry, snapshot, execution, holder) {
     startedAt: new Date().toISOString()
   };
 
-  const opened = await openSnapshot(launched.context, snapshot, config);
+  let opened;
+  try {
+    opened = await openSnapshot(launched.context, snapshot, config);
+  } catch (error) {
+    throw harnessFailure('replay', error);
+  }
   const { page } = opened;
   holder.pages.add(page);
 
@@ -258,8 +265,8 @@ async function runOnce(state, condition, entry, snapshot, execution, holder) {
 
     if (condition.driver === 'hook') {
       driver = await runHookDriver(page, condition, config, runId, launched.serviceWorker);
-      llmCalls = driver.runLog?.llmCalls || [];
-      usageKnown = !!driver.runLog;
+      llmCalls = driver.usage === 'runLog' || driver.usage === 'desconhecido' ? (driver.runLog?.llmCalls || []) : [];
+      usageKnown = driver.usage !== 'desconhecido';
     } else if (condition.driver === 'panel-v1') {
       // Portão por tentativa: as tentativas de uma URL dividem o runId, e o end() de uma
       // tentativa abandonada pelo watchdog não pode fechar o portão da seguinte
@@ -279,12 +286,45 @@ async function runOnce(state, condition, entry, snapshot, execution, holder) {
     }
     raw.driver = driver;
 
-    const scroll = await resetScroll(page, config.timeouts.settleMs);
-    const post = await withTimeout(runAxe(page, config.axe.tags), config.timeouts.evaluatorMs, 'axe');
-    const labelsAfter = await countGenericLabels(page);
-    raw.genericLabels = diffGenericLabels(labelsBefore, labelsAfter);
-    raw.axe = { tags: config.axe.tags, post };
-    raw.domPost = await serializeDom(page);
+    const ranPlugin = condition.driver !== 'none';
+    const totals = llmCalls.reduce((sum, call) => ({
+      tokensIn: sum.tokensIn + (call.tokensIn || 0),
+      tokensOut: sum.tokensOut + (call.tokensOut || 0),
+      latencyMs: sum.latencyMs + (call.latencyMs || 0)
+    }), { tokensIn: 0, tokensOut: 0, latencyMs: 0 });
+    const usage = (value) => (ranPlugin && usageKnown ? value : '');
+
+    // Medição: um erro aqui é do harness, mas o resultado do driver (e o uso do LLM) fica
+    // no JSON bruto e na linha
+    let post;
+    let scroll;
+    try {
+      scroll = await resetScroll(page, config.timeouts.settleMs);
+      post = await withTimeout(runAxe(page, config.axe.tags), config.timeouts.evaluatorMs, 'axe');
+      const labelsAfter = await countGenericLabels(page);
+      raw.genericLabels = diffGenericLabels(labelsBefore, labelsAfter);
+      raw.axe = { tags: config.axe.tags, post };
+      raw.domPost = await serializeDom(page);
+    } catch (error) {
+      if (holder.cancelled) {
+        throw error;
+      }
+      const failure = harnessFailure('medição', error);
+      raw.status = 'falha';
+      raw.error = failure.message;
+      return {
+        raw,
+        harnessFailure: true,
+        row: {
+          run_id: runId,
+          status: 'falha',
+          tokens_in: usage(totals.tokensIn),
+          tokens_out: usage(totals.tokensOut),
+          latencia_ms: usage(totals.latencyMs),
+          observacoes: [failure.message, ...(driver.errors || []).map((item) => `${item.stage}: ${item.message}`)].join(' | ')
+        }
+      };
+    }
     raw.replay = {
       abortedMain: opened.aborted.main,
       abortedFrames: opened.aborted.frames,
@@ -292,6 +332,7 @@ async function runOnce(state, condition, entry, snapshot, execution, holder) {
       loadTimedOut: opened.loadTimedOut,
       compatModeMismatch: opened.compatModeMismatch,
       animations: opened.animations,
+      scrollRestoredFromCapture: opened.scrollRestored,
       scrollBeforeMeasure: { ...scroll, elementsRecorded: scrollRecorded }
     };
 
@@ -310,18 +351,10 @@ async function runOnce(state, condition, entry, snapshot, execution, holder) {
     const contextLength = condition.model ? await loadedContext(config.ollama.baseUrl, condition.model) : null;
     raw.ollamaContext = contextLength;
 
-    const ranPlugin = condition.driver !== 'none';
-    const totals = llmCalls.reduce((sum, call) => ({
-      tokensIn: sum.tokensIn + (call.tokensIn || 0),
-      tokensOut: sum.tokensOut + (call.tokensOut || 0),
-      latencyMs: sum.latencyMs + (call.latencyMs || 0)
-    }), { tokensIn: 0, tokensOut: 0, latencyMs: 0 });
-    const usage = (value) => (ranPlugin && usageKnown ? value : '');
-
     const notes = [
       ...(driver.errors || []).map((error) => `${error.stage}: ${error.message}`),
-      condition.id !== 'baseline' && !baseline ? 'sem baseline válido (mesmo snapshot, mesmo axe, mesmo ambiente) para novos_erros_axe' : null,
-      ranPlugin && !usageKnown ? 'tokens e latência desconhecidos: o run não devolveu o runLog' : null,
+      condition.id !== 'baseline' && !baseline ? 'sem baseline válido (mesmo snapshot, mesmo axe, mesmo ambiente e código do harness) para novos_erros_axe' : null,
+      ranPlugin && !usageKnown ? 'tokens e latência desconhecidos: o run da extensão não terminou (runLog parcial ou ausente)' : null,
       driver.lateResult ? `resultado tardio da extensão: ${driver.lateResult.status}` : null,
       driver.measurementUnsettled ? 'medição com o run da extensão possivelmente ainda aplicando (sem resposta tardia)' : null,
       driver.staleJob?.stillRunningAtReset ? 'job anterior da v1.0.0 ainda rodando ao zerar (60 s)' : null,
@@ -379,7 +412,7 @@ function failureResult(condition, entry, snapshot, execution, message) {
  * um watchdog o contexto da condição é fechado e relançado (o service worker ou o
  * renderer podem ter ficado presos).
  */
-async function attemptWithWatchdog(state, condition, entry, snapshot, execution) {
+async function attemptWithWatchdog(state, condition, entry, snapshot, execution, attempt) {
   const holder = { pages: new Set(), cancelled: false };
   let timer;
   const watchdog = new Promise((resolve) => {
@@ -390,15 +423,16 @@ async function attemptWithWatchdog(state, condition, entry, snapshot, execution)
     }, config.timeouts.runWatchdogMs);
   });
   try {
-    const result = await Promise.race([runOnce(state, condition, entry, snapshot, execution, holder), watchdog]);
+    const result = await Promise.race([runOnce(state, condition, entry, snapshot, execution, attempt, holder), watchdog]);
     if (result) {
-      return { result };
+      return { result, harnessFailure: !!result.harnessFailure };
     }
     return { result: failureResult(condition, entry, snapshot, execution, `harness: watchdog de ${config.timeouts.runWatchdogMs} ms`), watchdog: true };
   } catch (error) {
-    const crashed = state.launched.state.closed;
-    const message = error.message.split('\n')[0];
-    return { result: failureResult(condition, entry, snapshot, execution, crashed ? `harness: navegador da condição caiu (${message})` : message), crashed };
+    if (state.launched.state.closed) {
+      return { result: failureResult(condition, entry, snapshot, execution, `harness: navegador da condição caiu (${firstLine(error)})`), harnessFailure: true, crashed: true };
+    }
+    return { result: failureResult(condition, entry, snapshot, execution, firstLine(error)), harnessFailure: !!error.harness };
   } finally {
     clearTimeout(timer);
   }
@@ -423,6 +457,7 @@ function writeRun(condition, entry, snapshot, execution, conditionState, result,
     data_coleta: snapshot?.capturado_em || '',
     condicao: condition.id,
     versao_plugin: extension ? (extension.gitDescribe || extension.version) : '',
+    versao_harness: versions.harness.describe || versions.harness.sha256.slice(0, 12),
     modelo: condition.model || '',
     model_digest: condition.model ? (conditionState.ollama?.digest || session.ollama.digests?.[condition.model] || '') : '',
     execucao: execution,
@@ -487,7 +522,7 @@ async function openCondition(condition, conditionState, contextInfo) {
     return null;
   } catch (error) {
     conditionState.launchFailures += 1;
-    const message = error.message.split('\n')[0];
+    const message = firstLine(error);
     harnessError({ condition: condition.id, message: `navegador da condição não abriu: ${message}` });
     if (conditionState.launchFailures >= config.launchRetries) {
       conditionState.broken = `harness: navegador da condição não abriu ${conditionState.launchFailures} vezes seguidas (${message})`;
@@ -516,7 +551,7 @@ async function runEntry(condition, conditionState, contextInfo, entry, execution
   }
 
   let pluginTries = 0;
-  let crashRetries = 0;
+  let harnessRetries = 0;
   for (let attempt = 1; pluginTries < 1 + config.retries; attempt++) {
     if (!conditionState.launched || conditionState.launched.state.closed) {
       const launchError = await openCondition(condition, conditionState, contextInfo);
@@ -529,7 +564,7 @@ async function runEntry(condition, conditionState, contextInfo, entry, execution
       }
     }
 
-    const outcome = await attemptWithWatchdog(conditionState, condition, entry, snapshot, execution);
+    const outcome = await attemptWithWatchdog(conditionState, condition, entry, snapshot, execution, attempt);
     result = outcome.result;
     result.raw.attempt = attempt;
     raw = saveRaw(result.raw, attempt);
@@ -537,10 +572,11 @@ async function runEntry(condition, conditionState, contextInfo, entry, execution
     if (result.row.status !== 'falha') {
       break;
     }
-    if (outcome.crashed && crashRetries < MAX_CRASH_RETRIES) {
-      // O navegador da condição caiu: relança, e a queda não conta como tentativa do plugin
-      crashRetries++;
-      harnessError({ condition: condition.id, runId: result.raw.runId, message: 'navegador da condição caiu; relançado sem contar a tentativa' });
+    if (outcome.harnessFailure && harnessRetries < MAX_HARNESS_RETRIES) {
+      // Falha do harness (navegador caiu, replay ou medição): nova tentativa que não conta
+      // como do plugin
+      harnessRetries++;
+      harnessError({ condition: condition.id, runId: result.raw.runId, message: `${result.row.observacoes}; nova tentativa sem contar a do plugin` });
       continue;
     }
     pluginTries++;
@@ -567,12 +603,25 @@ for (const key of new Set(conditions.map((condition) => condition.extension).fil
 }
 saveSession();
 
+// Condição em andamento, para o encerramento fechar o navegador dela mesmo depois de um
+// erro inesperado (um contexto aberto prenderia o processo do Node)
+let current = null;
 try {
   for (const condition of conditions) {
     console.log(`\n== condição ${condition.id}`);
     const contextInfo = { extension: provenance(extensions.get(condition.extension)), browser: null, launches: [], relaunches: 0, ollama: null, strayLlmCalls: [] };
     session.contexts[condition.id] = contextInfo;
     const conditionState = { launched: null, adapter: null, launchFailures: 0, broken: null, notes: [], ollama: null };
+    current = { conditionState, contextInfo };
+
+    const eligible = urls.filter((entry) => !condition.estratos || condition.estratos.some((item) => entry.estratos.includes(item)));
+    if (!eligible.length) {
+      const warning = `condição ${condition.id} sem nenhuma URL elegível${condition.estratos ? ` (estratos ${condition.estratos.join(', ')})` : ''}`;
+      console.warn(`  ${warning}`);
+      session.warnings.push(warning);
+      saveSession();
+      continue;
+    }
 
     if (condition.extension && !extensions.has(condition.extension)) {
       conditionState.broken = `harness: ${session.extensions[condition.extension]?.error || 'extensão não preparada'}`;
@@ -592,7 +641,6 @@ try {
     }
     saveSession();
 
-    const eligible = urls.filter((entry) => !condition.estratos || condition.estratos.includes(entry.estrato));
     // Execuções intercaladas: a 2ª de uma URL não vem logo depois da 1ª (cache de prompt
     // do Ollama quente e variância subestimada)
     for (let execution = 1; execution <= executions; execution++) {
@@ -604,6 +652,7 @@ try {
     }
 
     await closeCondition(conditionState, contextInfo);
+    current = null;
     saveSession();
   }
 } catch (error) {
@@ -612,7 +661,15 @@ try {
   process.exitCode = 1;
   console.error(error);
 } finally {
-  extensions.forEach((extension) => removeExtensionCopy(extension));
+  if (current) {
+    await closeCondition(current.conditionState, current.contextInfo).catch((error) => session.warnings.push(`navegador não fechado: ${error.message}`));
+  }
+  extensions.forEach((extension) => {
+    const problem = removeExtensionCopy(extension);
+    if (problem) {
+      session.warnings.push(`cópia da extensão ${extension.label} não apagada: ${problem}`);
+    }
+  });
   session.finishedAt = new Date().toISOString();
   session.ollamaAfter = await ollamaInfo(config.ollama.baseUrl);
   saveSession();

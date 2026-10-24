@@ -27,7 +27,11 @@ export async function launchCondition(condition, config, extension) {
       args: extension ? [`--disable-extensions-except=${extension.dir}`, `--load-extension=${extension.dir}`] : []
     });
   } catch (error) {
-    removeProfile();
+    try {
+      removeProfile();
+    } catch (removeError) {
+      // segue: o erro que importa é o da abertura
+    }
     throw error;
   }
 

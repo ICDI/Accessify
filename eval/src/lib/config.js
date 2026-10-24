@@ -5,8 +5,8 @@ import { isHttpUrl } from './hash.js';
 
 export const EVAL_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-// Opções que recebem um caminho: sem valor, o parseArgs devolve true e o harness cairia
-// nas pastas do lote sem avisar
+// Opções que recebem um caminho: sem valor (o parseArgs devolve true) ou vazias (uma
+// variável de ambiente não definida), o harness cairia nas pastas do lote sem avisar
 const PATH_OPTIONS = ['snapshots', 'resultados', 'urls'];
 
 /**
@@ -15,7 +15,7 @@ const PATH_OPTIONS = ['snapshots', 'resultados', 'urls'];
  */
 export function loadConfig(args = {}) {
   PATH_OPTIONS.forEach((option) => {
-    if (option in args && typeof args[option] !== 'string') {
+    if (option in args && (typeof args[option] !== 'string' || !args[option].trim())) {
       throw new Error(`--${option} precisa de um caminho.`);
     }
   });
@@ -40,8 +40,10 @@ export function loadConfig(args = {}) {
 /**
  * Lê eval/urls.csv, ou outra lista com --urls (url,estrato). Linhas vazias e comentários
  * (#) são ignorados. URLs que não abrem (sem esquema, vazias) ficam na lista com
- * invalid: true, para virarem 'falha' com motivo em vez de derrubar o lote; URLs
- * repetidas (a mesma página em dois estratos) ficam só na primeira linha e vão em
+ * invalid: true, para virarem 'falha' com motivo em vez de derrubar o lote. Uma URL em
+ * mais de uma linha (a mesma página na amostra e num subconjunto, como 'visao' ou
+ * 'variancia') vira uma entrada só, com todos os estratos em `estratos` (o snapshot e o
+ * run_id são os mesmos); `estrato` junta todos com '+'. As linhas mescladas vão em
  * `duplicates`.
  */
 export function loadUrls(file) {
@@ -52,17 +54,23 @@ export function loadUrls(file) {
     throw new Error(`${source} precisa do cabeçalho "url,estrato" (encontrado: "${header}")`);
   }
 
-  const seen = new Set();
+  const byUrl = new Map();
   const duplicates = [];
   const entries = [];
   rows.forEach((line) => {
     const [url = '', estrato = ''] = line.split(',').map((value) => value.trim());
-    if (seen.has(url)) {
+    const existing = byUrl.get(url);
+    if (existing) {
       duplicates.push({ url, estrato });
+      if (estrato && !existing.estratos.includes(estrato)) {
+        existing.estratos.push(estrato);
+        existing.estrato = existing.estratos.join('+');
+      }
       return;
     }
-    seen.add(url);
-    entries.push({ url, estrato, invalid: !isHttpUrl(url) });
+    const entry = { url, estrato, estratos: estrato ? [estrato] : [], invalid: !isHttpUrl(url) };
+    byUrl.set(url, entry);
+    entries.push(entry);
   });
   entries.duplicates = duplicates;
   return entries;
