@@ -2,11 +2,11 @@
 /**
  * Roteiro assistido para a avaliação manual com a extensão WAVE (D16).
  *
- * Serve em http://127.0.0.1:8765 as páginas do estrato A (sites originais do SEMISH) em
+ * Serve em http://127.0.0.1:8765 as 100 páginas da amostra (estrato A primeiro; filtro ?estrato=) em
  * três estados: baseline (page.html do snapshot congelado), v1.1.0 e v1.0.0 (DOM final
  * salvo pelo harness na 1ª passada). A pessoa abre cada estado no seu Chrome com a WAVE
  * instalada da loja, aciona a WAVE à mão (Ctrl+Shift+U), lê os seis totais do painel e
- * digita no formulário; o roteiro grava em docs/evidencias/wave/wave-semish.csv.
+ * digita no formulário; o roteiro grava em docs/evidencias/wave/wave.csv.
  * Nada aqui aciona a WAVE nem lê o resultado dela: os termos da WebAIM proíbem uso
  * automatizado fora da API.
  *
@@ -27,17 +27,23 @@ const opt = (name, fallback) => { const i = args.indexOf(`--${name}`); return i 
 const SESSAO = opt('sessao', '20261024-203955404-d8a9');
 const PORTA = Number(opt('porta', '8765'));
 const CONDICOES = ['baseline', 'v1.1.0', 'v1.0.0'];
-const CSV = path.resolve(EVAL, '..', 'docs', 'evidencias', 'wave', 'wave-semish.csv');
+const CSV = path.resolve(EVAL, '..', 'docs', 'evidencias', 'wave', 'wave.csv');
 const COLS = ['site', 'pagina', 'url', 'condicao', 'erros', 'erros_contraste', 'alertas', 'recursos', 'estrutura', 'aria', 'observacoes', 'coletado_por', 'coletado_em', 'snapshot_dir', 'run_id'];
 
-// Páginas do estrato A, com nome do site, a partir da ferramenta de montagem da amostra
+// Páginas da amostra, com nome do site e estrato, a partir da ferramenta de montagem; o
+// estrato A vem primeiro para manter os índices /p/0..17 usados na coleta dos sites do SEMISH
 const montagem = fs.readFileSync(path.join(EVAL, 'tools', 'amostra', 'montar_amostra.py'), 'utf8');
 const bloco = montagem.slice(montagem.indexOf('SITES=['), montagem.indexOf('CONTROLE=['));
 const paginas = [];
-for (const m of bloco.matchAll(/^\("A","([^"]*)","([^"]*)","([^"]+)","([^"]+)"/gm)) {
-  paginas.push({ site: m[2], papel: 'inicial', url: m[3] });
-  paginas.push({ site: m[2], papel: 'tarefa', url: m[4] });
+for (const m of bloco.matchAll(/^\("([A-F])","([^"]*)","([^"]*)","([^"]+)","([^"]+)"/gm)) {
+  paginas.push({ estrato: m[1], site: m[3], papel: 'inicial', url: m[4] });
+  paginas.push({ estrato: m[1], site: m[3], papel: 'tarefa', url: m[5] });
 }
+paginas.sort((a, b) => (a.estrato === 'A' ? 0 : 1) - (b.estrato === 'A' ? 0 : 1));
+paginas.push({ estrato: 'controle', site: 'Demo W3C Before and After', papel: 'before', url: 'https://www.w3.org/WAI/demos/bad/before/home.html' });
+paginas.push({ estrato: 'controle', site: 'Demo W3C Before and After', papel: 'after', url: 'https://www.w3.org/WAI/demos/bad/after/home.html' });
+const ESTRATOS = ['A', 'B', 'C', 'D', 'E', 'F', 'controle'];
+const NOME_ESTRATO = { A: 'A. Originais do SEMISH', B: 'B. Ingresso, fomento e serviços', C: 'C. Universidades federais', D: 'D. Ciência e publicação', E: 'E. Conteúdo de estudo', F: 'F. Referência em acessibilidade', controle: 'Controle W3C' };
 
 const snapshots = latestSnapshots(path.join(EVAL, 'snapshots'));
 const runs = fs.readFileSync(path.join(EVAL, 'results', 'runs.csv'), 'utf8').split('\n');
@@ -70,19 +76,26 @@ function lidas() {
   return new Set(fs.readFileSync(CSV, 'utf8').split('\n').slice(1).filter(Boolean).map((l) => { const c = l.split(','); return `${c[2]}|${c[3]}`; }));
 }
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-function indice() {
+function indice(filtro) {
   const feitas = lidas();
-  const linhas = paginas.map((p, i) => {
-    const celulas = CONDICOES.map((c) => {
-      const d = domDe(p.url, c); const ok = feitas.has(`${p.url}|${c}`);
-      return d.erro ? `<td><span class="erro" title="${esc(d.erro)}">indisponível</span></td>` : `<td><a href="/p/${i}/${c}" target="_blank" rel="noopener">${c}</a>${ok ? ' <strong>✓ lida</strong>' : ''}</td>`;
-    }).join('');
-    return `<tr><th scope="row">${esc(p.site)} — ${p.papel}</th>${celulas}<td><a href="/f/${i}">registrar</a></td></tr>`;
+  const visiveis = paginas.map((p, i) => ({ p, i })).filter(({ p }) => !filtro || p.estrato === filtro);
+  const porEstrato = ESTRATOS.filter((e) => visiveis.some(({ p }) => p.estrato === e)).map((e) => {
+    const linhas = visiveis.filter(({ p }) => p.estrato === e).map(({ p, i }) => {
+      const celulas = CONDICOES.map((c) => {
+        const d = domDe(p.url, c); const ok = feitas.has(`${p.url}|${c}`);
+        return d.erro ? `<td><span class="erro" title="${esc(d.erro)}">indisponível</span></td>` : `<td><a href="/p/${i}/${c}" target="_blank" rel="noopener">${c}</a>${ok ? ' <strong>✓ lida</strong>' : ''}</td>`;
+      }).join('');
+      return `<tr><th scope="row">${i} · ${esc(p.site)} — ${p.papel}</th>${celulas}<td><a href="/f/${i}">registrar</a></td></tr>`;
+    }).join('\n');
+    return `<h2 id="e-${e}">${NOME_ESTRATO[e]} (${visiveis.filter(({ p }) => p.estrato === e).length} páginas)</h2><table><thead><tr><th scope="col">Página</th>${CONDICOES.map((c) => `<th scope="col">${c}</th>`).join('')}<th scope="col">Formulário</th></tr></thead><tbody>${linhas}</tbody></table>`;
   }).join('\n');
-  return pagina('Roteiro WAVE — sites do SEMISH', `
-<p>Para cada página e estado: abra o link (nova aba), acione a WAVE no seu Chrome (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>U</kbd>), leia os totais do painel e <a href="#como">registre</a>. ${paginas.length} páginas × ${CONDICOES.length} estados. Gravando em <code>${esc(path.relative(path.resolve(EVAL, '..'), CSV))}</code>.</p>
-<table><caption>Páginas do estrato A</caption><thead><tr><th scope="col">Página</th>${CONDICOES.map((c) => `<th scope="col">${c}</th>`).join('')}<th scope="col">Formulário</th></tr></thead><tbody>${linhas}</tbody></table>
-<h2 id="como">Como ler o painel da WAVE</h2><ol><li>Errors, Contrast Errors, Alerts, Features, Structural Elements, ARIA: copie os seis números do resumo.</li><li>Se a WAVE não abrir (página sem permissão), anote em observações.</li><li>Não salve relatórios da WAVE; só os totais entram na planilha.</li></ol>`);
+  const filtros = ['<a href="/">todas</a>'].concat(ESTRATOS.map((e) => `<a href="/?estrato=${e}"${filtro === e ? ' aria-current="page"' : ''}>${e}</a>`)).join(' · ');
+  const totalLidas = paginas.reduce((n, p) => n + CONDICOES.filter((c) => feitas.has(`${p.url}|${c}`)).length, 0);
+  return pagina('Roteiro WAVE — amostra do Estudo 1', `
+<p>Para cada página e estado: abra o link (nova aba), acione a WAVE no seu Chrome (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>U</kbd>), deixe o painel visível e capture com <code>eval/tools/wave-captura.py</code>, ou <a href="#como">registre</a> à mão. ${paginas.length} páginas × ${CONDICOES.length} estados; ${totalLidas} leituras gravadas em <code>${esc(path.relative(path.resolve(EVAL, '..'), CSV))}</code>.</p>
+<p>Filtrar por estrato: ${filtros}</p>
+${porEstrato}
+<h2 id="como">Como ler o painel da WAVE</h2><ol><li>Errors, Contrast Errors, Alerts, Features, Structural Elements, ARIA: os seis números do resumo, mais o AIM Score.</li><li>Durante as capturas, mantenha o mouse fora da barra de abas (a miniatura cobre o painel).</li><li>Não salve relatórios da WAVE; só os totais entram na planilha.</li></ol>`);
 }
 function formulario(i) {
   const p = paginas[i];
@@ -107,7 +120,7 @@ const servidor = http.createServer((req, res) => {
   const u = new URL(req.url, `http://127.0.0.1:${PORTA}`);
   const html = (code, body) => { res.writeHead(code, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' }); res.end(body); };
   let m;
-  if (u.pathname === '/') return html(200, indice());
+  if (u.pathname === '/') return html(200, indice(u.searchParams.get('estrato')));
   if ((m = u.pathname.match(/^\/p\/(\d+)\/([\w.-]+)$/))) {
     const p = paginas[Number(m[1])]; if (!p || !CONDICOES.includes(m[2])) return html(404, pagina('Não encontrada', ''));
     const d = domDe(p.url, m[2]); if (d.erro) return html(404, pagina('Indisponível', `<p>${esc(d.erro)}</p>`));
@@ -132,7 +145,7 @@ const servidor = http.createServer((req, res) => {
 });
 servidor.listen(PORTA, '127.0.0.1', () => {
   const faltam = paginas.flatMap((p) => CONDICOES.map((c) => ({ p, c, d: domDe(p.url, c) }))).filter((x) => x.d.erro);
-  console.log(`Roteiro WAVE em http://127.0.0.1:${PORTA}/  (${paginas.length} páginas × ${CONDICOES.length} estados; sessão ${SESSAO})`);
+  console.log(`Roteiro WAVE em http://127.0.0.1:${PORTA}/  (${paginas.length} páginas × ${CONDICOES.length} estados; sessão ${SESSAO}; filtro /?estrato=A..F,controle)`);
   for (const x of faltam) console.log(`  indisponível: ${x.p.site} — ${x.p.papel} — ${x.c}: ${x.d.erro}`);
   console.log('Ctrl+C encerra.');
 });

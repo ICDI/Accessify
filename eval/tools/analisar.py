@@ -145,12 +145,12 @@ if S3:
 
 
 # 9. WAVE manual (D16), sites originais do SEMISH
-WAVE=os.path.join(REPO,'docs','evidencias','wave','wave-semish.csv')
+WAVE=os.path.join(REPO,'docs','evidencias','wave','wave.csv')
 if os.path.exists(WAVE):
     wr=list(csv.DictReader(open(WAVE))); conds=['baseline','v1.0.0','v1.1.0']
     by={c:{(r['site'],r['pagina']):r for r in wr if r['condicao']==c} for c in conds}
     mets=[('erros','Erros'),('erros_contraste','Erros de contraste'),('alertas','Alertas'),('recursos','Recursos'),('estrutura','Elementos estruturais'),('aria','ARIA')]
-    md.append('\n## 9. WAVE manual nos sites originais do SEMISH (D16): 18 páginas × baseline, v1.0.0, v1.1.0\n\nLeitura humana da extensão WAVE sobre o snapshot (baseline) e sobre o DOM final dos runs da 1ª passada; totais nas páginas com leitura nas três condições (a página institucional do IBC não tem v1.0.0 porque o run falhou). Planilha e recortes do painel em `docs/evidencias/wave/`.\n\n| Métrica | Páginas | baseline | v1.0.0 | v1.1.0 | Páginas que pioraram (v1.0.0 / v1.1.0) |\n|---|---|---|---|---|---|')
+    md.append('\n## 9. WAVE manual (D16): leitura humana da extensão sobre o snapshot (baseline) e sobre o DOM final dos runs\n\nTotais nas páginas com leitura nas três condições (páginas cujo run v1.0.0 falhou não têm esse estado). Planilha e recortes do painel em `docs/evidencias/wave/`.\n\n| Métrica | Páginas | baseline | v1.0.0 | v1.1.0 | Páginas que pioraram (v1.0.0 / v1.1.0) |\n|---|---|---|---|---|---|')
     linhas=[]
     for k,nome_m in mets:
         keys=[x for x in by['baseline'] if all(x in by[c] and by[c][x][k]!='' for c in conds)]
@@ -161,10 +161,15 @@ if os.path.exists(WAVE):
     aim=[st.mean(float(by[c][x]['aim_score']) for x in keys) for c in conds]
     md.append(f"| AIM Score (média) | {len(keys)} | {aim[0]:.1f} | {aim[1]:.1f} | {aim[2]:.1f} | — |")
     w('wave_semish_totais.csv',['metrica','paginas','baseline','v1.0.0','v1.1.0','pioraram_v1.0.0','pioraram_v1.1.0'],linhas)
-    md.append('\nPor página (erros / erros de contraste):\n\n| Página | baseline | v1.0.0 | v1.1.0 |\n|---|---|---|---|')
-    for x in by['baseline']:
-        cell=lambda c: (f"{by[c][x]['erros']} / {by[c][x]['erros_contraste']}" if x in by[c] and by[c][x]['erros']!='' else '—')
-        md.append(f"| {x[0]} — {x[1]} | {cell('baseline')} | {cell('v1.0.0')} | {cell('v1.1.0')} |")
+    # por estrato (erros / contraste), páginas com as três leituras
+    urlest={r['url']:est.get(r['url'],'?') for r in wr}
+    md.append('\nPor estrato, erros / erros de contraste (soma; páginas com leitura nas três condições):\n\n| Estrato | Páginas | baseline | v1.0.0 | v1.1.0 |\n|---|---|---|---|---|')
+    for e in ['A','B','C','D','E','F','controle']:
+        keys=[x for x in by['baseline'] if urlest.get(by['baseline'][x]['url'])==e and all(x in by[c] and by[c][x]['erros']!='' and by[c][x]['erros_contraste']!='' for c in conds)]
+        if not keys: continue
+        cell=lambda c: f"{sum(int(by[c][x]['erros']) for x in keys)} / {sum(int(by[c][x]['erros_contraste']) for x in keys)}"
+        md.append(f"| {e} | {len(keys)} | {cell('baseline')} | {cell('v1.0.0')} | {cell('v1.1.0')} |")
+    w('wave_por_pagina.csv',['estrato','site','pagina','condicao','erros','erros_contraste','alertas','recursos','estrutura','aria','aim_score'],[[urlest.get(r['url'],'?'),r['site'],r['pagina'],r['condicao'],r['erros'],r['erros_contraste'],r['alertas'],r['recursos'],r['estrutura'],r['aria'],r['aim_score']] for r in wr])
 
 # relatório
 hdr=f"""# Estudo 1 — comparação entre versões (v1.0.0 × v1.1.0 × variantes)
