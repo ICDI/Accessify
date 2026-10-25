@@ -53,3 +53,87 @@ A,Congresso Brasileiro de Software 2026,tarefa,v1.0.0,1,11,2,4,77,38,7.3
 A,Simpósio Brasileiro de Educação em Computação 2026,inicial,v1.0.0,0,6,4,25,23,32,8.1
 A,Simpósio Brasileiro de Educação em Computação 2026,tarefa,v1.0.0,0,1,1,4,98,36,10
 A,Instituto Benjamin Constant,tarefa,v1.0.0,,,,,,,
+B,Portal gov.br,inicial,baseline,11,22,22,131,45,263,6.3
+B,Portal gov.br,tarefa,baseline,7,,12,106,36,230,8.6
+B,Ministério da Educação,inicial,baseline,9,0,19,124,79,350,8.4
+B,Ministério da Educação,tarefa,baseline,5,2,10,105,66,239,8.6
+B,INEP,inicial,baseline,12,1,27,196,139,336,7.8
+B,INEP,tarefa,baseline,5,0,8,125,120,229,9.2
+B,CNPq,inicial,baseline,11,9,54,125,112,302,7
+B,CNPq,tarefa,baseline,5,0,44,105,97,249,8.8
+B,FNDE,inicial,baseline,2,0,17,78,30,114,9.7
+B,FNDE,tarefa,baseline,2,0,8,2,15,63,9.5
+B,INSS,inicial,baseline,11,3,46,140,177,333,7.6
+B,INSS,tarefa,baseline,5,0,11,105,162,238,9.2
+B,Ministério dos Direitos Humanos e da Cidadania,inicial,baseline,12,1,41,113,121,262,7.6
+B,Ministério dos Direitos Humanos e da Cidadania,tarefa,baseline,6,5,17,107,109,230,7.9
+B,Legislação federal (Planalto),inicial,baseline,1,4,679,1,0,1,8.5
+B,Legislação federal (Planalto),tarefa,baseline,2,4,5485,1,0,6,7.9
+B,Câmara dos Deputados,inicial,baseline,3,11,27,15,50,134,6.9
+B,Câmara dos Deputados,tarefa,baseline,3,2,13,145,40,116,8.8
+B,Portal do ProUni,inicial,baseline,0,0,10,20,11,49,9.8
+B,Portal do ProUni,tarefa,baseline,5,0,51,105,79,239,8.8
+B,Portal da Transparência,inicial,baseline,23,3,36,7,42,137,5.6
+B,Portal da Transparência,tarefa,baseline,20,0,2,2,1,2,4.9
+B,Senado Federal,inicial,baseline,5,0,41,43,28,138,8.5
+B,Senado Federal,tarefa,baseline,10,2,42,31,30,101,6.7
+B,"Receita Federal (2ª reserva de B, após a captura)",inicial,baseline,13,6,33,125,127,283,7.1
+B,"Receita Federal (2ª reserva de B, após a captura)",tarefa,baseline,5,3,13,120,118,239,8.5
+B,Biblioteca Nacional,inicial,baseline,6,4,19,127,101,285,8.4
+B,Biblioteca Nacional,tarefa,baseline,5,0,9,105,78,234,9.2
+B,Portal gov.br,inicial,v1.1.0,0,0,20,132,45,376,9.6
+B,Portal gov.br,tarefa,v1.1.0,0,2,10,109,36,346,9.8
+B,Ministério da Educação,inicial,v1.1.0,0,0,17,125,79,469,9.7
+B,Ministério da Educação,tarefa,v1.1.0,0,0,10,106,66,345,9.8
+B,INEP,inicial,v1.1.0,0,1,25,197,139,508,9.6
+B,INEP,tarefa,v1.1.0,0,0,8,126,120,343,9.8
+B,CNPq,inicial,v1.1.0,0,0,52,126,112,415,9.4
+B,CNPq,tarefa,v1.1.0,0,0,44,106,97,344,9.4
+B,FNDE,inicial,v1.1.0,0,3,17,79,30,95,9.1
+B,FNDE,tarefa,v1.1.0,0,0,8,3,15,44,9.8
+B,INSS,inicial,v1.1.0,0,3,38,141,177,449,8.9
+B,INSS,tarefa,v1.1.0,0,0,11,106,162,345,9.8
+B,Ministério dos Direitos Humanos e da Cidadania,inicial,v1.1.0,0,1,39,114,121,375,9.4
+B,Ministério dos Direitos Humanos e da Cidadania,tarefa,v1.1.0,1,1,17,108,109,344,9.7
+B,Legislação federal (Planalto),inicial,v1.1.0,0,2,669,2,7,1,9.1
+B,Câmara dos Deputados,inicial,v1.1.0,0,0,23,15,50,103,9.6
+B,Câmara dos Deputados,tarefa,v1.1.0,0,1,13,146,40,92,9.7
+B,Portal do ProUni,inicial,v1.1.0,0,0,10,20,11,31,9.8
+B,Portal do ProUni,tarefa,v1.1.0,0,0,51,106,79,343,9.4
+B,Portal da Transparência,inicial,v1.1.0,0,0,35,19,42,126,9.5
+B,Portal da Transparência,tarefa,v1.1.0,0,0,2,5,1,4,10
+B,Senado Federal,inicial,v1.1.0,0,0,32,47,28,147,9.5
+B,Senado Federal,tarefa,v1.1.0,0,1,38,32,30,155,9.5
+B,"Receita Federal (2ª reserva de B, após a captura)",inicial,v1.1.0,0,6,30,126,127,403,8.3
+B,"Receita Federal (2ª reserva de B, após a captura)",tarefa,v1.1.0,0,3,12,121,118,362,9.2
+B,Biblioteca Nacional,inicial,v1.1.0,0,0,17,128,101,401,9.7
+B,Biblioteca Nacional,tarefa,v1.1.0,0,0,9,106,78,343,9.8
+B,Portal gov.br,inicial,v1.0.0,2,20,20,131,45,356,6.9
+B,Portal gov.br,tarefa,v1.0.0,3,3,10,106,36,331,8.6
+B,Ministério da Educação,inicial,v1.0.0,2,1,17,124,79,452,9.1
+B,Ministério da Educação,tarefa,v1.0.0,2,3,10,105,66,331,9.2
+B,INEP,inicial,v1.0.0,2,2,25,196,139,440,9
+B,INEP,tarefa,v1.0.0,2,1,8,125,120,329,9.2
+B,CNPq,inicial,v1.0.0,2,10,52,125,112,395,7.6
+B,CNPq,tarefa,v1.0.0,2,1,44,105,97,329,8.8
+B,FNDE,inicial,v1.0.0,2,3,17,78,30,83,8.8
+B,INSS,inicial,v1.0.0,2,4,38,140,177,426,8.3
+B,Ministério dos Direitos Humanos e da Cidadania,inicial,v1.0.0,2,2,39,113,121,358,8.8
+B,Ministério dos Direitos Humanos e da Cidadania,tarefa,v1.0.0,3,6,17,107,109,330,8.5
+B,Legislação federal (Planalto),inicial,v1.0.0,1,2,672,1,0,5,8.5
+B,Câmara dos Deputados,inicial,v1.0.0,0,1,23,15,50,96,9.6
+B,Câmara dos Deputados,tarefa,v1.0.0,1,2,12,145,40,89,9.2
+B,Portal do ProUni,tarefa,v1.0.0,2,1,51,105,79,329,8.8
+B,Portal da Transparência,tarefa,v1.0.0,18,0,2,2,1,3,4.9
+B,Senado Federal,inicial,v1.0.0,0,0,32,43,28,136,9.5
+B,Senado Federal,tarefa,v1.0.0,0,0,38,30,30,111,9.5
+B,"Receita Federal (2ª reserva de B, após a captura)",inicial,v1.0.0,2,7,30,125,127,386,8.3
+B,"Receita Federal (2ª reserva de B, após a captura)",tarefa,v1.0.0,2,4,12,120,118,336,8.6
+B,Biblioteca Nacional,inicial,v1.0.0,2,5,17,127,101,383,8.5
+B,Biblioteca Nacional,tarefa,v1.0.0,2,1,9,105,78,330,9.2
+B,FNDE,tarefa,v1.0.0,,,,,,,
+B,INSS,tarefa,v1.0.0,,,,,,,
+B,Legislação federal (Planalto),tarefa,v1.0.0,,,,,,,
+B,Portal do ProUni,inicial,v1.0.0,,,,,,,
+B,Portal da Transparência,inicial,v1.0.0,,,,,,,
+B,Legislação federal (Planalto),tarefa,v1.1.0,,,,,,,
