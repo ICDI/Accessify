@@ -101,13 +101,13 @@ Totais nas páginas com leitura nas três condições (páginas cujo run v1.0.0 
 
 | Métrica | Páginas | baseline | v1.0.0 | v1.1.0 | Páginas que pioraram (v1.0.0 / v1.1.0) |
 |---|---|---|---|---|---|
-| Erros | 59 | 544 | 71 | 6 | 0 / 0 |
-| Erros de contraste | 58 | 637 | 500 | 113 | 25 / 7 |
-| Alertas | 59 | 2902 | 2142 | 2189 | 1 / 4 |
-| Recursos | 59 | 3116 | 3109 | 3218 | 10 / 40 |
-| Elementos estruturais | 59 | 4193 | 4192 | 4203 | 1 / 3 |
-| ARIA | 59 | 7385 | 8643 | 10022 | 36 / 47 |
-| AIM Score (média) | 59 | 7.0 | 8.1 | 9.3 | — |
+| Erros | 76 | 846 | 75 | 7 | 0 / 0 |
+| Erros de contraste | 75 | 842 | 694 | 171 | 32 / 8 |
+| Alertas | 76 | 3427 | 2501 | 2549 | 1 / 4 |
+| Recursos | 76 | 3767 | 3796 | 4042 | 12 / 51 |
+| Elementos estruturais | 76 | 5300 | 5300 | 5340 | 2 / 7 |
+| ARIA | 76 | 10955 | 11774 | 13945 | 39 / 60 |
+| AIM Score (média) | 76 | 6.9 | 8.1 | 9.3 | — |
 
 Por estrato, erros / erros de contraste (soma; páginas com leitura nas três condições):
 
@@ -116,3 +116,4 @@ Por estrato, erros / erros de contraste (soma; páginas com leitura nas três co
 | A | 17 | 126 / 256 | 10 / 183 | 1 / 39 |
 | B | 22 | 165 / 75 | 53 / 76 | 1 / 22 |
 | C | 19 | 246 / 306 | 5 / 241 | 4 / 52 |
+| D | 17 | 302 / 205 | 4 / 194 | 1 / 58 |

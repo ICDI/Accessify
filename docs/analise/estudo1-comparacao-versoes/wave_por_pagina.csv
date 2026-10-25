@@ -140,7 +140,7 @@ B,Legislação federal (Planalto),tarefa,v1.1.0,,,,,,,
 C,"Universidade Federal do Pará, portal (N, 4º; reserva)",inicial,baseline,12,0,37,22,88,1,6.8
 C,"Universidade Federal do Pará, portal (N, 4º; reserva)",inicial,v1.1.0,0,0,25,23,88,174,9.6
 C,"Universidade Federal do Pará, portal (N, 4º; reserva)",inicial,v1.0.0,0,0,24,22,86,22,9.6
-C,"Universidade Federal do Pará, portal (N, 4º; reserva)",tarefa,baseline,,,35,23,86,6,8
+C,"Universidade Federal do Pará, portal (N, 4º; reserva)",tarefa,baseline,8,0,35,23,86,6,8
 C,"Universidade Federal do Pará, portal (N, 4º; reserva)",tarefa,v1.1.0,0,0,23,30,86,178,9.6
 C,"Universidade Federal do Oeste do Pará (N, 3º)",inicial,baseline,14,50,79,45,148,106,3.3
 C,"Universidade Federal do Oeste do Pará (N, 3º)",inicial,v1.1.0,1,18,85,30,148,141,6.3
@@ -203,3 +203,57 @@ C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores)
 C,"Universidade Federal do Pará, portal (N, 4º; reserva)",tarefa,v1.0.0,,,,,,,
 C,"Universidade de Brasília (CO, 2º)",tarefa,v1.1.0,,,,,,,
 C,"Universidade Federal de Goiás (CO, 3º)",inicial,v1.0.0,,,,,,,
+D,Sociedade Brasileira de Computação,inicial,baseline,14,7,45,19,106,194,6.4
+D,Sociedade Brasileira de Computação,inicial,v1.1.0,0,0,45,24,106,257,9.4
+D,Sociedade Brasileira de Computação,inicial,v1.0.0,0,9,45,24,106,191,7.9
+D,Sociedade Brasileira de Computação,tarefa,baseline,9,0,46,4,116,193,7.9
+D,Sociedade Brasileira de Computação,tarefa,v1.1.0,0,0,34,5,116,240,9.5
+D,Sociedade Brasileira de Computação,tarefa,v1.0.0,0,2,34,4,116,173,9.5
+D,Journal on Interactive Systems (SOL),inicial,baseline,3,77,3,14,159,91,2.8
+D,Journal on Interactive Systems (SOL),inicial,v1.1.0,0,0,3,16,159,94,10
+D,Journal on Interactive Systems (SOL),inicial,v1.0.0,0,55,3,14,159,90,3.7
+D,Journal on Interactive Systems (SOL),tarefa,baseline,3,12,2,12,25,38,6.1
+D,Journal on Interactive Systems (SOL),tarefa,v1.1.0,0,1,2,14,25,27,9.7
+D,Journal on Interactive Systems (SOL),tarefa,v1.0.0,0,2,2,12,25,24,9.7
+D,SciELO Brasil,inicial,baseline,1,0,18,25,19,203,9.7
+D,SciELO Brasil,inicial,v1.1.0,1,5,16,27,19,210,7.9
+D,SciELO Brasil,inicial,v1.0.0,1,7,17,25,19,177,7.9
+D,SciELO Brasil,tarefa,baseline,0,0,7,14,26,69,9.8
+D,SciELO Brasil,tarefa,v1.1.0,0,0,7,14,26,396,9.8
+D,SciELO Brasil,tarefa,v1.0.0,0,0,6,14,26,55,9.9
+D,Portal de Periódicos da CAPES,inicial,baseline,1,2,7,14,26,124,8.9
+D,Portal de Periódicos da CAPES,inicial,v1.1.0,0,2,6,14,26,102,9.6
+D,Portal de Periódicos da CAPES,tarefa,baseline,196,0,99,326,22,1137,2.3
+D,Portal de Periódicos da CAPES,tarefa,v1.1.0,0,0,83,427,22,971,9.3
+D,Portal de Periódicos da CAPES,tarefa,v1.0.0,1,0,85,325,22,900,9.3
+D,Biblioteca Digital Brasileira de Teses e Dissertações,inicial,baseline,8,5,5,17,24,30,6.9
+D,Biblioteca Digital Brasileira de Teses e Dissertações,inicial,v1.1.0,0,1,4,25,24,45,9.9
+D,Biblioteca Digital Brasileira de Teses e Dissertações,inicial,v1.0.0,1,0,4,17,24,28,9.9
+D,Biblioteca Digital Brasileira de Teses e Dissertações,tarefa,baseline,8,2,11,13,18,27,7.7
+D,Biblioteca Digital Brasileira de Teses e Dissertações,tarefa,v1.1.0,0,1,3,19,18,39,10
+D,Biblioteca Digital Brasileira de Teses e Dissertações,tarefa,v1.0.0,1,0,3,13,18,26,10
+D,"Simpósio Brasileiro de Redes de Computadores 2026 (evento, 3º no sorteio)",inicial,baseline,23,15,57,48,56,366,4.2
+D,"Simpósio Brasileiro de Redes de Computadores 2026 (evento, 3º no sorteio)",inicial,v1.1.0,0,4,22,80,56,403,9
+D,"Simpósio Brasileiro de Redes de Computadores 2026 (evento, 3º no sorteio)",inicial,v1.0.0,0,29,22,80,56,378,5.4
+D,"Simpósio Brasileiro de Redes de Computadores 2026 (evento, 3º no sorteio)",tarefa,baseline,1,20,26,9,85,222,6.3
+D,"Simpósio Brasileiro de Redes de Computadores 2026 (evento, 3º no sorteio)",tarefa,v1.1.0,0,5,26,9,85,237,8.7
+D,"Simpósio Brasileiro de Redes de Computadores 2026 (evento, 3º no sorteio)",tarefa,v1.0.0,0,14,26,9,85,201,7.2
+D,"Sociedade Brasileira de Pesquisa Operacional (evento, 7º)",inicial,baseline,9,8,34,11,34,13,6.5
+D,"Sociedade Brasileira de Pesquisa Operacional (evento, 7º)",inicial,v1.1.0,0,0,22,18,41,30,9.6
+D,"Sociedade Brasileira de Pesquisa Operacional (evento, 7º)",inicial,v1.0.0,0,8,17,11,34,21,7.9
+D,"Sociedade Brasileira de Pesquisa Operacional (evento, 7º)",tarefa,baseline,9,2,29,9,25,13,6.8
+D,"Sociedade Brasileira de Pesquisa Operacional (evento, 7º)",tarefa,v1.1.0,0,1,17,16,32,27,9.7
+D,"Sociedade Brasileira de Pesquisa Operacional (evento, 7º)",tarefa,v1.0.0,0,7,12,9,25,21,8
+D,"Simpósio Brasileiro de Banco de Dados 2026 (evento, 9º; reserva)",inicial,baseline,11,17,27,29,98,459,5.7
+D,"Simpósio Brasileiro de Banco de Dados 2026 (evento, 9º; reserva)",inicial,v1.1.0,0,2,19,29,98,414,9.6
+D,"Simpósio Brasileiro de Banco de Dados 2026 (evento, 9º; reserva)",inicial,v1.0.0,0,19,19,29,98,403,6.6
+D,"Simpósio Brasileiro de Banco de Dados 2026 (evento, 9º; reserva)",tarefa,baseline,5,6,54,21,104,417,7.3
+D,"Simpósio Brasileiro de Banco de Dados 2026 (evento, 9º; reserva)",tarefa,v1.1.0,0,4,19,21,104,383,9
+D,"Simpósio Brasileiro de Banco de Dados 2026 (evento, 9º; reserva)",tarefa,v1.0.0,0,8,19,21,104,362,8.1
+D,"Simpósio Brasileiro de Sistemas de Informação 2026 (evento, 8º)",inicial,baseline,1,24,57,76,156,91,6.3
+D,"Simpósio Brasileiro de Sistemas de Informação 2026 (evento, 8º)",inicial,v1.1.0,0,24,35,76,166,121,6.5
+D,"Simpósio Brasileiro de Sistemas de Informação 2026 (evento, 8º)",inicial,v1.0.0,0,24,40,76,156,76,6.4
+D,"Simpósio Brasileiro de Sistemas de Informação 2026 (evento, 8º)",tarefa,baseline,1,10,5,4,34,7,7.8
+D,"Simpósio Brasileiro de Sistemas de Informação 2026 (evento, 8º)",tarefa,v1.1.0,0,10,3,4,40,29,8.5
+D,"Simpósio Brasileiro de Sistemas de Informação 2026 (evento, 8º)",tarefa,v1.0.0,0,10,5,4,35,5,8.4
+D,Portal de Periódicos da CAPES,inicial,v1.0.0,,,,,,,
