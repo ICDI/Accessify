@@ -306,7 +306,7 @@ Síntese (números no relatório):
 - Variância: v1.1.0 determinística (9/9 páginas idênticas nas 3 execuções); v1.0.0 varia pouco no axe (7/8) e muito no texto (até 427 tokens). Falhas se repetem nas 3 execuções.
 - Visão: 26 alts com imagem (`gemma3:4b`) pareados com 26 alts sem imagem (`v1.1.0-fix`) nas mesmas imagens, em `docs/analise/estudo1-comparacao-versoes/alts_visao.csv`, para a avaliação da coautora.
 
-Modelos extras: D14 (rodando em 24/10). Pendente: exportar os dados para o Zenodo; a página do CSBC 2026 usou snapshot com aceite manual (D12).
+Modelos extras (D14, sessão `20261025-011302024-2530`): `llama3.1:8b` e `gemma3:4b` na `v1.1.0-fix` dão métricas automáticas **idênticas** às do `qwen3:8b` nas 98 páginas (mesmas falhas: Constituição e UnB); só os textos dos alts e os tokens mudam (seção 8 do relatório, `alts_por_modelo.csv`). Conclusão: na v1.1.0 o modelo não influencia o que axe/IBM medem. Pendente: exportar os dados para o Zenodo; a página do CSBC 2026 usou snapshot com aceite manual (D12).
 
 ## Decisões
 

@@ -9,8 +9,8 @@ v1.0.0,aria-hidden-focus,5
 v1.0.0,link-in-text-block,1
 v1.0.0,aria-prohibited-attr,0
 v1.0.0,label-content-name-mismatch,0
-v1.0.0,nested-interactive,0
 v1.0.0,aria-input-field-name,0
+v1.0.0,nested-interactive,0
 v1.0.0,scrollable-region-focusable,0
 v1.0.0,aria-allowed-attr,0
 v1.0.0,aria-required-children,0
@@ -38,8 +38,8 @@ v1.1.0,aria-hidden-focus,8
 v1.1.0,meta-viewport,6
 v1.1.0,html-has-lang,2
 v1.1.0,aria-prohibited-attr,0
-v1.1.0,nested-interactive,0
 v1.1.0,aria-input-field-name,0
+v1.1.0,nested-interactive,0
 v1.1.0,scrollable-region-focusable,0
 v1.1.0,aria-allowed-attr,0
 v1.1.0,aria-required-children,0
@@ -64,8 +64,8 @@ v1.1.0-fix,aria-hidden-focus,8
 v1.1.0-fix,meta-viewport,6
 v1.1.0-fix,html-has-lang,2
 v1.1.0-fix,aria-prohibited-attr,0
-v1.1.0-fix,nested-interactive,0
 v1.1.0-fix,aria-input-field-name,0
+v1.1.0-fix,nested-interactive,0
 v1.1.0-fix,scrollable-region-focusable,0
 v1.1.0-fix,aria-allowed-attr,0
 v1.1.0-fix,aria-required-children,0
@@ -81,14 +81,14 @@ v1.1.0-vision,color-contrast,261
 v1.1.0-vision,link-name,126
 v1.1.0-vision,image-alt,98
 v1.1.0-vision,button-name,9
-v1.1.0-vision,select-name,7
 v1.1.0-vision,label-content-name-mismatch,7
+v1.1.0-vision,select-name,7
 v1.1.0-vision,frame-title,5
 v1.1.0-vision,aria-hidden-focus,4
 v1.1.0-vision,meta-viewport,1
 v1.1.0-vision,html-has-lang,1
-v1.1.0-vision,aria-required-children,0
 v1.1.0-vision,aria-input-field-name,0
+v1.1.0-vision,aria-required-children,0
 v1.1.0-vision,aria-prohibited-attr,0
 v1.1.0-vision,aria-allowed-attr,0
 v1.1.0-vision,list,0

@@ -5,10 +5,10 @@ Gera CSVs e um relatório em Markdown reproduzíveis."""
 import csv, json, glob, os, re, sys, statistics as st
 from collections import defaultdict, Counter
 EVAL=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..'); REPO=os.path.join(EVAL,'..')
-S1, S2, OUT = sys.argv[1], sys.argv[2], sys.argv[3]; os.makedirs(OUT, exist_ok=True)
+S1, S2, OUT = sys.argv[1], sys.argv[2], sys.argv[3]; S3 = sys.argv[4] if len(sys.argv) > 4 else None; os.makedirs(OUT, exist_ok=True)
 IMP=('critical','serious','moderate','minor'); COND=['v1.0.0','v1.1.0','v1.1.0-fix','v1.1.0-vision']
 rows=[r for r in csv.DictReader(open(os.path.join(EVAL,'results/runs.csv')))]
-r1=[r for r in rows if r['sessao']==S1]; r2=[r for r in rows if r['sessao']==S2]
+r1=[r for r in rows if r['sessao']==S1]; r2=[r for r in rows if r['sessao']==S2]; r3=[r for r in rows if S3 and r['sessao']==S3]
 tot=lambda r: sum(int(r[f'axe_violations_{k}']) for k in IMP)
 def raw(r):
     fs=sorted(glob.glob(os.path.join(EVAL,'results/raw',f"{r['run_id']}__{r['sessao']}__a*.json")))
@@ -117,10 +117,34 @@ for c in COND:
     tmo=sum(1 for r in r1 if r['condicao']==c and r['status']!='ok' and ('290000' in r['observacoes'] or 'sem resposta' in r['observacoes']))
     chamou=sum(1 for r in ok if (fnum(r['tokens_in']) or 0)>0)
     md.append(f"| {c} | {chamou} de {len(ok)} | {ti:.0f} | {to:.0f} | {lat/60:.1f} min | {lat/max(len(ok),1):.1f} s | {tmo} |")
+
+# 8. robustez por modelo (D14)
+if S3:
+    md.append('\n## 8. Modelo como fator de robustez (D14): v1.1.0-fix com três modelos, 100 páginas\n\n| Modelo | ok | falha | Violações axe baseline→pós | Média por página | Páginas que pioraram | Novos erros axe | IBM pós | Rótulos genéricos | Páginas que chamaram o modelo | Tokens de saída |\n|---|---|---|---|---|---|---|---|---|---|---|')
+    conds=[('v1.1.0-fix','qwen3:8b',r1),('v1.1.0-fix-llama31','llama3.1:8b',r3),('v1.1.0-fix-gemma3','gemma3:4b',r3)]
+    oks={}
+    for c,m,rr in conds:
+        v=[r for r in rr if r['condicao']==c]; ok=[r for r in v if r['status']=='ok']; oks[c]=ok; n=len(ok) or 1
+        md.append(f"| {m} | {len(ok)} | {len(v)-len(ok)} | {sum(tot(base[r['url']]) for r in ok)}→{sum(tot(r) for r in ok)} | {sum(tot(r) for r in ok)/n:.1f} | {sum(1 for r in ok if tot(r)>tot(base[r['url']]))} | {sum(fnum(r['novos_erros_axe']) or 0 for r in ok):.0f} | {sum(fnum(r['ibm_violations']) or 0 for r in ok):.0f} | {sum(fnum(r['rotulos_genericos']) or 0 for r in ok):.0f} | {sum(1 for r in ok if (fnum(r['tokens_in']) or 0)>0)} | {sum(fnum(r['tokens_out']) or 0 for r in ok):.0f} |")
+    # alts por modelo nas mesmas imagens
+    alts={}
+    for c,m,rr in conds:
+        for r in oks[c]:
+            d=raw(r); rl=(d or {}).get('driver',{}).get('runLog') or {}
+            for a in rl.get('altTexts') or []:
+                if a.get('source')=='llm': alts.setdefault((r['url'],a.get('selector')),{})[m]=(a.get('finalAlt') or a.get('alt') or '').strip()
+    comp=[k for k,v in alts.items() if len(v)==3]; ident=sum(1 for k in comp if len(set(alts[k].values()))==1)
+    lines=[[u,sel]+[alts[(u,sel)].get(m,'') for _,m,_ in conds] for (u,sel) in comp]
+    w('alts_por_modelo.csv',['url','selector','qwen3:8b','llama3.1:8b','gemma3:4b'],lines)
+    tot_axe=[tot(r) for r in oks['v1.1.0-fix']]
+    comum=set(r['url'] for r in oks['v1.1.0-fix'])&set(r['url'] for r in oks['v1.1.0-fix-llama31'])&set(r['url'] for r in oks['v1.1.0-fix-gemma3'])
+    q={r['url']:tot(r) for r in oks['v1.1.0-fix']}; l={r['url']:tot(r) for r in oks['v1.1.0-fix-llama31']}; g={r['url']:tot(r) for r in oks['v1.1.0-fix-gemma3']}
+    md.append(f"\nPáginas ok nos três modelos: {len(comum)}; com violações axe idênticas nos três: {sum(1 for u in comum if q[u]==l[u]==g[u])}. Alts gerados pelo modelo nas mesmas imagens: {len(comp)} imagens com os três modelos, {ident} com texto idêntico; lista em `alts_por_modelo.csv`. As métricas automáticas não dependem do modelo: na v1.1.0 o modelo só escreve texto alternativo e rótulos, cuja qualidade é objeto das Sessões A/B.")
+
 # relatório
 hdr=f"""# Estudo 1 — comparação entre versões (v1.0.0 × v1.1.0 × variantes)
 
-Sessões: 1ª passada `{S1}` (baseline, v1.0.0, v1.1.0, v1.1.0-fix em 100 páginas; v1.1.0-vision em 19), variância `{S2}` (3 execuções × 10 páginas). Build `v1.1.0-jis_submission`; modelo `qwen3:8b` (visão: `gemma3:4b`), temperatura 0, contexto 4096, máquina do lote com GPU em clock travado (D10). Amostra: `docs/pesquisa/criterio_amostragem.md`. Reproduzir: `python3 -I eval/tools/analisar.py {S1} {S2} docs/analise/estudo1-comparacao-versoes`.
+Sessões: 1ª passada `{S1}` (baseline, v1.0.0, v1.1.0, v1.1.0-fix em 100 páginas; v1.1.0-vision em 19), variância `{S2}` (3 execuções × 10 páginas). Build `v1.1.0-jis_submission`; modelo `qwen3:8b` (visão: `gemma3:4b`), temperatura 0, contexto 4096, máquina do lote com GPU em clock travado (D10). Amostra: `docs/pesquisa/criterio_amostragem.md`. Robustez por modelo (D14): sessão `{S3}`. Reproduzir: `python3 -I eval/tools/analisar.py {S1} {S2} docs/analise/estudo1-comparacao-versoes {S3}`.
 
 Leitura: "violações axe" = pares (regra, nó) com violação WCAG 2.1 A/AA; "novos erros" = violações no pós sem par na baseline do mesmo snapshot; "rótulos genéricos" = rótulos de fallback novos no DOM ("Abrir link N", alt "Imagem"); falha é dado do estudo.
 """
