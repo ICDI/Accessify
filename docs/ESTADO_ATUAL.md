@@ -306,7 +306,7 @@ Síntese (números no relatório):
 - Variância: v1.1.0 determinística (9/9 páginas idênticas nas 3 execuções); v1.0.0 varia pouco no axe (7/8) e muito no texto (até 427 tokens). Falhas se repetem nas 3 execuções.
 - Visão: 26 alts com imagem (`gemma3:4b`) pareados com 26 alts sem imagem (`v1.1.0-fix`) nas mesmas imagens, em `docs/analise/estudo1-comparacao-versoes/alts_visao.csv`, para a avaliação da coautora.
 
-Pendente: modelos extras como fator de robustez (decidir); exportar os dados para o Zenodo; a página do CSBC 2026 usou snapshot com aceite manual (D12).
+Modelos extras: D14 (rodando em 24/10). Pendente: exportar os dados para o Zenodo; a página do CSBC 2026 usou snapshot com aceite manual (D12).
 
 ## Decisões
 
@@ -325,6 +325,7 @@ Pendente: modelos extras como fator de robustez (decidir); exportar os dados par
 | D11 | Amostra do Estudo 1: 100 páginas (49 sites × inicial + tarefa, + 2 controles W3C) por amostragem estratificada com semente `accessify-jis-2026`; critério, exclusões e reservas em `docs/pesquisa/criterio_amostragem.md`; `visao` e `variancia` definidos após a baseline e a captura | tomada em 24/10/2026 |
 | D12 | Aceite manual de snapshot `suspeito` só por divergência visual (texto 0%), registrado em `eval/snapshots/aceitos.csv` com sha256 e justificativa; aplicado apenas à inicial do CSBC 2026. Reposição pós-captura: saem UNIFAP, Nova Escola, Mundo Educação, Brasil Escola, InfoEscola; entram Wikipédia, Receita Federal, portal da UFPA, SBBD 2026 (`docs/pesquisa/criterio_amostragem.md`, seção 11) | tomada em 24/10/2026 |
 | D13 | Estrato `visao` = páginas com ≥ 1 `image-alt` na baseline (19 páginas, 110 imagens), em vez de ≥ 5 (6 páginas): a extensão descreve no máximo 2 imagens por página no provedor local, então descrições avaliáveis dependem do número de páginas. Alterado antes de qualquer execução da condição de visão. Tag do build do lote: `v1.1.0-jis_submission` | tomada em 24/10/2026 |
+| D14 | Modelo como fator de robustez: condições `v1.1.0-fix-llama31` (`llama3.1:8b`) e `v1.1.0-fix-gemma3` (`gemma3:4b`, só texto) nas 100 páginas, mesmos prompts, temperatura 0, contexto 4096, `reasoning: none`; sem grade fatorial completa e sem APIs pagas (determinismo/versão não garantidos). Comparação principal continua com `qwen3:8b` | tomada em 24/10/2026 |
 
 ## Desvios em relação às instruções e à v1.1.0 (entram no artigo)
 
