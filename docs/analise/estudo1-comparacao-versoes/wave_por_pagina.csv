@@ -137,3 +137,69 @@ B,Legislação federal (Planalto),tarefa,v1.0.0,,,,,,,
 B,Portal do ProUni,inicial,v1.0.0,,,,,,,
 B,Portal da Transparência,inicial,v1.0.0,,,,,,,
 B,Legislação federal (Planalto),tarefa,v1.1.0,,,,,,,
+C,"Universidade Federal do Pará, portal (N, 4º; reserva)",inicial,baseline,12,0,37,22,88,1,6.8
+C,"Universidade Federal do Pará, portal (N, 4º; reserva)",inicial,v1.1.0,0,0,25,23,88,174,9.6
+C,"Universidade Federal do Pará, portal (N, 4º; reserva)",inicial,v1.0.0,0,0,24,22,86,22,9.6
+C,"Universidade Federal do Pará, portal (N, 4º; reserva)",tarefa,baseline,,,35,23,86,6,8
+C,"Universidade Federal do Pará, portal (N, 4º; reserva)",tarefa,v1.1.0,0,0,23,30,86,178,9.6
+C,"Universidade Federal do Oeste do Pará (N, 3º)",inicial,baseline,14,50,79,45,148,106,3.3
+C,"Universidade Federal do Oeste do Pará (N, 3º)",inicial,v1.1.0,1,18,85,30,148,141,6.3
+C,"Universidade Federal do Oeste do Pará (N, 3º)",inicial,v1.0.0,1,58,91,25,148,130,3.5
+C,"Universidade Federal do Oeste do Pará (N, 3º)",tarefa,baseline,12,62,38,20,73,39,2
+C,"Universidade Federal do Oeste do Pará (N, 3º)",tarefa,v1.1.0,0,0,25,17,73,61,9.6
+C,"Universidade Federal do Oeste do Pará (N, 3º)",tarefa,v1.0.0,0,53,26,11,73,56,3
+C,"Universidade Federal do Sul da Bahia (NE, 1º)",inicial,baseline,14,0,32,18,87,1,7.1
+C,"Universidade Federal do Sul da Bahia (NE, 1º)",inicial,v1.1.0,0,0,32,20,87,34,9.5
+C,"Universidade Federal do Sul da Bahia (NE, 1º)",inicial,v1.0.0,0,0,32,20,87,14,9.5
+C,"Universidade Federal do Sul da Bahia (NE, 1º)",tarefa,baseline,5,1,55,8,55,1,7.9
+C,"Universidade Federal do Sul da Bahia (NE, 1º)",tarefa,v1.1.0,0,1,52,10,55,22,9.4
+C,"Universidade Federal do Sul da Bahia (NE, 1º)",tarefa,v1.0.0,0,1,52,10,55,5,9.4
+C,"Universidade Federal do Recôncavo da Bahia (NE, 2º)",inicial,baseline,31,0,53,17,51,39,4.9
+C,"Universidade Federal do Recôncavo da Bahia (NE, 2º)",inicial,v1.1.0,0,1,18,21,51,77,9.7
+C,"Universidade Federal do Recôncavo da Bahia (NE, 2º)",inicial,v1.0.0,0,1,16,25,51,55,9.7
+C,"Universidade Federal do Recôncavo da Bahia (NE, 2º)",tarefa,baseline,14,0,179,90,102,27,7
+C,"Universidade Federal do Recôncavo da Bahia (NE, 2º)",tarefa,v1.1.0,0,1,87,89,102,68,9.3
+C,"Universidade Federal do Recôncavo da Bahia (NE, 2º)",tarefa,v1.0.0,0,1,88,88,102,38,9.3
+C,"Universidade de Brasília (CO, 2º)",inicial,baseline,10,5,199,104,174,315,6.7
+C,"Universidade de Brasília (CO, 2º)",inicial,v1.1.0,1,5,50,109,174,408,7.9
+C,"Universidade de Brasília (CO, 2º)",inicial,v1.0.0,1,11,50,104,174,311,7
+C,"Universidade de Brasília (CO, 2º)",tarefa,baseline,11,4,27,14,41,69,6.6
+C,"Universidade de Brasília (CO, 2º)",tarefa,v1.0.0,1,4,18,16,41,76,8.8
+C,"Universidade Federal de Goiás (CO, 3º)",inicial,baseline,52,64,171,88,98,58,2.2
+C,"Universidade Federal de Goiás (CO, 3º)",inicial,v1.1.0,4,102,111,134,98,136,2.3
+C,"Universidade Federal de Goiás (CO, 3º)",tarefa,baseline,44,70,29,2,8,1,2
+C,"Universidade Federal de Goiás (CO, 3º)",tarefa,v1.1.0,0,1,28,3,9,81,9.5
+C,"Universidade Federal de Goiás (CO, 3º)",tarefa,v1.0.0,0,36,29,3,8,45,3.5
+C,"Universidade Federal do Espírito Santo (SE, 1º)",inicial,baseline,0,4,36,36,74,207,8.9
+C,"Universidade Federal do Espírito Santo (SE, 1º)",inicial,v1.1.0,0,8,35,36,74,190,8
+C,"Universidade Federal do Espírito Santo (SE, 1º)",inicial,v1.0.0,0,11,35,36,74,151,7.4
+C,"Universidade Federal do Espírito Santo (SE, 1º)",tarefa,baseline,0,1,20,18,45,97,9.6
+C,"Universidade Federal do Espírito Santo (SE, 1º)",tarefa,v1.1.0,0,1,16,18,45,119,9.7
+C,"Universidade Federal do Espírito Santo (SE, 1º)",tarefa,v1.0.0,0,1,16,18,45,86,9.7
+C,"Universidade Federal de Juiz de Fora (SE, 2º)",inicial,baseline,10,16,25,14,97,39,5.7
+C,"Universidade Federal de Juiz de Fora (SE, 2º)",inicial,v1.1.0,1,6,20,19,97,51,8.1
+C,"Universidade Federal de Juiz de Fora (SE, 2º)",inicial,v1.0.0,1,15,20,15,97,43,7.2
+C,"Universidade Federal de Juiz de Fora (SE, 2º)",tarefa,baseline,4,6,14,7,65,30,8.2
+C,"Universidade Federal de Juiz de Fora (SE, 2º)",tarefa,v1.1.0,1,4,14,12,65,48,8.8
+C,"Universidade Federal de Juiz de Fora (SE, 2º)",tarefa,v1.0.0,1,4,14,8,65,32,8.8
+C,"Universidade Federal de Santa Maria (S, 1º)",inicial,baseline,5,4,145,65,66,171,7.7
+C,"Universidade Federal de Santa Maria (S, 1º)",inicial,v1.1.0,0,2,53,71,66,178,9.4
+C,"Universidade Federal de Santa Maria (S, 1º)",inicial,v1.0.0,0,4,50,65,66,145,8.8
+C,"Universidade Federal de Santa Maria (S, 1º)",tarefa,baseline,5,3,164,7,50,38,7.6
+C,"Universidade Federal de Santa Maria (S, 1º)",tarefa,v1.1.0,0,1,25,13,50,80,9.6
+C,"Universidade Federal de Santa Maria (S, 1º)",tarefa,v1.0.0,0,3,50,7,50,20,8.8
+C,"Universidade Federal da Integração Latino-Americana (S, 2º)",inicial,baseline,9,32,37,14,64,1,4.1
+C,"Universidade Federal da Integração Latino-Americana (S, 2º)",inicial,v1.1.0,0,1,23,18,64,11,9.6
+C,"Universidade Federal da Integração Latino-Americana (S, 2º)",inicial,v1.0.0,1,14,24,17,64,9,6.9
+C,"Universidade Federal da Integração Latino-Americana (S, 2º)",tarefa,baseline,5,25,26,38,50,1,5.1
+C,"Universidade Federal da Integração Latino-Americana (S, 2º)",tarefa,v1.1.0,0,0,14,39,50,11,9.7
+C,"Universidade Federal da Integração Latino-Americana (S, 2º)",tarefa,v1.0.0,0,11,13,39,50,11,7.3
+C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),inicial,baseline,16,10,100,35,45,158,5.3
+C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),inicial,v1.1.0,0,1,44,51,45,184,9.4
+C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),inicial,v1.0.0,0,3,44,39,45,136,8.8
+C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),tarefa,baseline,36,17,127,4,32,89,3.2
+C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),tarefa,v1.1.0,0,1,52,33,32,182,9.4
+C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),tarefa,v1.0.0,0,14,52,4,32,122,7
+C,"Universidade Federal do Pará, portal (N, 4º; reserva)",tarefa,v1.0.0,,,,,,,
+C,"Universidade de Brasília (CO, 2º)",tarefa,v1.1.0,,,,,,,
+C,"Universidade Federal de Goiás (CO, 3º)",inicial,v1.0.0,,,,,,,
