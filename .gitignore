@@ -26,3 +26,6 @@ eval/results/raw/
 # Locais
 .env
 *.log
+
+# Capturas de tela inteiras da coleta WAVE (2 MB cada): arquivadas à parte; os recortes do painel são versionados
+docs/evidencias/wave/prints/
