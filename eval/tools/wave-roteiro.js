@@ -20,6 +20,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { latestSnapshots } from '../src/lib/snapshot.js';
+import { readCsv } from '../src/lib/csv.js';
 
 const EVAL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -72,8 +73,9 @@ function domDe(url, condicao) {
   return { html: raw.domPost, ref: id };
 }
 function lidas() {
+  // leitura com parser de CSV: nomes de site com vírgula vêm entre aspas
   if (!fs.existsSync(CSV)) return new Set();
-  return new Set(fs.readFileSync(CSV, 'utf8').split('\n').slice(1).filter(Boolean).map((l) => { const c = l.split(','); return `${c[2]}|${c[3]}`; }));
+  return new Set(readCsv(CSV).filter((r) => r.erros !== '' || (r.observacoes || '').startsWith('estado indisponível')).map((r) => `${r.url}|${r.condicao}`));
 }
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 function indice(filtro) {
