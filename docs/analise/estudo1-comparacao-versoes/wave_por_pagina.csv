@@ -134,7 +134,6 @@ B,Biblioteca Nacional,tarefa,v1.0.0,2,1,9,105,78,330,9.2
 B,FNDE,tarefa,v1.0.0,,,,,,,
 B,INSS,tarefa,v1.0.0,,,,,,,
 B,Legislação federal (Planalto),tarefa,v1.0.0,,,,,,,
-B,Portal do ProUni,inicial,v1.0.0,,,,,,,
 B,Portal da Transparência,inicial,v1.0.0,,,,,,,
 B,Legislação federal (Planalto),tarefa,v1.1.0,,,,,,,
 C,"Universidade Federal do Pará, portal (N, 4º; reserva)",inicial,baseline,12,0,37,22,88,1,6.8
@@ -200,9 +199,7 @@ C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores)
 C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),tarefa,baseline,36,17,127,4,32,89,3.2
 C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),tarefa,v1.1.0,0,1,52,33,32,182,9.4
 C,Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),tarefa,v1.0.0,0,14,52,4,32,122,7
-C,"Universidade Federal do Pará, portal (N, 4º; reserva)",tarefa,v1.0.0,,,,,,,
 C,"Universidade de Brasília (CO, 2º)",tarefa,v1.1.0,,,,,,,
-C,"Universidade Federal de Goiás (CO, 3º)",inicial,v1.0.0,,,,,,,
 D,Sociedade Brasileira de Computação,inicial,baseline,14,7,45,19,106,194,6.4
 D,Sociedade Brasileira de Computação,inicial,v1.1.0,0,0,45,24,106,257,9.4
 D,Sociedade Brasileira de Computação,inicial,v1.0.0,0,9,45,24,106,191,7.9
@@ -299,3 +296,6 @@ controle,Demo W3C Before and After,after,v1.1.0,0,0,6,17,14,1,9.9
 controle,Demo W3C Before and After,after,v1.0.0,1,0,5,17,16,6,9.6
 F,Laramara,inicial,v1.0.0,,,,,,,
 F,Modelo de Acessibilidade em Governo Eletrônico,tarefa,v1.0.0,,,,,,,
+B,Portal do ProUni,inicial,v1.0.0,2,0,10,18,11,29,9.5
+C,"Universidade Federal do Pará, portal (N, 4º; reserva)",tarefa,v1.0.0,0,0,23,24,86,26,9.6
+C,"Universidade Federal de Goiás (CO, 3º)",inicial,v1.0.0,4,68,106,131,98,71,3.2

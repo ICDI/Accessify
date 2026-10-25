@@ -150,7 +150,7 @@ if os.path.exists(WAVE):
     wr=list(csv.DictReader(open(WAVE))); conds=['baseline','v1.0.0','v1.1.0']
     by={c:{(r['site'],r['pagina']):r for r in wr if r['condicao']==c} for c in conds}
     mets=[('erros','Erros'),('erros_contraste','Erros de contraste'),('alertas','Alertas'),('recursos','Recursos'),('estrutura','Elementos estruturais'),('aria','ARIA')]
-    md.append('\n## 9. WAVE manual (D16): leitura humana da extensão sobre o snapshot (baseline) e sobre o DOM final dos runs\n\nTotais nas páginas com leitura nas três condições (páginas cujo run v1.0.0 falhou não têm esse estado). Planilha e recortes do painel em `docs/evidencias/wave/`.\n\n| Métrica | Páginas | baseline | v1.0.0 | v1.1.0 | Páginas que pioraram (v1.0.0 / v1.1.0) |\n|---|---|---|---|---|---|')
+    md.append('\n## 9. WAVE manual (D16): leitura humana da extensão sobre o snapshot (baseline) e sobre o DOM final dos runs\n\nTotais nas páginas com leitura nas três condições (páginas cujo run v1.0.0 falhou não têm esse estado; três páginas usam o DOM da sessão complementar com prazo ampliado, D17, marcadas na planilha). Planilha e recortes do painel em `docs/evidencias/wave/`.\n\n| Métrica | Páginas | baseline | v1.0.0 | v1.1.0 | Páginas que pioraram (v1.0.0 / v1.1.0) |\n|---|---|---|---|---|---|')
     linhas=[]
     for k,nome_m in mets:
         keys=[x for x in by['baseline'] if all(x in by[c] and by[c][x][k]!='' for c in conds)]

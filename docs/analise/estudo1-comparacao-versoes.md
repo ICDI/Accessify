@@ -97,25 +97,25 @@ Páginas ok em todos os modelos: 98; com violações axe idênticas em todos: 98
 
 ## 9. WAVE manual (D16): leitura humana da extensão sobre o snapshot (baseline) e sobre o DOM final dos runs
 
-Totais nas páginas com leitura nas três condições (páginas cujo run v1.0.0 falhou não têm esse estado). Planilha e recortes do painel em `docs/evidencias/wave/`.
+Totais nas páginas com leitura nas três condições (páginas cujo run v1.0.0 falhou não têm esse estado; três páginas usam o DOM da sessão complementar com prazo ampliado, D17, marcadas na planilha). Planilha e recortes do painel em `docs/evidencias/wave/`.
 
 | Métrica | Páginas | baseline | v1.0.0 | v1.1.0 | Páginas que pioraram (v1.0.0 / v1.1.0) |
 |---|---|---|---|---|---|
-| Erros | 88 | 905 | 85 | 20 | 1 / 0 |
-| Erros de contraste | 88 | 895 | 738 | 183 | 35 / 10 |
-| Alertas | 88 | 3830 | 2722 | 2763 | 1 / 4 |
-| Recursos | 88 | 4553 | 4642 | 4898 | 15 / 58 |
-| Elementos estruturais | 88 | 5985 | 5990 | 6091 | 5 / 10 |
-| ARIA | 88 | 12427 | 13148 | 15426 | 43 / 65 |
-| AIM Score (média) | 88 | 7.0 | 8.2 | 9.3 | — |
+| Erros | 91 | 965 | 91 | 24 | 2 / 0 |
+| Erros de contraste | 91 | 959 | 806 | 285 | 36 / 11 |
+| Alertas | 91 | 4046 | 2861 | 2907 | 1 / 4 |
+| Recursos | 91 | 4684 | 4815 | 5082 | 17 / 60 |
+| Elementos estruturais | 91 | 6180 | 6185 | 6286 | 5 / 10 |
+| ARIA | 91 | 12540 | 13274 | 15771 | 45 / 67 |
+| AIM Score (média) | 91 | 7.0 | 8.2 | 9.2 | — |
 
 Por estrato, erros / erros de contraste (soma; páginas com leitura nas três condições):
 
 | Estrato | Páginas | baseline | v1.0.0 | v1.1.0 |
 |---|---|---|---|---|
 | A | 17 | 126 / 256 | 10 / 183 | 1 / 39 |
-| B | 23 | 172 / 75 | 56 / 79 | 1 / 24 |
-| C | 19 | 246 / 306 | 5 / 241 | 4 / 52 |
+| B | 24 | 172 / 75 | 58 / 79 | 1 / 24 |
+| C | 21 | 306 / 370 | 9 / 309 | 8 / 154 |
 | D | 17 | 302 / 205 | 4 / 194 | 1 / 58 |
 | E | 4 | 20 / 7 | 7 / 9 | 5 / 1 |
 | F | 6 | 2 / 44 | 1 / 32 | 1 / 9 |
