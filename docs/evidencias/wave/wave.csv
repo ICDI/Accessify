@@ -54,7 +54,7 @@ Simpósio Brasileiro de Educação em Computação 2026,inicial,https://educomp.
 Simpósio Brasileiro de Educação em Computação 2026,tarefa,https://educomp.sbc.org.br/2026/educomp/inscricoes/index.html,v1.0.0,0,1,1,4,98,36,10,print-057-083353.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Instituto Benjamin Constant,tarefa,https://www.gov.br/ibc/pt-br/acesso-a-informacao/institucional,v1.0.0,,,,,,,,,,"estado indisponível: o run v1.0.0 desta página falhou (nome de tag inválido, C5); sem DOM final"
 Portal gov.br,inicial,https://www.gov.br/pt-br,baseline,11,22,22,131,45,263,6.3,print-061-084643.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
-Portal gov.br,tarefa,https://www.gov.br/pt-br/servicos,baseline,7,,12,106,36,230,8.6,print-062-084647.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",contraste ilegível: miniatura de aba sobre o painel; recapturar
+Portal gov.br,tarefa,https://www.gov.br/pt-br/servicos,baseline,7,0,12,106,36,230,8.6,print-323-093905.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",recaptura do contraste (print-062 tinha o painel coberto)
 Ministério da Educação,inicial,https://www.gov.br/mec/pt-br/,baseline,9,0,19,124,79,350,8.4,print-063-084650.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Ministério da Educação,tarefa,https://www.gov.br/mec/pt-br/assuntos,baseline,5,2,10,105,66,239,8.6,print-064-084654.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 INEP,inicial,https://www.gov.br/inep/pt-br,baseline,12,1,27,196,139,336,7.8,print-065-084657.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",

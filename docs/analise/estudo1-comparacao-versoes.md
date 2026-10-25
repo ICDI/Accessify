@@ -102,7 +102,7 @@ Totais nas páginas com leitura nas três condições (páginas cujo run v1.0.0 
 | Métrica | Páginas | baseline | v1.0.0 | v1.1.0 | Páginas que pioraram (v1.0.0 / v1.1.0) |
 |---|---|---|---|---|---|
 | Erros | 88 | 905 | 85 | 20 | 1 / 0 |
-| Erros de contraste | 87 | 895 | 735 | 181 | 34 / 9 |
+| Erros de contraste | 88 | 895 | 738 | 183 | 35 / 10 |
 | Alertas | 88 | 3830 | 2722 | 2763 | 1 / 4 |
 | Recursos | 88 | 4553 | 4642 | 4898 | 15 / 58 |
 | Elementos estruturais | 88 | 5985 | 5990 | 6091 | 5 / 10 |
@@ -114,7 +114,7 @@ Por estrato, erros / erros de contraste (soma; páginas com leitura nas três co
 | Estrato | Páginas | baseline | v1.0.0 | v1.1.0 |
 |---|---|---|---|---|
 | A | 17 | 126 / 256 | 10 / 183 | 1 / 39 |
-| B | 22 | 165 / 75 | 53 / 76 | 1 / 22 |
+| B | 23 | 172 / 75 | 56 / 79 | 1 / 24 |
 | C | 19 | 246 / 306 | 5 / 241 | 4 / 52 |
 | D | 17 | 302 / 205 | 4 / 194 | 1 / 58 |
 | E | 4 | 20 / 7 | 7 / 9 | 5 / 1 |

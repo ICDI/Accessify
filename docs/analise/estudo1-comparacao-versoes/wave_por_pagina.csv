@@ -54,7 +54,7 @@ A,Simpósio Brasileiro de Educação em Computação 2026,inicial,v1.0.0,0,6,4,2
 A,Simpósio Brasileiro de Educação em Computação 2026,tarefa,v1.0.0,0,1,1,4,98,36,10
 A,Instituto Benjamin Constant,tarefa,v1.0.0,,,,,,,
 B,Portal gov.br,inicial,baseline,11,22,22,131,45,263,6.3
-B,Portal gov.br,tarefa,baseline,7,,12,106,36,230,8.6
+B,Portal gov.br,tarefa,baseline,7,0,12,106,36,230,8.6
 B,Ministério da Educação,inicial,baseline,9,0,19,124,79,350,8.4
 B,Ministério da Educação,tarefa,baseline,5,2,10,105,66,239,8.6
 B,INEP,inicial,baseline,12,1,27,196,139,336,7.8
