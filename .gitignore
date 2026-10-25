@@ -33,3 +33,6 @@ docs/evidencias/wave/prints/
 
 # Sessão complementar D17 (DOM para a WAVE): JSON bruto fora do git como em results/raw
 eval/results-prazo-ampliado/raw/
+
+# Projeto LaTeX do artigo (JIS 2026): local, fora do git
+artigo-jis/
