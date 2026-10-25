@@ -1,4 +1,4 @@
-# Estudo 1 — análise do lote de 24/10/2026
+# Estudo 1 — comparação entre versões (v1.0.0 × v1.1.0 × variantes)
 
 Sessões: 1ª passada `20261024-203955404-d8a9` (baseline, v1.0.0, v1.1.0, v1.1.0-fix em 100 páginas; v1.1.0-vision em 19), variância `20261024-234322221-70ab` (3 execuções × 10 páginas). Build `v1.1.0-jis_submission`; modelo `qwen3:8b` (visão: `gemma3:4b`), temperatura 0, contexto 4096, máquina do lote com GPU em clock travado (D10). Amostra: `docs/pesquisa/criterio_amostragem.md`. Reproduzir: `python3 -I eval/tools/analisar.py 20261024-203955404-d8a9 20261024-234322221-70ab docs/analise/estudo1-comparacao-versoes`.
 

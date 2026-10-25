@@ -118,11 +118,11 @@ for c in COND:
     chamou=sum(1 for r in ok if (fnum(r['tokens_in']) or 0)>0)
     md.append(f"| {c} | {chamou} de {len(ok)} | {ti:.0f} | {to:.0f} | {lat/60:.1f} min | {lat/max(len(ok),1):.1f} s | {tmo} |")
 # relatório
-hdr=f"""# Estudo 1 — análise do lote de 24/10/2026
+hdr=f"""# Estudo 1 — comparação entre versões (v1.0.0 × v1.1.0 × variantes)
 
 Sessões: 1ª passada `{S1}` (baseline, v1.0.0, v1.1.0, v1.1.0-fix em 100 páginas; v1.1.0-vision em 19), variância `{S2}` (3 execuções × 10 páginas). Build `v1.1.0-jis_submission`; modelo `qwen3:8b` (visão: `gemma3:4b`), temperatura 0, contexto 4096, máquina do lote com GPU em clock travado (D10). Amostra: `docs/pesquisa/criterio_amostragem.md`. Reproduzir: `python3 -I eval/tools/analisar.py {S1} {S2} docs/analise/estudo1-comparacao-versoes`.
 
 Leitura: "violações axe" = pares (regra, nó) com violação WCAG 2.1 A/AA; "novos erros" = violações no pós sem par na baseline do mesmo snapshot; "rótulos genéricos" = rótulos de fallback novos no DOM ("Abrir link N", alt "Imagem"); falha é dado do estudo.
 """
-open(os.path.join(OUT,'..','estudo1-comparacao-versoes.md'),'w').write(hdr+'\n'+'\n'.join(md)+'\n')
+open(os.path.join(OUT,'..',os.path.basename(OUT.rstrip('/'))+'.md'),'w').write(hdr+'\n'+'\n'.join(md)+'\n')
 print('ok:',OUT)
