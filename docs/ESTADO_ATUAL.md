@@ -293,7 +293,7 @@ Pendente: conferir cabos PCIe e fonte para rodar com a placa em velocidade plena
 
 ## Sessão de 24/10/2026 — Lote do Estudo 1 (1ª passada + variância)
 
-Lote completo na máquina do lote, build `v1.1.0-jis_submission`, em ~4 h sem reset (D10). Sessões `20261024-203955404-d8a9` (1ª passada) e `20261024-234322221-70ab` (variância). Relatório gerado: `docs/analise/estudo1-2026-10-24.md` (+ CSVs em `docs/analise/estudo1-2026-10-24/`), reproduzível com `eval/tools/analisar.py`.
+Lote completo na máquina do lote, build `v1.1.0-jis_submission`, em ~4 h sem reset (D10). Sessões `20261024-203955404-d8a9` (1ª passada) e `20261024-234322221-70ab` (variância). Relatório gerado: `docs/analise/estudo1-comparacao-versoes.md` (+ CSVs em `docs/analise/estudo1-comparacao-versoes/`), reproduzível com `eval/tools/analisar.py`.
 
 Síntese (números no relatório):
 
@@ -304,7 +304,7 @@ Síntese (números no relatório):
 - Regras mais corrigidas: color-contrast, link-name, label, image-alt. Erros introduzidos pela v1.1.0: label-content-name-mismatch (+25), svg-img-alt (+21), nested-interactive (+6); pela v1.0.0: color-contrast (+71) e svg-img-alt (+50).
 - Falhas da v1.0.0 (11): tag inválida aplicada sem validação (5, C5), timeouts (5), painel travado na Constituição (1). Falhas da v1.1.0 (2): Constituição (análise não termina) e UnB (`element.id?.startsWith` em `content.js:1028`: `id` não é texto quando o formulário tem um campo chamado `id`). **Defeitos novos da v1.1.0 para a POC**: usar `getAttribute('id')`; limitar a análise em páginas gigantes.
 - Variância: v1.1.0 determinística (9/9 páginas idênticas nas 3 execuções); v1.0.0 varia pouco no axe (7/8) e muito no texto (até 427 tokens). Falhas se repetem nas 3 execuções.
-- Visão: 26 alts com imagem (`gemma3:4b`) pareados com 26 alts sem imagem (`v1.1.0-fix`) nas mesmas imagens, em `docs/analise/estudo1-2026-10-24/alts_visao.csv`, para a avaliação da coautora.
+- Visão: 26 alts com imagem (`gemma3:4b`) pareados com 26 alts sem imagem (`v1.1.0-fix`) nas mesmas imagens, em `docs/analise/estudo1-comparacao-versoes/alts_visao.csv`, para a avaliação da coautora.
 
 Pendente: modelos extras como fator de robustez (decidir); exportar os dados para o Zenodo; a página do CSBC 2026 usou snapshot com aceite manual (D12).
 
