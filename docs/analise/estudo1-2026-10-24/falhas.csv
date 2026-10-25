@@ -1,0 +1,8 @@
+condicao,causa,n,paginas
+v1.0.0,"aplicação: nome de tag inválido (replaceWith sem validação, C5)",5,IBC; FNDE; INSS; Periódicos CAPES; eMAG
+v1.0.0,painel da v1.0.0 não respondeu (página gigante),1,Planalto
+v1.0.0,timeout do modelo/análise (D8),5,ProUni; Transparência; UFG; Laramara; UFPA
+v1.1.0,análise da v1.1.0 não terminou (página gigante),1,Planalto
+v1.1.0,"aplicação: element.id não é texto (formulário com campo ""id"")",1,UnB
+v1.1.0-fix,análise da v1.1.0 não terminou (página gigante),1,Planalto
+v1.1.0-fix,"aplicação: element.id não é texto (formulário com campo ""id"")",1,UnB

@@ -291,6 +291,23 @@ Conclusão: o gatilho é a transição da GPU de ociosa para carga CUDA com cloc
 
 Pendente: conferir cabos PCIe e fonte para rodar com a placa em velocidade plena; medir se o clock travado altera a taxa de timeouts (D8) em páginas maiores.
 
+## Sessão de 24/10/2026 — Lote do Estudo 1 (1ª passada + variância)
+
+Lote completo na máquina do lote, build `v1.1.0-jis_submission`, em ~4 h sem reset (D10). Sessões `20261024-203955404-d8a9` (1ª passada) e `20261024-234322221-70ab` (variância). Relatório gerado: `docs/analise/estudo1-2026-10-24.md` (+ CSVs em `docs/analise/estudo1-2026-10-24/`), reproduzível com `eval/tools/analisar.py`.
+
+Síntese (números no relatório):
+
+- v1.1.0 completa 98/100 páginas (v1.0.0: 89/100), reduz as violações axe de 18,7 para 6,5 por página (v1.0.0: 18,8 → 11,1), piora 3 páginas (v1.0.0: 15) e introduz 230 erros novos (v1.0.0: 296). No IBM, 3169 → 1875 (v1.0.0: 2978 → 2438).
+- `v1.1.0` e `v1.1.0-fix` são idênticas nas métricas automáticas: a correção do raciocínio só muda tokens de saída (1728 → 329) e o texto dos alts. A diferença é objeto das Sessões A/B.
+- **O modelo quase não participa na v1.1.0**: poucas páginas chamam o LLM (ver seção 7 do relatório) e o custo cai de 199 mil tokens de saída (v1.0.0) para 1,7 mil. A redução vem das correções determinísticas. Isso precisa ser dito com clareza no artigo (a v1 "multimodal/LLM" gastava 46 s de modelo por página para um resultado pior).
+- **Rótulos genéricos aumentaram** na v1.1.0 (1233 contra 940 na v1.0.0): a versão nova silencia mais o validador com fallbacks. Reforça C6 e vira limitação declarada.
+- Regras mais corrigidas: color-contrast, link-name, label, image-alt. Erros introduzidos pela v1.1.0: label-content-name-mismatch (+25), svg-img-alt (+21), nested-interactive (+6); pela v1.0.0: color-contrast (+71) e svg-img-alt (+50).
+- Falhas da v1.0.0 (11): tag inválida aplicada sem validação (5, C5), timeouts (5), painel travado na Constituição (1). Falhas da v1.1.0 (2): Constituição (análise não termina) e UnB (`element.id?.startsWith` em `content.js:1028`: `id` não é texto quando o formulário tem um campo chamado `id`). **Defeitos novos da v1.1.0 para a POC**: usar `getAttribute('id')`; limitar a análise em páginas gigantes.
+- Variância: v1.1.0 determinística (9/9 páginas idênticas nas 3 execuções); v1.0.0 varia pouco no axe (7/8) e muito no texto (até 427 tokens). Falhas se repetem nas 3 execuções.
+- Visão: 26 alts com imagem (`gemma3:4b`) pareados com 26 alts sem imagem (`v1.1.0-fix`) nas mesmas imagens, em `docs/analise/estudo1-2026-10-24/alts_visao.csv`, para a avaliação da coautora.
+
+Pendente: modelos extras como fator de robustez (decidir); exportar os dados para o Zenodo; a página do CSBC 2026 usou snapshot com aceite manual (D12).
+
 ## Decisões
 
 | Id | Decisão | Situação |
@@ -428,5 +445,5 @@ Resultado de uma verificação adversarial: um pesquisador por grupo de premissa
 
 1. Revisar e mergear na `main`, nesta ordem e com merge commit: a #7 (`semish2026` → `main`) e depois as PRs das Fases 1 a 5 (#2 a #6, cada uma encadeada na anterior).
 2. Na máquina do lote: medir o tempo da v1.0.0 com GPU contra os prazos do D8, confirmar a D9 e recapturar os snapshots (a captura e o lote rodam na mesma máquina).
-3. ~~Montar a lista de URLs~~ feito em 24/10 (D11, 100 páginas em `eval/urls.csv`); ~~`npm run aceites` na máquina do lote~~ feito em 24/10 (6/6, 61 verificações OK). ~~Capturar os 100 snapshots~~ feito em 24/10 (93 ok + reposição, D12; 1 aceite manual). ~~Baseline~~ feita em 24/10 (100/100 ok, IBM sem erro; sessão em `eval/results/sessions/`). ~~`visao` e `variancia`~~ definidos e acrescentados ao `urls.csv` em 24/10 (`visao`: 19 páginas com ≥ 1 `image-alt` (D13), inclusive o controle W3C; `variancia`: 10 páginas, 3/3/4 por terços de `html_bytes`, limites 123 458 e 273 269 bytes). ~~D9~~ confirmada e ~~tag~~ `v1.1.0-jis_submission` criada em 24/10. Falta: rodar as condições com modelo (lote iniciado em 24/10).
+3. ~~Montar a lista de URLs~~ feito em 24/10 (D11, 100 páginas em `eval/urls.csv`); ~~`npm run aceites` na máquina do lote~~ feito em 24/10 (6/6, 61 verificações OK). ~~Capturar os 100 snapshots~~ feito em 24/10 (93 ok + reposição, D12; 1 aceite manual). ~~Baseline~~ feita em 24/10 (100/100 ok, IBM sem erro; sessão em `eval/results/sessions/`). ~~`visao` e `variancia`~~ definidos e acrescentados ao `urls.csv` em 24/10 (`visao`: 19 páginas com ≥ 1 `image-alt` (D13), inclusive o controle W3C; `variancia`: 10 páginas, 3/3/4 por terços de `html_bytes`, limites 123 458 e 273 269 bytes). ~~D9~~ confirmada e ~~tag~~ `v1.1.0-jis_submission` criada em 24/10. ~~Rodar as condições com modelo~~ feito em 24/10 (1ª passada + variância; relatório em `docs/analise/`).
 4. Criar a tag do build usado no lote.
