@@ -1,6 +1,6 @@
 # Estudo 1 — comparação entre versões (v1.0.0 × v1.1.0 × variantes)
 
-Sessões: 1ª passada `20261024-203955404-d8a9` (baseline, v1.0.0, v1.1.0, v1.1.0-fix em 100 páginas; v1.1.0-vision em 19), variância `20261024-234322221-70ab` (3 execuções × 10 páginas). Build `v1.1.0-jis_submission`; modelo `qwen3:8b` (visão: `gemma3:4b`), temperatura 0, contexto 4096, máquina do lote com GPU em clock travado (D10). Amostra: `docs/pesquisa/criterio_amostragem.md`. Robustez por modelo (D14): sessão `20261025-011302024-2530`. Reproduzir: `python3 -I eval/tools/analisar.py 20261024-203955404-d8a9 20261024-234322221-70ab docs/analise/estudo1-comparacao-versoes 20261025-011302024-2530`.
+Sessões: 1ª passada `20261024-203955404-d8a9` (baseline, v1.0.0, v1.1.0, v1.1.0-fix em 100 páginas; v1.1.0-vision em 19), variância `20261024-234322221-70ab` (3 execuções × 10 páginas). Build `v1.1.0-jis_submission`; modelo `qwen3:8b` (visão: `gemma3:4b`), temperatura 0, contexto 4096, máquina do lote com GPU em clock travado (D10). Amostra: `docs/pesquisa/criterio_amostragem.md`. Robustez por modelo (D14/D15): sessões `20261025-011302024-2530 20261025-023445656-af96`. Reproduzir: `python3 -I eval/tools/analisar.py 20261024-203955404-d8a9 20261024-234322221-70ab docs/analise/estudo1-comparacao-versoes 20261025-011302024-2530 20261025-023445656-af96`.
 
 Leitura: "violações axe" = pares (regra, nó) com violação WCAG 2.1 A/AA; "novos erros" = violações no pós sem par na baseline do mesmo snapshot; "rótulos genéricos" = rótulos de fallback novos no DOM ("Abrir link N", alt "Imagem"); falha é dado do estudo.
 
@@ -34,7 +34,7 @@ Leitura: "violações axe" = pares (regra, nó) com violação WCAG 2.1 A/AA; "n
 
 **v1.1.0-fix** — corrigidas: color-contrast −526, link-name −419, label −132, image-alt −98, label-content-name-mismatch −31, button-name −17; aumentaram: label-content-name-mismatch +25, svg-img-alt +21, nested-interactive +6, role-img-alt +4, color-contrast +4; novos erros por regra: label-content-name-mismatch 25, svg-img-alt 21, nested-interactive 6, role-img-alt 4, color-contrast 4
 
-**v1.1.0-vision** — corrigidas: color-contrast −261, link-name −126, image-alt −98, button-name −9, label-content-name-mismatch −7, select-name −7; aumentaram: label-content-name-mismatch +6, nested-interactive +4, aria-command-name +1, aria-prohibited-attr +1; novos erros por regra: label-content-name-mismatch 6, nested-interactive 4, aria-command-name 1, aria-prohibited-attr 1
+**v1.1.0-vision** — corrigidas: color-contrast −261, link-name −126, image-alt −98, button-name −9, select-name −7, label-content-name-mismatch −7; aumentaram: label-content-name-mismatch +6, nested-interactive +4, aria-command-name +1, aria-prohibited-attr +1; novos erros por regra: label-content-name-mismatch 6, nested-interactive 4, aria-command-name 1, aria-prohibited-attr 1
 
 
 ## 4. Falhas por causa (1ª passada)
@@ -78,12 +78,19 @@ Lista completa (alt final, seletor, origem, latência) em `alts_visao.csv` (66 l
 | v1.1.0-fix | 19 de 98 | 4531 | 329 | 0.1 min | 0.1 s | 0 |
 | v1.1.0-vision | 18 de 19 | 11269 | 283 | 0.6 min | 1.8 s | 0 |
 
-## 8. Modelo como fator de robustez (D14): v1.1.0-fix com três modelos, 100 páginas
+## 8. Modelo como fator de robustez (D14/D15): v1.1.0-fix com 10 modelos, 100 páginas
 
-| Modelo | ok | falha | Violações axe baseline→pós | Média por página | Páginas que pioraram | Novos erros axe | IBM pós | Rótulos genéricos | Páginas que chamaram o modelo | Tokens de saída |
-|---|---|---|---|---|---|---|---|---|---|---|
-| qwen3:8b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 329 |
-| llama3.1:8b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 422 |
-| gemma3:4b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 244 |
+| Modelo | ok | falha | Violações axe baseline→pós | Média por página | Páginas que pioraram | Novos erros axe | IBM pós | Rótulos genéricos | Páginas que chamaram o modelo | Tokens de saída | Latência média por página | Alts do modelo | Raciocínio gravado como alt |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| qwen3:8b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 329 | 0.1 s | 27 | 0 |
+| llama3.1:8b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 422 | 0.1 s | 27 | 0 |
+| gemma3:4b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 244 | 0.1 s | 27 | 0 |
+| mistral:7b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 441 | 0.1 s | 27 | 0 |
+| deepseek-r1:8b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 1728 | 0.3 s | 27 | 27 |
+| qwen3.5:4b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 356 | 0.2 s | 27 | 0 |
+| qwen3.5:2b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 289 | 0.1 s | 27 | 0 |
+| gemma4:e2b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 268 | 0.2 s | 27 | 0 |
+| gemma4:e4b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 291 | 0.1 s | 27 | 0 |
+| llama3.2:3b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 357 | 0.2 s | 27 | 0 |
 
-Páginas ok nos três modelos: 98; com violações axe idênticas nos três: 98. Alts gerados pelo modelo nas mesmas imagens: 27 imagens com os três modelos, 0 com texto idêntico; lista em `alts_por_modelo.csv`. As métricas automáticas não dependem do modelo: na v1.1.0 o modelo só escreve texto alternativo e rótulos, cuja qualidade é objeto das Sessões A/B.
+Páginas ok em todos os modelos: 98; com violações axe idênticas em todos: 98. Imagens com alt gerado por todos os modelos: 27; com texto idêntico entre todos: 0; lista em `alts_por_modelo.csv`. As métricas automáticas não dependem do modelo: na v1.1.0 o modelo só escreve texto alternativo e rótulos, cuja qualidade é objeto das Sessões A/B.
