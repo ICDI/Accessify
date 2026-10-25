@@ -257,3 +257,45 @@ D,"Simpósio Brasileiro de Sistemas de Informação 2026 (evento, 8º)",tarefa,b
 D,"Simpósio Brasileiro de Sistemas de Informação 2026 (evento, 8º)",tarefa,v1.1.0,0,10,3,4,40,29,8.5
 D,"Simpósio Brasileiro de Sistemas de Informação 2026 (evento, 8º)",tarefa,v1.0.0,0,10,5,4,35,5,8.4
 D,Portal de Periódicos da CAPES,inicial,v1.0.0,,,,,,,
+E,Wikipédia em português (10º; reserva),inicial,baseline,12,0,99,406,50,74,7.1
+E,Wikipédia em português (10º; reserva),inicial,v1.1.0,5,0,26,411,69,63,9
+E,Wikipédia em português (10º; reserva),inicial,v1.0.0,5,0,30,409,50,65,8.9
+E,Wikipédia em português (10º; reserva),tarefa,baseline,4,0,48,73,64,96,8.8
+E,Wikipédia em português (10º; reserva),tarefa,v1.1.0,0,0,27,75,64,94,9.6
+E,Wikipédia em português (10º; reserva),tarefa,v1.0.0,0,0,27,73,64,95,9.6
+E,Toda Matéria (1º no sorteio),inicial,baseline,2,6,28,84,43,35,8
+E,Toda Matéria (1º no sorteio),inicial,v1.1.0,0,0,13,86,43,80,9.7
+E,Toda Matéria (1º no sorteio),inicial,v1.0.0,0,8,13,84,43,51,8.2
+E,Toda Matéria (1º no sorteio),tarefa,baseline,2,1,36,9,31,19,8.9
+E,Toda Matéria (1º no sorteio),tarefa,v1.1.0,0,1,5,11,31,31,9.9
+E,Toda Matéria (1º no sorteio),tarefa,v1.0.0,2,1,5,9,31,18,9.3
+F,Fundação Dorina Nowill para Cegos,inicial,baseline,0,16,51,16,121,521,7.3
+F,Fundação Dorina Nowill para Cegos,inicial,v1.1.0,0,0,49,16,121,490,9.4
+F,Fundação Dorina Nowill para Cegos,inicial,v1.0.0,0,9,49,16,121,462,7.9
+F,Fundação Dorina Nowill para Cegos,tarefa,baseline,0,4,29,8,93,492,8.9
+F,Fundação Dorina Nowill para Cegos,tarefa,v1.1.0,0,0,29,8,93,464,9.5
+F,Fundação Dorina Nowill para Cegos,tarefa,v1.0.0,0,2,29,8,93,436,9.5
+F,Laramara,inicial,baseline,3,13,28,41,88,247,7.1
+F,Laramara,inicial,v1.1.0,1,9,28,31,88,247,8
+F,Laramara,tarefa,baseline,2,14,9,5,52,121,7.1
+F,Laramara,tarefa,v1.1.0,1,0,9,8,52,125,9.8
+F,Laramara,tarefa,v1.0.0,1,14,9,4,52,103,7.1
+F,Movimento Web para Todos,inicial,baseline,0,6,4,58,45,53,8.4
+F,Movimento Web para Todos,inicial,v1.1.0,0,1,4,58,45,37,9.9
+F,Movimento Web para Todos,inicial,v1.0.0,0,1,4,58,45,34,9.9
+F,Movimento Web para Todos,tarefa,baseline,0,2,4,5,30,58,9.6
+F,Movimento Web para Todos,tarefa,v1.1.0,0,1,4,5,30,33,9.9
+F,Movimento Web para Todos,tarefa,v1.0.0,0,5,4,5,31,36,8.7
+F,Modelo de Acessibilidade em Governo Eletrônico,inicial,baseline,0,2,53,100,139,1,9.4
+F,Modelo de Acessibilidade em Governo Eletrônico,inicial,v1.1.0,0,7,15,129,153,33,8.5
+F,Modelo de Acessibilidade em Governo Eletrônico,inicial,v1.0.0,0,1,15,129,141,30,9.7
+F,Modelo de Acessibilidade em Governo Eletrônico,tarefa,baseline,0,1,6,1,10,1,9.3
+F,Modelo de Acessibilidade em Governo Eletrônico,tarefa,v1.1.0,0,0,6,1,10,1,9.9
+controle,Demo W3C Before and After,before,baseline,37,2,35,5,3,1,3.5
+controle,Demo W3C Before and After,before,v1.1.0,7,0,27,32,36,30,7.5
+controle,Demo W3C Before and After,before,v1.0.0,1,0,31,34,3,38,9.5
+controle,Demo W3C Before and After,after,baseline,0,0,7,17,14,1,9.8
+controle,Demo W3C Before and After,after,v1.1.0,0,0,6,17,14,1,9.9
+controle,Demo W3C Before and After,after,v1.0.0,1,0,5,17,16,6,9.6
+F,Laramara,inicial,v1.0.0,,,,,,,
+F,Modelo de Acessibilidade em Governo Eletrônico,tarefa,v1.0.0,,,,,,,

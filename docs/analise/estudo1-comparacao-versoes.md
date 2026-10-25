@@ -34,7 +34,7 @@ Leitura: "violações axe" = pares (regra, nó) com violação WCAG 2.1 A/AA; "n
 
 **v1.1.0-fix** — corrigidas: color-contrast −526, link-name −419, label −132, image-alt −98, label-content-name-mismatch −31, button-name −17; aumentaram: label-content-name-mismatch +25, svg-img-alt +21, nested-interactive +6, role-img-alt +4, color-contrast +4; novos erros por regra: label-content-name-mismatch 25, svg-img-alt 21, nested-interactive 6, role-img-alt 4, color-contrast 4
 
-**v1.1.0-vision** — corrigidas: color-contrast −261, link-name −126, image-alt −98, button-name −9, select-name −7, label-content-name-mismatch −7; aumentaram: label-content-name-mismatch +6, nested-interactive +4, aria-command-name +1, aria-prohibited-attr +1; novos erros por regra: label-content-name-mismatch 6, nested-interactive 4, aria-command-name 1, aria-prohibited-attr 1
+**v1.1.0-vision** — corrigidas: color-contrast −261, link-name −126, image-alt −98, button-name −9, label-content-name-mismatch −7, select-name −7; aumentaram: label-content-name-mismatch +6, nested-interactive +4, aria-command-name +1, aria-prohibited-attr +1; novos erros por regra: label-content-name-mismatch 6, nested-interactive 4, aria-command-name 1, aria-prohibited-attr 1
 
 
 ## 4. Falhas por causa (1ª passada)
@@ -101,13 +101,13 @@ Totais nas páginas com leitura nas três condições (páginas cujo run v1.0.0 
 
 | Métrica | Páginas | baseline | v1.0.0 | v1.1.0 | Páginas que pioraram (v1.0.0 / v1.1.0) |
 |---|---|---|---|---|---|
-| Erros | 76 | 846 | 75 | 7 | 0 / 0 |
-| Erros de contraste | 75 | 842 | 694 | 171 | 32 / 8 |
-| Alertas | 76 | 3427 | 2501 | 2549 | 1 / 4 |
-| Recursos | 76 | 3767 | 3796 | 4042 | 12 / 51 |
-| Elementos estruturais | 76 | 5300 | 5300 | 5340 | 2 / 7 |
-| ARIA | 76 | 10955 | 11774 | 13945 | 39 / 60 |
-| AIM Score (média) | 76 | 6.9 | 8.1 | 9.3 | — |
+| Erros | 88 | 905 | 85 | 20 | 1 / 0 |
+| Erros de contraste | 87 | 895 | 735 | 181 | 34 / 9 |
+| Alertas | 88 | 3830 | 2722 | 2763 | 1 / 4 |
+| Recursos | 88 | 4553 | 4642 | 4898 | 15 / 58 |
+| Elementos estruturais | 88 | 5985 | 5990 | 6091 | 5 / 10 |
+| ARIA | 88 | 12427 | 13148 | 15426 | 43 / 65 |
+| AIM Score (média) | 88 | 7.0 | 8.2 | 9.3 | — |
 
 Por estrato, erros / erros de contraste (soma; páginas com leitura nas três condições):
 
@@ -117,3 +117,6 @@ Por estrato, erros / erros de contraste (soma; páginas com leitura nas três co
 | B | 22 | 165 / 75 | 53 / 76 | 1 / 22 |
 | C | 19 | 246 / 306 | 5 / 241 | 4 / 52 |
 | D | 17 | 302 / 205 | 4 / 194 | 1 / 58 |
+| E | 4 | 20 / 7 | 7 / 9 | 5 / 1 |
+| F | 6 | 2 / 44 | 1 / 32 | 1 / 9 |
+| controle | 2 | 37 / 2 | 2 / 0 | 7 / 0 |
