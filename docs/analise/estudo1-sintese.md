@@ -55,7 +55,11 @@ Leitura humana da extensão WAVE nas 100 páginas, sobre o snapshot (baseline) e
 
 Triangulação por página (`triangulacao.md`): na v1.1.0, WAVE, axe-core e IBM apontam a mesma direção de mudança em 69% das páginas, WAVE e IBM em 87%, e nenhuma página piora no axe sem piorar também na WAVE. Na v1.0.0 a concordância cai para 53%, com 12 páginas que pioram no axe sem a WAVE registrar: são os erros de SVG e contraste que a v1.0.0 introduz e que a WAVE classifica de outro modo. A correlação de Spearman das reduções por página fica entre 0,64 e 0,77 para todos os pares. As escalas não são comparáveis em valor absoluto, só em direção e ordem.
 
-## 11. Limitações do estudo
+## 11. Defeitos como resultado, não como correção
+
+Os 12 defeitos revelados pela avaliação (tabela em `estudo1-defeitos.md`: origem no código, instrumento que revelou, critério WCAG, páginas-exemplo) ficam na versão avaliada e viram o backlog C14–C21 da versão seguinte (D18). Quatro deles só aparecem em um dos instrumentos, o que sustenta a triangulação.
+
+## 12. Limitações do estudo
 
 - Amostra sub-representa aplicações de página única e portais com bloqueio anti-bot ou muita publicidade (Escola Virtual Gov, Sisu/ProUni/Fies, Lattes, Sucupira, Nova Escola, Brasil Escola, Mundo Educação ficaram de fora).
 - Snapshot da página inicial do CSBC 2026 aceito manualmente por divergência só visual (D12).
