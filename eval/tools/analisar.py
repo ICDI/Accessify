@@ -143,6 +143,29 @@ if S3:
     ident=sum(1 for u in comum if len({vals[c][u] for c,_,_ in conds})==1)
     md.append(f"\nPáginas ok em todos os modelos: {len(comum)}; com violações axe idênticas em todos: {ident}. Imagens com alt gerado por todos os modelos: {len(comp)}; com texto idêntico entre todos: {sum(1 for k in comp if len(set(alts[k].values()))==1)}; lista em `alts_por_modelo.csv`. As métricas automáticas não dependem do modelo: na v1.1.0 o modelo só escreve texto alternativo e rótulos, cuja qualidade é objeto das Sessões A/B.")
 
+
+# 9. WAVE manual (D16), sites originais do SEMISH
+WAVE=os.path.join(REPO,'docs','evidencias','wave','wave-semish.csv')
+if os.path.exists(WAVE):
+    wr=list(csv.DictReader(open(WAVE))); conds=['baseline','v1.0.0','v1.1.0']
+    by={c:{(r['site'],r['pagina']):r for r in wr if r['condicao']==c} for c in conds}
+    mets=[('erros','Erros'),('erros_contraste','Erros de contraste'),('alertas','Alertas'),('recursos','Recursos'),('estrutura','Elementos estruturais'),('aria','ARIA')]
+    md.append('\n## 9. WAVE manual nos sites originais do SEMISH (D16): 18 páginas × baseline, v1.0.0, v1.1.0\n\nLeitura humana da extensão WAVE sobre o snapshot (baseline) e sobre o DOM final dos runs da 1ª passada; totais nas páginas com leitura nas três condições (a página institucional do IBC não tem v1.0.0 porque o run falhou). Planilha e recortes do painel em `docs/evidencias/wave/`.\n\n| Métrica | Páginas | baseline | v1.0.0 | v1.1.0 | Páginas que pioraram (v1.0.0 / v1.1.0) |\n|---|---|---|---|---|---|')
+    linhas=[]
+    for k,nome_m in mets:
+        keys=[x for x in by['baseline'] if all(x in by[c] and by[c][x][k]!='' for c in conds)]
+        tot_=[sum(int(by[c][x][k]) for x in keys) for c in conds]
+        pior=[sum(1 for x in keys if int(by[c][x][k])>int(by['baseline'][x][k])) for c in conds[1:]]
+        md.append(f"| {nome_m} | {len(keys)} | {tot_[0]} | {tot_[1]} | {tot_[2]} | {pior[0]} / {pior[1]} |"); linhas.append([k,len(keys)]+tot_+pior)
+    keys=[x for x in by['baseline'] if all(x in by[c] and by[c][x]['aim_score']!='' for c in conds)]
+    aim=[st.mean(float(by[c][x]['aim_score']) for x in keys) for c in conds]
+    md.append(f"| AIM Score (média) | {len(keys)} | {aim[0]:.1f} | {aim[1]:.1f} | {aim[2]:.1f} | — |")
+    w('wave_semish_totais.csv',['metrica','paginas','baseline','v1.0.0','v1.1.0','pioraram_v1.0.0','pioraram_v1.1.0'],linhas)
+    md.append('\nPor página (erros / erros de contraste):\n\n| Página | baseline | v1.0.0 | v1.1.0 |\n|---|---|---|---|')
+    for x in by['baseline']:
+        cell=lambda c: (f"{by[c][x]['erros']} / {by[c][x]['erros_contraste']}" if x in by[c] and by[c][x]['erros']!='' else '—')
+        md.append(f"| {x[0]} — {x[1]} | {cell('baseline')} | {cell('v1.0.0')} | {cell('v1.1.0')} |")
+
 # relatório
 hdr=f"""# Estudo 1 — comparação entre versões (v1.0.0 × v1.1.0 × variantes)
 

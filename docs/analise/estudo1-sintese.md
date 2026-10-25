@@ -47,7 +47,11 @@ A v1.0.0 cria principalmente problemas de contraste (+71) e SVG sem nome (+50). 
 - v1.1.0, 2 falhas em todas as condições e modelos: Constituição Federal (a análise não termina numa página de 885 mil caracteres) e UnB (`element.id` não é texto quando o formulário tem um campo chamado `id`, `content.js:1028`). São defeitos novos para a POC.
 - Nas 3 execuções do estrato de variância, nenhuma página mudou de status; a v1.1.0 é determinística (9 de 9 páginas idênticas) e a v1.0.0 varia pouco no resultado (7 de 8) e muito no texto (até 427 tokens).
 
-## 9. Limitações do estudo
+## 9. A WAVE confirma o quadro nos sites originais do SEMISH
+
+Leitura manual da extensão WAVE em 18 páginas dos 9 sites originais (D16), sobre o snapshot e sobre o DOM final dos runs: erros de 103 para 10 na v1.0.0 e para 1 na v1.1.0; erros de contraste de 256 para 181 na v1.0.0 e para 37 na v1.1.0, com a v1.0.0 piorando o contraste em 4 páginas, o defeito relatado no SEMISH (IHC 2025: 26 → 44 → 10). O AIM Score médio sobe de 6,7 para 7,9 e 9,3. Os alertas crescem na v1.1.0 (261 → 298), coerente com os rótulos e links que a extensão acrescenta. Tabelas na seção 9 do relatório.
+
+## 10. Limitações do estudo
 
 - Amostra sub-representa aplicações de página única e portais com bloqueio anti-bot ou muita publicidade (Escola Virtual Gov, Sisu/ProUni/Fies, Lattes, Sucupira, Nova Escola, Brasil Escola, Mundo Educação ficaram de fora).
 - Snapshot da página inicial do CSBC 2026 aceito manualmente por divergência só visual (D12).

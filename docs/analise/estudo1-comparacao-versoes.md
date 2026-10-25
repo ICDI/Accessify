@@ -94,3 +94,40 @@ Lista completa (alt final, seletor, origem, latência) em `alts_visao.csv` (66 l
 | llama3.2:3b | 98 | 2 | 1836→634 | 6.5 | 3 | 230 | 1875 | 1233 | 19 | 357 | 0.2 s | 27 | 0 |
 
 Páginas ok em todos os modelos: 98; com violações axe idênticas em todos: 98. Imagens com alt gerado por todos os modelos: 27; com texto idêntico entre todos: 0; lista em `alts_por_modelo.csv`. As métricas automáticas não dependem do modelo: na v1.1.0 o modelo só escreve texto alternativo e rótulos, cuja qualidade é objeto das Sessões A/B.
+
+## 9. WAVE manual nos sites originais do SEMISH (D16): 18 páginas × baseline, v1.0.0, v1.1.0
+
+Leitura humana da extensão WAVE sobre o snapshot (baseline) e sobre o DOM final dos runs da 1ª passada; totais nas páginas com leitura nas três condições (a página institucional do IBC não tem v1.0.0 porque o run falhou). Planilha e recortes do painel em `docs/evidencias/wave/`.
+
+| Métrica | Páginas | baseline | v1.0.0 | v1.1.0 | Páginas que pioraram (v1.0.0 / v1.1.0) |
+|---|---|---|---|---|---|
+| Erros | 17 | 126 | 10 | 1 | 0 / 0 |
+| Erros de contraste | 17 | 256 | 183 | 39 | 5 / 3 |
+| Alertas | 17 | 261 | 221 | 298 | 0 / 3 |
+| Recursos | 17 | 278 | 280 | 283 | 1 / 4 |
+| Elementos estruturais | 17 | 1036 | 1037 | 1038 | 1 / 1 |
+| ARIA | 17 | 1115 | 848 | 1139 | 4 / 10 |
+| AIM Score (média) | 17 | 6.7 | 8.0 | 9.2 | — |
+
+Por página (erros / erros de contraste):
+
+| Página | baseline | v1.0.0 | v1.1.0 |
+|---|---|---|---|
+| Congresso da SBC 2026 — inicial | 23 / 18 | 0 / 5 | 0 / 0 |
+| Congresso da SBC 2026 — tarefa | 24 / 1 | 0 / 0 | 0 / 0 |
+| Portal da CAPES — inicial | 2 / 0 | 2 / 2 | 0 / 2 |
+| Portal da CAPES — tarefa | 2 / 0 | 2 / 0 | 0 / 0 |
+| Simpósio IHC 2025 — inicial | 15 / 26 | 0 / 44 | 0 / 10 |
+| Simpósio IHC 2025 — tarefa | 1 / 1 | 0 / 6 | 0 / 4 |
+| Congresso Brasileiro de Informática na Educação 2025 — inicial | 19 / 36 | 3 / 12 | 0 / 0 |
+| Congresso Brasileiro de Informática na Educação 2025 — tarefa | 12 / 76 | 0 / 62 | 0 / 0 |
+| Brazilian Conference on Intelligent Systems 2026 — inicial | 1 / 16 | 0 / 0 | 0 / 6 |
+| Brazilian Conference on Intelligent Systems 2026 — tarefa | 1 / 13 | 0 / 12 | 0 / 12 |
+| SBC OpenLib — inicial | 0 / 14 | 0 / 0 | 0 / 0 |
+| SBC OpenLib — tarefa | 0 / 9 | 0 / 4 | 0 / 1 |
+| Instituto Benjamin Constant — inicial | 2 / 0 | 2 / 11 | 0 / 4 |
+| Instituto Benjamin Constant — tarefa | 2 / 0 | — | 0 / 0 |
+| Congresso Brasileiro de Software 2026 — inicial | 10 / 9 | 0 / 7 | 0 / 0 |
+| Congresso Brasileiro de Software 2026 — tarefa | 8 / 8 | 1 / 11 | 1 / 0 |
+| Simpósio Brasileiro de Educação em Computação 2026 — inicial | 5 / 28 | 0 / 6 | 0 / 0 |
+| Simpósio Brasileiro de Educação em Computação 2026 — tarefa | 1 / 1 | 0 / 1 | 0 / 0 |
