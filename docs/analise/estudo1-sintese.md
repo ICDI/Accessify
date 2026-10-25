@@ -51,7 +51,11 @@ A v1.0.0 cria principalmente problemas de contraste (+71) e SVG sem nome (+50). 
 
 Leitura humana da extensão WAVE nas 100 páginas, sobre o snapshot (baseline) e sobre o DOM final dos runs (D16): 300 leituras; 10 estados indisponíveis por falhas definitivas dos runs (3 páginas da v1.0.0 recuperadas com prazo ampliado, D17). Nas 91 páginas com leitura nas três condições: erros de 965 para 91 na v1.0.0 e para 24 na v1.1.0; erros de contraste de 959 para 806 na v1.0.0 e para 285 na v1.1.0, com a v1.0.0 piorando o contraste em 36 páginas (40%) e a v1.1.0 em 11. O AIM Score médio sobe de 7,0 para 8,2 e 9,2. Nos sites originais do SEMISH, a WAVE reproduz o defeito relatado no artigo (IHC 2025: 26 → 44 → 10 erros de contraste). Os alertas caem nas duas versões (3 830 → 2 722 → 2 763) e os itens ARIA sobem na v1.1.0 (12 427 → 15 426), reflexo dos rótulos e atributos que a extensão acrescenta. Casos a discutir: a página inicial da UFG, pior da amostra, tem o contraste agravado pela v1.1.0 (64 → 102); no controle da W3C a v1.0.0 deixa 1 erro e a v1.1.0 deixa 7 (cabeçalhos de tabela vazios). Tabelas por estrato e por página na seção 9 do relatório.
 
-## 10. Limitações do estudo
+## 10. Os três instrumentos concordam, e mais na v1.1.0
+
+Triangulação por página (`triangulacao.md`): na v1.1.0, WAVE, axe-core e IBM apontam a mesma direção de mudança em 69% das páginas, WAVE e IBM em 87%, e nenhuma página piora no axe sem piorar também na WAVE. Na v1.0.0 a concordância cai para 53%, com 12 páginas que pioram no axe sem a WAVE registrar: são os erros de SVG e contraste que a v1.0.0 introduz e que a WAVE classifica de outro modo. A correlação de Spearman das reduções por página fica entre 0,64 e 0,77 para todos os pares. As escalas não são comparáveis em valor absoluto, só em direção e ordem.
+
+## 11. Limitações do estudo
 
 - Amostra sub-representa aplicações de página única e portais com bloqueio anti-bot ou muita publicidade (Escola Virtual Gov, Sisu/ProUni/Fies, Lattes, Sucupira, Nova Escola, Brasil Escola, Mundo Educação ficaram de fora).
 - Snapshot da página inicial do CSBC 2026 aceito manualmente por divergência só visual (D12).

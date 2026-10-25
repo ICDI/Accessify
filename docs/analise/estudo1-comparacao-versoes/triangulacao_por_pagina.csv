@@ -1,0 +1,101 @@
+estrato,pagina,url,baseline_wave_erros,baseline_wave_contraste,baseline_axe,baseline_ibm,baseline_aim,v1.0.0_wave_erros,v1.0.0_wave_contraste,v1.0.0_axe,v1.0.0_ibm,v1.0.0_aim,v1.1.0_wave_erros,v1.1.0_wave_contraste,v1.1.0_axe,v1.1.0_ibm,v1.1.0_aim
+A,CSBC 2026 — inicial,https://csbc.sbc.org.br/2026/,23,18,34,33,4.8,0,5,4,5,9,0,0,19,16,9.3
+A,CSBC 2026 — tarefa,https://csbc.sbc.org.br/2026/inscricoes/,24,1,24,24,5.8,0,0,2,4,9.5,0,0,2,0,9.5
+A,CAPES — inicial,https://www.gov.br/capes/pt-br,2,0,2,7,9.5,2,2,2,7,8.7,0,2,2,3,9.6
+A,CAPES — tarefa,https://www.gov.br/capes/pt-br/acesso-a-informacao/acoes-e-programas/bolsas,2,0,2,10,9.5,2,0,2,10,9.5,0,0,2,6,9.8
+A,IHC 2025 — inicial,https://ihc.sbc.org.br/2025/,15,26,19,24,4,0,44,13,24,4,0,10,2,8,7.9
+A,IHC 2025 — tarefa,https://ihc.sbc.org.br/2025/index.php/inscricoes/,1,1,3,7,9.5,0,6,0,38,8.3,0,4,1,8,8.9
+A,CBIE 2025 — inicial,https://cbie.sbc.org.br/2025/,19,36,53,47,3.5,3,12,24,17,7.1,0,0,12,2,9.6
+A,CBIE 2025 — tarefa,https://cbie.sbc.org.br/2025/inscricoes/,12,76,94,152,2.9,0,62,69,144,3.8,0,0,7,125,9.8
+A,BRACIS 2026 — inicial,https://bracis.sbc.org.br/2026/,1,16,18,17,6.2,0,0,1,4,9.9,0,6,6,5,7.8
+A,BRACIS 2026 — tarefa,https://bracis.sbc.org.br/2026/bracis/,1,13,16,20,6.7,0,12,14,18,6.7,0,12,12,16,6.7
+A,SOL — inicial,https://sol.sbc.org.br/,0,14,14,12,5.8,0,0,10,5,10,0,0,10,5,10
+A,SOL — tarefa,https://sol.sbc.org.br/index.php/semish,0,9,4,6,8.5,0,4,4,3,9.4,0,1,1,0,10
+A,IBC — inicial,https://www.gov.br/ibc/pt-br,2,0,2,27,9.5,2,11,2,7,7.1,0,4,2,3,8.6
+A,IBC — tarefa,https://www.gov.br/ibc/pt-br/acesso-a-informacao/institucional,2,0,2,9,9.7,,,,,,0,0,2,3,9.7
+A,CBSoft 2026 — inicial,https://cbsoft.sbc.org.br/2026/,10,9,22,30,6.1,0,7,14,25,8.1,0,0,5,5,9.6
+A,CBSoft 2026 — tarefa,https://cbsoft.sbc.org.br/2026/pt/registration,8,8,15,86,7.3,1,11,4,75,7.3,1,0,0,69,10
+A,EduComp 2026 — inicial,https://educomp.sbc.org.br/2026/,5,28,29,29,4.5,0,6,7,7,8.1,0,0,2,1,10
+A,EduComp 2026 — tarefa,https://educomp.sbc.org.br/2026/educomp/inscricoes/index.html,1,1,6,6,10,0,1,4,4,10,0,0,3,3,10
+B,gov.br — inicial,https://www.gov.br/pt-br,11,22,4,15,6.3,2,20,2,13,6.9,0,0,2,11,9.6
+B,gov.br — tarefa,https://www.gov.br/pt-br/servicos,7,0,3,8,8.6,3,3,5,11,8.6,0,2,2,5,9.8
+B,MEC — inicial,https://www.gov.br/mec/pt-br/,9,0,6,12,8.4,2,1,3,9,9.1,0,0,2,6,9.7
+B,MEC — tarefa,https://www.gov.br/mec/pt-br/assuntos,5,2,2,6,8.6,2,3,3,7,9.2,0,0,2,4,9.8
+B,INEP — inicial,https://www.gov.br/inep/pt-br,12,1,5,9,7.8,2,2,3,7,9,0,1,2,4,9.6
+B,INEP — tarefa,https://www.gov.br/inep/pt-br/areas-de-atuacao/avaliacao-e-exames-educacionais/enem,5,0,2,6,9.2,2,1,3,7,9.2,0,0,2,4,9.8
+B,CNPq — inicial,https://www.gov.br/cnpq/pt-br,11,9,10,15,7,2,10,5,10,7.6,0,0,2,5,9.4
+B,CNPq — tarefa,https://www.gov.br/cnpq/pt-br/chamadas/abertas-para-submissao,5,0,2,6,8.8,2,1,3,7,8.8,0,0,2,4,9.4
+B,FNDE — inicial,https://www.gov.br/fnde/pt-br,2,0,2,13,9.7,2,3,2,7,8.8,0,3,2,3,9.1
+B,FNDE — tarefa,https://www.gov.br/fnde/pt-br/acesso-a-informacao/acoes-e-programas/programas,2,0,2,7,9.5,,,,,,0,0,2,3,9.8
+B,INSS — inicial,https://www.gov.br/inss/pt-br,11,3,8,18,7.6,2,4,3,14,8.3,0,3,2,11,8.9
+B,INSS — tarefa,https://www.gov.br/inss/pt-br/direitos-e-deveres/beneficios-assistenciais,5,0,2,6,9.2,,,,,,0,0,2,4,9.8
+B,MDHC — inicial,https://www.gov.br/mdh/pt-br,12,1,11,16,7.6,2,2,5,10,8.8,0,1,3,6,9.4
+B,MDHC — tarefa,https://www.gov.br/mdh/pt-br/navegue-por-temas/pessoa-com-deficiencia,6,5,2,6,7.9,3,6,3,7,8.5,1,1,2,4,9.7
+B,Planalto — inicial,https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2015/lei/l13146.htm,1,4,4,7,8.5,1,2,4,5,8.5,0,2,1,1,9.1
+B,Planalto — tarefa,https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm,2,4,4,8,7.9,,,,,,,,,,
+B,Câmara — inicial,https://www.camara.leg.br/,3,11,2,2,6.9,0,1,2,5,9.6,0,0,2,2,9.6
+B,Câmara — tarefa,https://www.camara.leg.br/busca-portal/proposicoes/pesquisa-simplificada,3,2,2,5,8.8,1,2,2,7,9.2,0,1,2,5,9.7
+B,ProUni — inicial,https://prouniportal.mec.gov.br/,0,0,1,0,9.8,2,0,,,9.5,0,0,0,0,9.8
+B,ProUni — tarefa,https://prouniportal.mec.gov.br/tire-suas-duvidas-pesquisa/processo-seletivo,5,0,2,6,8.8,2,1,3,7,8.8,0,0,2,4,9.4
+B,Transparência — inicial,https://portaldatransparencia.gov.br/,23,3,24,30,5.6,,,,,,0,0,5,7,9.5
+B,Transparência — tarefa,https://portaldatransparencia.gov.br/transferencias,20,0,0,19,4.9,18,0,1,20,4.9,0,0,0,1,10
+B,Senado — inicial,https://www12.senado.leg.br/hpsenado,5,0,10,22,8.5,0,0,10,22,9.5,0,0,0,11,9.5
+B,Senado — tarefa,https://www12.senado.leg.br/institucional/biblioteca,10,2,8,23,6.7,0,0,1,13,9.5,0,1,1,8,9.5
+B,Receita — inicial,https://www.gov.br/receitafederal/pt-br,13,6,11,33,7.1,2,7,4,26,8.3,0,6,3,23,8.3
+B,Receita — tarefa,https://www.gov.br/receitafederal/pt-br/assuntos/meu-cpf,5,3,2,6,8.5,2,4,3,7,8.6,0,3,2,4,9.2
+B,BN — inicial,https://www.gov.br/bn/pt-br,6,4,3,8,8.4,2,5,3,8,8.5,0,0,2,5,9.7
+B,BN — tarefa,https://www.gov.br/bn/pt-br/servicos,5,0,2,7,9.2,2,1,4,9,9.2,0,0,2,5,9.8
+C,UFPA — inicial,https://portal.ufpa.br/,12,0,16,49,6.8,0,0,6,38,9.6,0,0,1,15,9.6
+C,UFPA — tarefa,https://portal.ufpa.br/index.php/editais-e-bolsas,8,0,7,41,8,0,0,,,9.6,0,0,2,16,9.6
+C,UFOPA — inicial,https://www.ufopa.edu.br/,14,50,51,92,3.3,1,58,27,63,3.5,1,18,4,19,6.3
+C,UFOPA — tarefa,https://www.ufopa.edu.br/ufopa/institucional/pro-reitorias/proen/,12,62,24,87,2,0,53,6,60,3,0,0,2,6,9.6
+C,UFSB — inicial,https://www.ufsb.edu.br/,14,0,29,28,7.1,0,0,25,17,9.5,0,0,11,5,9.5
+C,UFSB — tarefa,https://www.ufsb.edu.br/ensino/graduacao,5,1,60,17,7.9,0,1,36,15,9.4,0,1,5,5,9.4
+C,UFRB — inicial,https://ufrb.edu.br/portal/,31,0,67,43,4.9,0,1,32,8,9.7,0,1,30,1,9.7
+C,UFRB — tarefa,https://ufrb.edu.br/portal/curso-de-graduacao,14,0,25,49,7,0,1,13,37,9.3,0,1,13,32,9.3
+C,UnB — inicial,https://unb.br/,10,5,10,121,6.7,1,11,14,47,7,1,5,8,38,7.9
+C,UnB — tarefa,https://unb.br/vida-academica/graduacao,11,4,3,12,6.6,1,4,3,9,8.8,,,,,
+C,UFG — inicial,https://www.ufg.br/,52,64,94,65,2.2,4,68,,,3.2,4,102,55,46,2.3
+C,UFG — tarefa,https://sistemas.institutoverbena.ufg.br/2026/vestibular-ufg/,44,70,116,115,2,0,36,37,36,3.5,0,1,3,2,9.5
+C,UFES — inicial,https://www.ufes.br/,0,4,0,15,8.9,0,11,39,54,7.4,0,8,19,26,8
+C,UFES — tarefa,https://www.ufes.br/cursos-de-graduacao,0,1,2,6,9.6,0,1,3,7,9.7,0,1,2,3,9.7
+C,UFJF — inicial,https://www2.ufjf.br/,10,16,24,31,5.7,1,15,17,19,7.2,1,6,5,5,8.1
+C,UFJF — tarefa,https://www2.ufjf.br/ufjf/ensino/graduacao/,4,6,9,11,8.2,1,4,7,5,8.8,1,4,0,0,8.8
+C,UFSM — inicial,https://www.ufsm.br/,5,4,20,33,7.7,0,4,6,30,8.8,0,2,6,29,9.4
+C,UFSM — tarefa,https://www.ufsm.br/graduacao,5,3,1,4,7.6,0,3,0,3,8.8,0,1,0,1,9.6
+C,UNILA — inicial,https://portal.unila.edu.br/,9,32,28,22,4.1,1,14,24,12,6.9,0,1,12,0,9.6
+C,UNILA — tarefa,https://portal.unila.edu.br/graduacao,5,25,20,13,5.1,0,11,26,13,7.3,0,0,6,0,9.7
+C,UTFPR — inicial,https://www.utfpr.edu.br/,16,10,12,39,5.3,0,3,4,53,8.8,0,1,3,33,9.4
+C,UTFPR — tarefa,https://www.utfpr.edu.br/cursos/graduacao,36,17,15,47,3.2,0,14,3,34,7,0,1,3,24,9.4
+D,SBC — inicial,https://www.sbc.org.br/,14,7,36,53,6.4,0,9,30,52,7.9,0,0,29,33,9.4
+D,SBC — tarefa,https://www.sbc.org.br/eventos/,9,0,24,34,7.9,0,2,23,38,9.5,0,0,22,24,9.5
+D,JIS — inicial,https://journals-sol.sbc.org.br/index.php/jis,3,77,146,79,2.8,0,55,125,56,3.7,0,0,76,6,10
+D,JIS — tarefa,https://journals-sol.sbc.org.br/index.php/jis/about/submissions,3,12,11,14,6.1,0,2,8,9,9.7,0,1,6,6,9.7
+D,SciELO — inicial,https://www.scielo.br/,1,0,3,28,9.7,1,7,2,27,7.9,1,5,5,41,7.9
+D,SciELO — tarefa,https://www.scielo.br/journals/alpha,0,0,3,437,9.8,0,0,3,438,9.9,0,0,2,437,9.8
+D,Periódicos CAPES — inicial,https://www.periodicos.capes.gov.br/,1,2,25,8,8.9,,,,,,0,2,25,10,9.6
+D,Periódicos CAPES — tarefa,https://www.periodicos.capes.gov.br/index.php/acervo/lista-a-z-periodicos.html,196,0,172,290,2.3,1,0,42,160,9.3,0,0,40,258,9.3
+D,BDTD — inicial,https://bdtd.ibict.br/vufind/,8,5,10,9,6.9,1,0,5,5,9.9,0,1,5,1,9.9
+D,BDTD — tarefa,https://bdtd.ibict.br/vufind/about/home,8,2,7,7,7.7,1,0,5,5,10,0,1,5,1,10
+D,SBRC 2026 — inicial,https://sbrc.sbc.org.br/2026/,23,15,41,35,4.2,0,29,29,58,5.4,0,4,10,39,9
+D,SBRC 2026 — tarefa,https://sbrc.sbc.org.br/2026/inscricoes/,1,20,31,21,6.3,0,14,20,28,7.2,0,5,11,7,8.7
+D,SBPO — inicial,https://www.sobrapo.org.br/,9,8,16,17,6.5,0,8,10,11,7.9,0,0,0,0,9.6
+D,SBPO — tarefa,https://www.sobrapo.org.br/modalidades-e-beneficios,9,2,12,13,6.8,0,7,7,9,8,0,1,0,0,9.7
+D,SBBD 2026 — inicial,https://sbbd.org.br/2026/,11,17,10,20,5.7,0,19,2,15,6.6,0,2,0,8,9.6
+D,SBBD 2026 — tarefa,https://sbbd.org.br/2026/inscricoes/,5,6,10,10,7.3,0,8,8,17,8.1,0,4,4,7,9
+D,SBSI 2026 — inicial,https://sbsi.sbc.org.br/2026/,1,24,2,53,6.3,0,24,2,67,6.4,0,24,0,65,6.5
+D,SBSI 2026 — tarefa,https://sbsi.sbc.org.br/2026/chamada-pesquisa.php,1,10,1,3,7.8,0,10,1,3,8.4,0,10,0,0,8.5
+E,Wikipédia — inicial,https://pt.wikipedia.org/,12,0,7,31,7.1,5,0,1,25,8.9,5,0,0,14,9
+E,Wikipédia — tarefa,https://pt.wikipedia.org/wiki/Acessibilidade,4,0,31,25,8.8,0,0,25,19,9.6,0,0,23,14,9.6
+E,Toda Matéria — inicial,https://www.todamateria.com.br/,2,6,5,26,8,0,8,5,67,8.2,0,0,0,45,9.7
+E,Toda Matéria — tarefa,https://www.todamateria.com.br/matematica/,2,1,7,4,8.9,2,1,7,6,9.3,0,1,7,0,9.9
+F,Dorina — inicial,https://fundacaodorina.org.br/,0,16,20,27,7.3,0,9,15,20,7.9,0,0,0,5,9.4
+F,Dorina — tarefa,https://fundacaodorina.org.br/servicos-de-apoio-a-inclusao/,0,4,3,6,8.9,0,2,3,5,9.5,0,0,0,2,9.5
+F,Laramara — inicial,https://laramara.org.br/,3,13,9,37,7.1,,,,,,1,9,1,23,8
+F,Laramara — tarefa,https://laramara.org.br/e-books/,2,14,1,5,7.1,1,14,0,15,7.1,1,0,0,12,9.8
+F,Web para Todos — inicial,https://mwpt.com.br/,0,6,3,3,8.4,0,1,3,3,9.9,0,1,3,1,9.9
+F,Web para Todos — tarefa,https://mwpt.com.br/biblioteca/,0,2,0,4,9.6,0,5,2,4,8.7,0,1,0,1,9.9
+F,eMAG — inicial,https://emag.governoeletronico.gov.br/,0,2,24,28,9.4,0,1,23,57,9.7,0,7,28,62,8.5
+F,eMAG — tarefa,https://emag.governoeletronico.gov.br/recomendacao-002.php,0,1,1,0,9.3,,,,,,0,0,0,0,9.9
+controle,W3C BAD — before,https://www.w3.org/WAI/demos/bad/before/home.html,37,2,44,57,3.5,1,0,1,24,9.5,7,0,1,19,7.5
+controle,W3C BAD — after,https://www.w3.org/WAI/demos/bad/after/home.html,0,0,0,0,9.8,1,0,1,0,9.6,0,0,0,0,9.9

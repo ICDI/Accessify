@@ -171,6 +171,8 @@ if os.path.exists(WAVE):
         md.append(f"| {e} | {len(keys)} | {cell('baseline')} | {cell('v1.0.0')} | {cell('v1.1.0')} |")
     w('wave_por_pagina.csv',['estrato','site','pagina','condicao','erros','erros_contraste','alertas','recursos','estrutura','aria','aim_score'],[[urlest.get(r['url'],'?'),r['site'],r['pagina'],r['condicao'],r['erros'],r['erros_contraste'],r['alertas'],r['recursos'],r['estrutura'],r['aria'],r['aim_score']] for r in wr])
 
+md.append('\n## 10. Triangulação WAVE × axe × IBM por página\n\nTabela por página, concordância de direção e correlação de Spearman em `'+os.path.basename(OUT.rstrip('/'))+'/triangulacao.md` (+ `triangulacao_por_pagina.csv`), gerados por `eval/tools/triangulacao.py <sessao> <pasta>` após este script.')
+
 # relatório
 hdr=f"""# Estudo 1 — comparação entre versões (v1.0.0 × v1.1.0 × variantes)
 

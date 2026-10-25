@@ -120,3 +120,7 @@ Por estrato, erros / erros de contraste (soma; páginas com leitura nas três co
 | E | 4 | 20 / 7 | 7 / 9 | 5 / 1 |
 | F | 6 | 2 / 44 | 1 / 32 | 1 / 9 |
 | controle | 2 | 37 / 2 | 2 / 0 | 7 / 0 |
+
+## 10. Triangulação WAVE × axe × IBM por página
+
+Tabela por página e condição, concordância de direção entre os três instrumentos e correlação de Spearman das reduções em `estudo1-comparacao-versoes/triangulacao.md` (+ `triangulacao_por_pagina.csv`), gerados por `eval/tools/triangulacao.py`. Síntese: na v1.1.0 os três instrumentos apontam a mesma direção em 69% das páginas (WAVE e IBM em 87%), e nenhuma página piora no axe sem piorar na WAVE; na v1.0.0 a concordância cai para 53%, com 12 páginas que pioram no axe sem a WAVE registrar e 6 no sentido inverso. Correlação das reduções: 0,71 a 0,77 entre axe e WAVE, 0,65 a 0,76 entre axe e IBM.
