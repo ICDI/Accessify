@@ -49,7 +49,7 @@ A v1.0.0 cria principalmente problemas de contraste (+71) e SVG sem nome (+50). 
 
 ## 9. A WAVE confirma o quadro nos sites originais do SEMISH
 
-Leitura manual da extensão WAVE em 18 páginas dos 9 sites originais (D16), sobre o snapshot e sobre o DOM final dos runs: erros de 103 para 10 na v1.0.0 e para 1 na v1.1.0; erros de contraste de 256 para 181 na v1.0.0 e para 37 na v1.1.0, com a v1.0.0 piorando o contraste em 4 páginas, o defeito relatado no SEMISH (IHC 2025: 26 → 44 → 10). O AIM Score médio sobe de 6,7 para 7,9 e 9,3. Os alertas crescem na v1.1.0 (261 → 298), coerente com os rótulos e links que a extensão acrescenta. Tabelas na seção 9 do relatório.
+Leitura manual da extensão WAVE em 18 páginas dos 9 sites originais (D16), sobre o snapshot e sobre o DOM final dos runs; totais nas 17 páginas com leitura nas três condições: erros de 126 para 10 na v1.0.0 e para 1 na v1.1.0; erros de contraste de 256 para 183 na v1.0.0 e para 39 na v1.1.0, com a v1.0.0 piorando o contraste em 5 páginas, o defeito relatado no SEMISH (IHC 2025: 26 → 44 → 10). O AIM Score médio sobe de 6,7 para 8,0 e 9,2. Os alertas crescem na v1.1.0 (261 → 298), coerente com os rótulos e links que a extensão acrescenta. Tabelas na seção 9 do relatório.
 
 ## 10. Limitações do estudo
 
