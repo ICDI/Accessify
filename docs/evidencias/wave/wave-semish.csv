@@ -1,7 +1,7 @@
 site,pagina,url,condicao,erros,erros_contraste,alertas,recursos,estrutura,aria,aim_score,print,lido_por,observacoes
 Congresso da SBC 2026,inicial,https://csbc.sbc.org.br/2026/,baseline,23,18,6,5,39,63,4.8,print-001-082509.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Congresso da SBC 2026,tarefa,https://csbc.sbc.org.br/2026/inscricoes/,baseline,24,1,39,4,100,49,5.8,print-002-082513.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
-Portal da CAPES,inicial,https://www.gov.br/capes/pt-br,baseline,2,,29,,,118,9.5,print-003-082516.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon","painel parcialmente coberto por miniatura de aba: contraste, recursos e estrutura ilegíveis; recapturar"
+Portal da CAPES,inicial,https://www.gov.br/capes/pt-br,baseline,2,0,29,39,43,118,9.5,print-040-083310.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",recaptura (print-003 tinha o painel coberto)
 Portal da CAPES,tarefa,https://www.gov.br/capes/pt-br/acesso-a-informacao/acoes-e-programas/bolsas,baseline,2,0,9,9,23,73,9.5,print-004-082520.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Simpósio IHC 2025,inicial,https://ihc.sbc.org.br/2025/,baseline,15,26,18,11,46,34,4,print-005-082523.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Simpósio IHC 2025,tarefa,https://ihc.sbc.org.br/2025/index.php/inscricoes/,baseline,1,1,33,8,152,69,9.5,print-006-082527.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
@@ -35,3 +35,21 @@ Congresso Brasileiro de Software 2026,inicial,https://cbsoft.sbc.org.br/2026/,v1
 Congresso Brasileiro de Software 2026,tarefa,https://cbsoft.sbc.org.br/2026/pt/registration,v1.1.0,1,0,2,4,77,57,10,print-035-082920.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Simpósio Brasileiro de Educação em Computação 2026,inicial,https://educomp.sbc.org.br/2026/,v1.1.0,0,0,3,25,23,63,10,print-036-082922.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Simpósio Brasileiro de Educação em Computação 2026,tarefa,https://educomp.sbc.org.br/2026/educomp/inscricoes/index.html,v1.1.0,0,0,1,4,98,36,10,print-037-082925.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",prints 038 e 039 são repetições da mesma aba
+Congresso da SBC 2026,inicial,https://csbc.sbc.org.br/2026/,v1.0.0,,5,6,5,39,58,9,print-041-083312.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",erros ilegíveis: miniatura de aba sobre o painel; recapturar
+Congresso da SBC 2026,tarefa,https://csbc.sbc.org.br/2026/inscricoes/,v1.0.0,0,0,33,4,100,52,9.5,print-042-083315.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Portal da CAPES,inicial,https://www.gov.br/capes/pt-br,v1.0.0,2,,24,39,43,76,8.7,print-043-083317.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",contraste ilegível: miniatura de aba sobre o painel; recapturar
+Portal da CAPES,tarefa,https://www.gov.br/capes/pt-br/acesso-a-informacao/acoes-e-programas/bolsas,v1.0.0,2,0,9,9,23,46,9.5,print-044-083320.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Simpósio IHC 2025,inicial,https://ihc.sbc.org.br/2025/,v1.0.0,0,44,17,11,46,36,4,print-045-083322.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Simpósio IHC 2025,tarefa,https://ihc.sbc.org.br/2025/index.php/inscricoes/,v1.0.0,0,6,30,8,152,32,8.3,print-046-083325.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Congresso Brasileiro de Informática na Educação 2025,inicial,https://cbie.sbc.org.br/2025/,v1.0.0,3,12,7,30,58,102,7.1,print-047-083328.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Congresso Brasileiro de Informática na Educação 2025,tarefa,https://cbie.sbc.org.br/2025/inscricoes/,v1.0.0,0,62,11,15,58,93,3.8,print-048-083330.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Brazilian Conference on Intelligent Systems 2026,inicial,https://bracis.sbc.org.br/2026/,v1.0.0,0,0,4,32,22,18,,print-049-083333.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",AIM Score ilegível: miniatura de aba sobre o painel
+Brazilian Conference on Intelligent Systems 2026,tarefa,https://bracis.sbc.org.br/2026/bracis/,v1.0.0,0,12,15,24,32,17,6.7,print-050-083335.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+SBC OpenLib,inicial,https://sol.sbc.org.br/,v1.0.0,0,0,0,5,14,7,10,print-051-083338.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+SBC OpenLib,tarefa,https://sol.sbc.org.br/index.php/semish,v1.0.0,0,4,0,5,124,11,9.4,print-052-083340.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Instituto Benjamin Constant,inicial,https://www.gov.br/ibc/pt-br,v1.0.0,2,11,37,12,30,124,7.1,print-053-083343.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Congresso Brasileiro de Software 2026,inicial,https://cbsoft.sbc.org.br/2026/,v1.0.0,0,7,21,48,98,70,8.1,print-054-083345.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Congresso Brasileiro de Software 2026,tarefa,https://cbsoft.sbc.org.br/2026/pt/registration,v1.0.0,1,11,2,4,77,38,7.3,print-055-083348.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Simpósio Brasileiro de Educação em Computação 2026,inicial,https://educomp.sbc.org.br/2026/,v1.0.0,0,6,4,25,23,32,8.1,print-056-083350.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Simpósio Brasileiro de Educação em Computação 2026,tarefa,https://educomp.sbc.org.br/2026/educomp/inscricoes/index.html,v1.0.0,0,1,1,4,98,36,10,print-057-083353.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
+Instituto Benjamin Constant,tarefa,https://www.gov.br/ibc/pt-br/acesso-a-informacao/institucional,v1.0.0,,,,,,,,,,"estado indisponível: o run v1.0.0 desta página falhou (nome de tag inválido, C5); sem DOM final"
