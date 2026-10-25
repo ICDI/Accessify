@@ -1,0 +1,378 @@
+{
+  "sessionId": "20261025-011302024-2530",
+  "startedAt": "2026-10-25T01:13:02.024Z",
+  "study": "jis2026",
+  "args": {
+    "conditions": "baseline,v1.1.0-fix-llama31,v1.1.0-fix-gemma3"
+  },
+  "conditions": [
+    "baseline",
+    "v1.1.0-fix-llama31",
+    "v1.1.0-fix-gemma3"
+  ],
+  "urls": 100,
+  "executions": 1,
+  "versions": {
+    "node": "v22.22.1",
+    "playwright": "1.64.1",
+    "axeCore": "4.14.0",
+    "axeCorePlaywright": "4.14.0",
+    "ibmEngine": "4.0.34",
+    "harness": {
+      "commit": "e502ded08049e77dd1368e7d9c7935a6d6400617",
+      "describe": "v1.1.0-jis_submission-6-ge502ded",
+      "dirty": false,
+      "sha256": "95a7c053e26316b1aab56bcf997061e5adf0ea8d8a9c6c081328b261411263c2"
+    }
+  },
+  "ollama": {
+    "version": "0.40.10",
+    "error": null,
+    "digests": {
+      "llama3.1:8b": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+      "gemma3:4b": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+      "qwen3:8b": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41"
+    },
+    "models": [
+      {
+        "name": "llama3.1:8b",
+        "model": "llama3.1:8b",
+        "modified_at": "2026-10-24T22:12:51.69435001-03:00",
+        "size": 4920753328,
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "llama",
+          "families": [
+            "llama"
+          ],
+          "parameter_size": "8.0B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 131072,
+          "embedding_length": 4096,
+          "runner": "ggml"
+        },
+        "capabilities": [
+          "completion",
+          "tools"
+        ]
+      },
+      {
+        "name": "gemma3:4b",
+        "model": "gemma3:4b",
+        "modified_at": "2026-10-24T12:50:48.25756733-03:00",
+        "size": 3350272403,
+        "digest": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+        "details": {
+          "parent_model": "dhiltgen/gemma3:4b-it-q4_K_M-llamacpp",
+          "format": "gguf",
+          "family": "gemma3",
+          "families": [
+            "gemma3",
+            "clip"
+          ],
+          "parameter_size": "3.9B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 131072,
+          "embedding_length": 2560,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "vision"
+        ]
+      },
+      {
+        "name": "qwen3:8b",
+        "model": "qwen3:8b",
+        "modified_at": "2026-10-24T12:45:52.14760461-03:00",
+        "size": 5225388164,
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 40960,
+          "embedding_length": 4096,
+          "runner": "ggml"
+        },
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ]
+      }
+    ],
+    "loaded": [
+      {
+        "name": "gemma3:4b",
+        "model": "gemma3:4b",
+        "size": 2882482994,
+        "digest": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "gemma3",
+          "families": [
+            "gemma3",
+            "clip"
+          ],
+          "parameter_size": "3.9B",
+          "quantization_level": "Q4_K_M"
+        },
+        "expires_at": "2026-10-24T22:15:59.232555788-03:00",
+        "size_vram": 2882482994,
+        "context_length": 4096,
+        "runner": "llamacpp"
+      }
+    ]
+  },
+  "expectedContextLength": 4096,
+  "extensions": {
+    "accessifyV11": {
+      "label": "accessifyV11",
+      "sourceDir": "/home/marlon-marcon/workspace/Accessify",
+      "version": "1.1.0",
+      "gitCommit": "e502ded08049e77dd1368e7d9c7935a6d6400617",
+      "gitDescribe": "v1.1.0-jis_submission-6-ge502ded",
+      "gitDirty": false,
+      "copySha256": "9c14122dc2669bac0458f868b23f7a318586644e11a88406da10270b28beba4d"
+    }
+  },
+  "contexts": {
+    "baseline": {
+      "extension": null,
+      "browser": {
+        "product": "Chrome/156.0.8078.4",
+        "revision": "@f842f52ef39fd97b449eb27cff414bf05a98ddce",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+      },
+      "launches": [
+        {
+          "at": "2026-10-25T01:13:02.304Z",
+          "browser": "Chrome/156.0.8078.4",
+          "copySha256": null
+        }
+      ],
+      "relaunches": 0,
+      "ollama": null,
+      "strayLlmCalls": []
+    },
+    "v1.1.0-fix-llama31": {
+      "extension": {
+        "label": "accessifyV11",
+        "sourceDir": "/home/marlon-marcon/workspace/Accessify",
+        "version": "1.1.0",
+        "gitCommit": "e502ded08049e77dd1368e7d9c7935a6d6400617",
+        "gitDescribe": "v1.1.0-jis_submission-6-ge502ded",
+        "gitDirty": false,
+        "copySha256": "9c14122dc2669bac0458f868b23f7a318586644e11a88406da10270b28beba4d"
+      },
+      "browser": {
+        "product": "Chrome/156.0.8078.4",
+        "revision": "@f842f52ef39fd97b449eb27cff414bf05a98ddce",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+      },
+      "launches": [
+        {
+          "at": "2026-10-25T01:22:20.411Z",
+          "browser": "Chrome/156.0.8078.4",
+          "copySha256": "9c14122dc2669bac0458f868b23f7a318586644e11a88406da10270b28beba4d"
+        }
+      ],
+      "relaunches": 0,
+      "ollama": {
+        "ok": true,
+        "version": "0.40.10",
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "warmupMs": 2667,
+        "contextLength": 4096
+      },
+      "strayLlmCalls": []
+    },
+    "v1.1.0-fix-gemma3": {
+      "extension": {
+        "label": "accessifyV11",
+        "sourceDir": "/home/marlon-marcon/workspace/Accessify",
+        "version": "1.1.0",
+        "gitCommit": "e502ded08049e77dd1368e7d9c7935a6d6400617",
+        "gitDescribe": "v1.1.0-jis_submission-6-ge502ded",
+        "gitDirty": false,
+        "copySha256": "9c14122dc2669bac0458f868b23f7a318586644e11a88406da10270b28beba4d"
+      },
+      "browser": {
+        "product": "Chrome/156.0.8078.4",
+        "revision": "@f842f52ef39fd97b449eb27cff414bf05a98ddce",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36"
+      },
+      "launches": [
+        {
+          "at": "2026-10-25T01:36:02.800Z",
+          "browser": "Chrome/156.0.8078.4",
+          "copySha256": "9c14122dc2669bac0458f868b23f7a318586644e11a88406da10270b28beba4d"
+        }
+      ],
+      "relaunches": 0,
+      "ollama": {
+        "ok": true,
+        "version": "0.40.10",
+        "digest": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+        "warmupMs": 3684,
+        "contextLength": 4096
+      },
+      "strayLlmCalls": []
+    }
+  },
+  "warnings": [
+    "URL em mais de uma linha de urls.csv (estrato smoke), mesclada numa entrada: https://www.gov.br/pt-br",
+    "URL em mais de uma linha de urls.csv (estrato smoke), mesclada numa entrada: https://www.utfpr.edu.br/",
+    "URL em mais de uma linha de urls.csv (estrato controle), mesclada numa entrada: https://www.w3.org/WAI/demos/bad/before/home.html",
+    "URL em mais de uma linha de urls.csv (estrato smoke), mesclada numa entrada: https://www.w3.org/WAI/demos/bad/before/home.html",
+    "URL em mais de uma linha de urls.csv (estrato controle), mesclada numa entrada: https://www.w3.org/WAI/demos/bad/after/home.html",
+    "URL em mais de uma linha de urls.csv (estrato variancia), mesclada numa entrada: https://unb.br/vida-academica/graduacao",
+    "URL em mais de uma linha de urls.csv (estrato variancia), mesclada numa entrada: https://portal.ufpa.br/",
+    "URL em mais de uma linha de urls.csv (estrato variancia), mesclada numa entrada: https://prouniportal.mec.gov.br/",
+    "URL em mais de uma linha de urls.csv (estrato variancia), mesclada numa entrada: https://emag.governoeletronico.gov.br/",
+    "URL em mais de uma linha de urls.csv (estrato variancia), mesclada numa entrada: https://cbsoft.sbc.org.br/2026/",
+    "URL em mais de uma linha de urls.csv (estrato variancia), mesclada numa entrada: https://www.utfpr.edu.br/",
+    "URL em mais de uma linha de urls.csv (estrato variancia), mesclada numa entrada: https://www.gov.br/pt-br",
+    "URL em mais de uma linha de urls.csv (estrato variancia), mesclada numa entrada: https://cbie.sbc.org.br/2025/",
+    "URL em mais de uma linha de urls.csv (estrato variancia), mesclada numa entrada: https://fundacaodorina.org.br/",
+    "URL em mais de uma linha de urls.csv (estrato variancia), mesclada numa entrada: https://www.gov.br/inss/pt-br",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://www.w3.org/WAI/demos/bad/before/home.html",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://ufrb.edu.br/portal/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://www.ufg.br/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://portaldatransparencia.gov.br/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://www2.ufjf.br/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://www.sbc.org.br/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://educomp.sbc.org.br/2026/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://sistemas.institutoverbena.ufg.br/2026/vestibular-ufg/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://portal.unila.edu.br/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://www.todamateria.com.br/matematica/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://pt.wikipedia.org/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://pt.wikipedia.org/wiki/Acessibilidade",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://educomp.sbc.org.br/2026/educomp/inscricoes/index.html",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://www.ufsb.edu.br/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://www.ufsb.edu.br/ensino/graduacao",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://www.utfpr.edu.br/",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://www.utfpr.edu.br/cursos/graduacao",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://journals-sol.sbc.org.br/index.php/jis",
+    "URL em mais de uma linha de urls.csv (estrato visao), mesclada numa entrada: https://journals-sol.sbc.org.br/index.php/jis/about/submissions"
+  ],
+  "harnessErrors": [],
+  "finishedAt": "2026-10-25T01:50:08.457Z",
+  "ollamaAfter": {
+    "version": "0.40.10",
+    "error": null,
+    "digests": {
+      "llama3.1:8b": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+      "gemma3:4b": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+      "qwen3:8b": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41"
+    },
+    "models": [
+      {
+        "name": "llama3.1:8b",
+        "model": "llama3.1:8b",
+        "modified_at": "2026-10-24T22:12:51.69435001-03:00",
+        "size": 4920753328,
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "llama",
+          "families": [
+            "llama"
+          ],
+          "parameter_size": "8.0B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 131072,
+          "embedding_length": 4096,
+          "runner": "ggml"
+        },
+        "capabilities": [
+          "completion",
+          "tools"
+        ]
+      },
+      {
+        "name": "gemma3:4b",
+        "model": "gemma3:4b",
+        "modified_at": "2026-10-24T12:50:48.25756733-03:00",
+        "size": 3350272403,
+        "digest": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+        "details": {
+          "parent_model": "dhiltgen/gemma3:4b-it-q4_K_M-llamacpp",
+          "format": "gguf",
+          "family": "gemma3",
+          "families": [
+            "gemma3",
+            "clip"
+          ],
+          "parameter_size": "3.9B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 131072,
+          "embedding_length": 2560,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "vision"
+        ]
+      },
+      {
+        "name": "qwen3:8b",
+        "model": "qwen3:8b",
+        "modified_at": "2026-10-24T12:45:52.14760461-03:00",
+        "size": 5225388164,
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 40960,
+          "embedding_length": 4096,
+          "runner": "ggml"
+        },
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ]
+      }
+    ],
+    "loaded": [
+      {
+        "name": "gemma3:4b",
+        "model": "gemma3:4b",
+        "size": 2882482994,
+        "digest": "68ceab7e468a31c988b44d5a4984a0e21f58c4f7158c6ce29c1804babac38df7",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "gemma3",
+          "families": [
+            "gemma3",
+            "clip"
+          ],
+          "parameter_size": "3.9B",
+          "quantization_level": "Q4_K_M"
+        },
+        "expires_at": "2026-10-24T23:19:32.279165795-03:00",
+        "size_vram": 2882482994,
+        "context_length": 4096,
+        "runner": "llamacpp"
+      }
+    ]
+  }
+}
