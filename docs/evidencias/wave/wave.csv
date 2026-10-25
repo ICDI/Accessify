@@ -134,8 +134,7 @@ Biblioteca Nacional,tarefa,https://www.gov.br/bn/pt-br/servicos,v1.0.0,2,1,9,105
 FNDE,tarefa,https://www.gov.br/fnde/pt-br/acesso-a-informacao/acoes-e-programas/programas,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou; sem DOM final
 INSS,tarefa,https://www.gov.br/inss/pt-br/direitos-e-deveres/beneficios-assistenciais,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou; sem DOM final
 Legislação federal (Planalto),tarefa,https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou; sem DOM final
-Portal do ProUni,inicial,https://prouniportal.mec.gov.br/,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou; sem DOM final
-Portal da Transparência,inicial,https://portaldatransparencia.gov.br/,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou; sem DOM final
+Portal da Transparência,inicial,https://portaldatransparencia.gov.br/,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou; sem DOM final; nem com prazo de 900 s (D17) a análise terminou
 Legislação federal (Planalto),tarefa,https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm,v1.1.0,,,,,,,,,,estado indisponível: o run v1.1.0 desta página falhou (análise não terminou); sem DOM final
 "Universidade Federal do Pará, portal (N, 4º; reserva)",inicial,https://portal.ufpa.br/,baseline,12,0,37,22,88,1,6.8,print-155-090842.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 "Universidade Federal do Pará, portal (N, 4º; reserva)",inicial,https://portal.ufpa.br/,v1.1.0,0,0,25,23,88,174,9.6,print-156-090845.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
@@ -200,9 +199,7 @@ Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),i
 Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),tarefa,https://www.utfpr.edu.br/cursos/graduacao,baseline,36,17,127,4,32,89,3.2,print-219-091227.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),tarefa,https://www.utfpr.edu.br/cursos/graduacao,v1.1.0,0,1,52,33,32,182,9.4,print-221-091234.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",print-220 ainda carregando
 Universidade Tecnológica Federal do Paraná (fixa: instituição dos autores),tarefa,https://www.utfpr.edu.br/cursos/graduacao,v1.0.0,0,14,52,4,32,122,7,print-222-091237.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
-"Universidade Federal do Pará, portal (N, 4º; reserva)",tarefa,https://portal.ufpa.br/index.php/editais-e-bolsas,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou (timeout do modelo); sem DOM final
 "Universidade de Brasília (CO, 2º)",tarefa,https://unb.br/vida-academica/graduacao,v1.1.0,,,,,,,,,,estado indisponível: o run v1.1.0 desta página falhou (element.id não é texto); sem DOM final
-"Universidade Federal de Goiás (CO, 3º)",inicial,https://www.ufg.br/,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou (timeout da análise); sem DOM final
 Sociedade Brasileira de Computação,inicial,https://www.sbc.org.br/,baseline,14,7,45,19,106,194,6.4,print-224-091849.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Sociedade Brasileira de Computação,inicial,https://www.sbc.org.br/,v1.1.0,0,0,45,24,106,257,9.4,print-223-091846.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Sociedade Brasileira de Computação,inicial,https://www.sbc.org.br/,v1.0.0,0,9,45,24,106,191,7.9,print-226-091856.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",print-225 ainda carregando
@@ -297,5 +294,5 @@ Demo W3C Before and After,before,https://www.w3.org/WAI/demos/bad/before/home.ht
 Demo W3C Before and After,after,https://www.w3.org/WAI/demos/bad/after/home.html,baseline,0,0,7,17,14,1,9.8,print-319-093241.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Demo W3C Before and After,after,https://www.w3.org/WAI/demos/bad/after/home.html,v1.1.0,0,0,6,17,14,1,9.9,print-320-093244.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",
 Demo W3C Before and After,after,https://www.w3.org/WAI/demos/bad/after/home.html,v1.0.0,1,0,5,17,16,6,9.6,print-322-093251.png,"Claude (leitura do print), WAVE acionada por Marlon Marcon",print-321 ainda carregando
-Laramara,inicial,https://laramara.org.br/,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou (timeout do modelo); sem DOM final
-Modelo de Acessibilidade em Governo Eletrônico,tarefa,https://emag.governoeletronico.gov.br/recomendacao-002.php,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou (timeout do modelo); sem DOM final
+Laramara,inicial,https://laramara.org.br/,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou (timeout do modelo); sem DOM final; com prazo de 900 s (D17) o modelo devolveu conteúdo vazio
+Modelo de Acessibilidade em Governo Eletrônico,tarefa,https://emag.governoeletronico.gov.br/recomendacao-002.php,v1.0.0,,,,,,,,,,estado indisponível: o run v1.0.0 desta página falhou (timeout do modelo); sem DOM final; com prazo de 900 s (D17) a aplicação falhou por nome de tag inválido (C5)
