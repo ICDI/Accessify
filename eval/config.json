@@ -113,6 +113,69 @@
       "temperature": 0,
       "reasoning": "none",
       "vision": false
+    },
+    {
+      "id": "v1.1.0-fix-mistral7b",
+      "extension": "accessifyV11",
+      "driver": "hook",
+      "model": "mistral:7b",
+      "temperature": 0,
+      "reasoning": "none",
+      "vision": false
+    },
+    {
+      "id": "v1.1.0-fix-deepseekr1-8b",
+      "extension": "accessifyV11",
+      "driver": "hook",
+      "model": "deepseek-r1:8b",
+      "temperature": 0,
+      "reasoning": "none",
+      "vision": false
+    },
+    {
+      "id": "v1.1.0-fix-qwen35-4b",
+      "extension": "accessifyV11",
+      "driver": "hook",
+      "model": "qwen3.5:4b",
+      "temperature": 0,
+      "reasoning": "none",
+      "vision": false
+    },
+    {
+      "id": "v1.1.0-fix-qwen35-2b",
+      "extension": "accessifyV11",
+      "driver": "hook",
+      "model": "qwen3.5:2b",
+      "temperature": 0,
+      "reasoning": "none",
+      "vision": false
+    },
+    {
+      "id": "v1.1.0-fix-gemma4-e2b",
+      "extension": "accessifyV11",
+      "driver": "hook",
+      "model": "gemma4:e2b",
+      "temperature": 0,
+      "reasoning": "none",
+      "vision": false
+    },
+    {
+      "id": "v1.1.0-fix-gemma4-e4b",
+      "extension": "accessifyV11",
+      "driver": "hook",
+      "model": "gemma4:e4b",
+      "temperature": 0,
+      "reasoning": "none",
+      "vision": false
+    },
+    {
+      "id": "v1.1.0-fix-llama32-3b",
+      "extension": "accessifyV11",
+      "driver": "hook",
+      "model": "llama3.2:3b",
+      "temperature": 0,
+      "reasoning": "none",
+      "vision": false
     }
   ],
   "smoke": {
