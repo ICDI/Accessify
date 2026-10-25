@@ -19,7 +19,10 @@ export function loadConfig(args = {}) {
       throw new Error(`--${option} precisa de um caminho.`);
     }
   });
-  const config = JSON.parse(fs.readFileSync(path.join(EVAL_DIR, 'config.json'), 'utf8'));
+  // --config <arquivo>: configuração alternativa (ex.: prazos ampliados, D17); o nome entra na sessão
+  const configFile = args.config ? path.resolve(args.config) : path.join(EVAL_DIR, 'config.json');
+  const config = JSON.parse(fs.readFileSync(configFile, 'utf8'));
+  config.configFile = path.relative(EVAL_DIR, configFile);
   const resolve = (relative) => path.resolve(EVAL_DIR, relative);
   const snapshots = args.snapshots ? path.resolve(args.snapshots) : resolve(config.paths.snapshots);
   const results = args.resultados ? path.resolve(args.resultados) : resolve(config.paths.results);

@@ -29,3 +29,6 @@ eval/results/raw/
 
 # Capturas de tela inteiras da coleta WAVE (2 MB cada): arquivadas à parte; os recortes do painel são versionados
 docs/evidencias/wave/prints/
+
+# Sessão complementar D17 (DOM para a WAVE): JSON bruto fora do git como em results/raw
+eval/results-prazo-ampliado/raw/

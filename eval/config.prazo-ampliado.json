@@ -1,0 +1,79 @@
+{
+  "study": "jis2026-prazo-ampliado",
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "locale": "pt-BR",
+  "headless": true,
+  "ollama": {
+    "baseUrl": "http://127.0.0.1:11434",
+    "expectedContextLength": 4096,
+    "keepAlive": "30m"
+  },
+  "axe": {
+    "tags": [
+      "wcag2a",
+      "wcag2aa",
+      "wcag21a",
+      "wcag21aa"
+    ]
+  },
+  "ibm": {
+    "ruleset": "WCAG_2_1"
+  },
+  "timeouts": {
+    "navigationMs": 45000,
+    "settleMs": 8000,
+    "quietMs": 1000,
+    "minAfterLoadMs": 6000,
+    "domQuietMs": 2000,
+    "domQuietCapMs": 15000,
+    "captureMs": 180000,
+    "runWatchdogMs": 2400000,
+    "hookMs": 290000,
+    "hookGraceMs": 75000,
+    "hookLateMs": 60000,
+    "panelMs": 900000,
+    "applyMs": 120000,
+    "llmCallMs": 870000,
+    "evaluatorMs": 120000,
+    "warmupMs": 600000
+  },
+  "replay": {
+    "maxDiffPixels": 0.1,
+    "maxDiffTexto": 0.05
+  },
+  "retries": 1,
+  "launchRetries": 3,
+  "paths": {
+    "accessifyV1": "../../accessify-v1",
+    "accessifyV11": "..",
+    "snapshots": "snapshots",
+    "results": "results-prazo-ampliado"
+  },
+  "conditions": [
+    {
+      "id": "baseline",
+      "extension": null,
+      "driver": "none"
+    },
+    {
+      "id": "v1.0.0",
+      "extension": "accessifyV1",
+      "driver": "panel-v1",
+      "model": "qwen3:8b",
+      "temperature": 0,
+      "reasoning": "original"
+    }
+  ],
+  "smoke": {
+    "conditions": [
+      "baseline",
+      "v1.0.0",
+      "v1.1.0"
+    ],
+    "estrato": "smoke"
+  },
+  "_nota": "D17: sessão complementar só para produzir o DOM final das páginas em que a v1.0.0 falhou por timeout na 1ª passada (prazo 290 s → 900 s), para a leitura da WAVE. Não substitui as falhas registradas em results/."
+}

@@ -26,6 +26,8 @@ const EVAL = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const args = process.argv.slice(2);
 const opt = (name, fallback) => { const i = args.indexOf(`--${name}`); return i >= 0 ? args[i + 1] : fallback; };
 const SESSAO = opt('sessao', '20261024-203955404-d8a9');
+// --extra <pasta>:<sessao>: runs de uma sessão complementar (D17, prazo ampliado) usados só quando o run da sessão principal falhou
+const EXTRA = opt('extra', '');
 const PORTA = Number(opt('porta', '8765'));
 const CONDICOES = ['baseline', 'v1.1.0', 'v1.0.0'];
 const CSV = path.resolve(EVAL, '..', 'docs', 'evidencias', 'wave', 'wave.csv');
@@ -58,19 +60,32 @@ for (const linha of runs.slice(1)) {
   const cond = linha.split(',')[col('condicao')];
   for (const p of paginas) if (id.includes(`_${cond}_`) && linha.includes(`,${p.url},`)) runId.set(`${p.url}|${cond}`, id);
 }
+function runsDe(resultsDir, sessao) {
+  const file = path.join(resultsDir, 'runs.csv'); const mapa = new Map();
+  if (!fs.existsSync(file)) return mapa;
+  readCsv(file).forEach((r) => { if (r.sessao === sessao) mapa.set(`${r.url}|${r.condicao}`, r.run_id); });
+  return mapa;
+}
 function domDe(url, condicao) {
   if (condicao === 'baseline') {
     const s = snapshots.get(url);
     if (!s || s.status !== 'ok') return { erro: `sem snapshot ok para ${url}` };
     return { html: fs.readFileSync(path.join(EVAL, 'snapshots', s.dir, 'page.html'), 'utf8'), ref: s.dir };
   }
-  const id = runId.get(`${url}|${condicao}`);
-  if (!id) return { erro: `sem run ${condicao} de ${url} na sessão ${SESSAO}` };
-  const arquivos = fs.readdirSync(path.join(EVAL, 'results', 'raw')).filter((n) => n.startsWith(`${id}__${SESSAO}__`)).sort();
-  if (!arquivos.length) return { erro: `JSON bruto de ${id} não está em results/raw` };
-  const raw = JSON.parse(fs.readFileSync(path.join(EVAL, 'results', 'raw', arquivos.at(-1)), 'utf8'));
-  if (raw.status !== 'ok' || !raw.domPost) return { erro: `run ${id} terminou em ${raw.status}: ${raw.error || ''}` };
-  return { html: raw.domPost, ref: id };
+  const fontes = [{ dir: path.join(EVAL, 'results'), sessao: SESSAO, extra: false }];
+  if (EXTRA) { const [dir, sessao] = EXTRA.split(':'); fontes.push({ dir: path.resolve(EVAL, dir), sessao, extra: true }); }
+  let ultimoErro = null;
+  for (const fonte of fontes) {
+    const id = runsDe(fonte.dir, fonte.sessao).get(`${url}|${condicao}`);
+    if (!id) { ultimoErro = ultimoErro || `sem run ${condicao} de ${url} na sessão ${fonte.sessao}`; continue; }
+    const rawDir = path.join(fonte.dir, 'raw');
+    const arquivos = fs.existsSync(rawDir) ? fs.readdirSync(rawDir).filter((n) => n.startsWith(`${id}__${fonte.sessao}__`)).sort() : [];
+    if (!arquivos.length) { ultimoErro = `JSON bruto de ${id} não está em ${rawDir}`; continue; }
+    const raw = JSON.parse(fs.readFileSync(path.join(rawDir, arquivos.at(-1)), 'utf8'));
+    if (raw.status !== 'ok' || !raw.domPost) { ultimoErro = `run ${id} terminou em ${raw.status}: ${raw.error || ''}`; continue; }
+    return { html: raw.domPost, ref: fonte.extra ? `${id} (prazo ampliado, sessão ${fonte.sessao})` : id, extra: fonte.extra };
+  }
+  return { erro: ultimoErro };
 }
 function lidas() {
   // leitura com parser de CSV: nomes de site com vírgula vêm entre aspas
@@ -85,7 +100,7 @@ function indice(filtro) {
     const linhas = visiveis.filter(({ p }) => p.estrato === e).map(({ p, i }) => {
       const celulas = CONDICOES.map((c) => {
         const d = domDe(p.url, c); const ok = feitas.has(`${p.url}|${c}`);
-        return d.erro ? `<td><span class="erro" title="${esc(d.erro)}">indisponível</span></td>` : `<td><a href="/p/${i}/${c}" target="_blank" rel="noopener">${c}</a>${ok ? ' <strong>✓ lida</strong>' : ''}</td>`;
+        return d.erro ? `<td><span class="erro" title="${esc(d.erro)}">indisponível</span></td>` : `<td><a href="/p/${i}/${c}" target="_blank" rel="noopener">${c}</a>${d.extra ? ' <em>(prazo ampliado)</em>' : ''}${ok ? ' <strong>✓ lida</strong>' : ''}</td>`;
       }).join('');
       return `<tr><th scope="row">${i} · ${esc(p.site)} — ${p.papel}</th>${celulas}<td><a href="/f/${i}">registrar</a></td></tr>`;
     }).join('\n');
